@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "users": {
+      "title": "User Profile",
+      "description": "Stores user profile information, balances, and KYC status.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "btcBalance": { "type": "number", "description": "Current BTC balance" },
+        "totalDeposited": { "type": "number", "description": "Total BTC deposited" },
+        "kycStatus": { "type": "string", "enum": ["not_submitted", "pending", "verified", "rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role", "btcBalance", "kycStatus"]
+    },
+    "transactions": {
+      "title": "Transaction",
+      "description": "Records of deposits and withdrawals.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["deposit", "withdrawal"] },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "failed"] },
+        "txHash": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "proofUrl": { "type": "string", "description": "URL to payment proof image" }
+      },
+      "required": ["userId", "type", "amount", "status", "timestamp"]
+    },
+    "kyc_submissions": {
+      "title": "KYC Submission",
+      "description": "User KYC documents for verification.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "fullName": { "type": "string" },
+        "idType": { "type": "string" },
+        "idNumber": { "type": "string" },
+        "idFrontUrl": { "type": "string" },
+        "selfieUrl": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "submittedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "fullName", "idType", "status", "submittedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "users",
+      "description": "User profile documents"
+    },
+    "/transactions/{txId}": {
+      "schema": "transactions",
+      "description": "Global transaction records"
+    },
+    "/kyc_submissions/{submissionId}": {
+      "schema": "kyc_submissions",
+      "description": "KYC verification requests"
+    }
+  }
+}

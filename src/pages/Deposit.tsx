@@ -1,0 +1,168 @@
+import React, { useState } from "react";
+import { 
+  Copy, 
+  Check, 
+  Info, 
+  ArrowDownCircle, 
+  QrCode,
+  Upload,
+  AlertTriangle
+} from "lucide-react";
+import { useAuth } from "../AuthContext";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../firebase";
+import { motion } from "motion/react";
+
+export const Deposit = () => {
+  const { user } = useAuth();
+  const [copied, setCopied] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [txHash, setTxHash] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  // In a real app, this would be generated uniquely per user
+  const walletAddress = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(walletAddress);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleSubmitProof = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setLoading(true);
+    try {
+      await addDoc(collection(db, "transactions"), {
+        userId: user.uid,
+        type: "deposit",
+        amount: parseFloat(amount),
+        status: "pending",
+        txHash: txHash,
+        timestamp: new Date().toISOString(),
+      });
+      setSuccess(true);
+      setAmount("");
+      setTxHash("");
+    } catch (err) {
+      console.error("Deposit error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-8">
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-12 h-12 bg-[#C9A96E]/10 rounded-2xl flex items-center justify-center text-[#C9A96E]">
+          <ArrowDownCircle size={28} />
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Deposit Bitcoin</h1>
+          <p className="text-gray-400">Send BTC to your unique wallet address below.</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Wallet Address Section */}
+        <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-8 space-y-8">
+          <div className="flex justify-center">
+            <div className="p-4 bg-white rounded-2xl">
+              <QrCode size={180} className="text-[#0B0B0B]" />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <label className="text-sm font-medium text-gray-500">Your BTC Deposit Address</label>
+            <div className="flex items-center gap-2 p-4 bg-[#0B0B0B] border border-[#C9A96E]/20 rounded-xl">
+              <span className="text-sm font-mono text-gray-300 break-all flex-1">{walletAddress}</span>
+              <button 
+                onClick={handleCopy}
+                className="p-2 text-[#C9A96E] hover:bg-[#C9A96E]/10 rounded-lg transition-colors shrink-0"
+              >
+                {copied ? <Check size={18} /> : <Copy size={18} />}
+              </button>
+            </div>
+          </div>
+
+          <div className="p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl flex gap-4">
+            <Info className="text-blue-500 shrink-0" size={20} />
+            <p className="text-xs text-blue-200 leading-relaxed">
+              Send only Bitcoin (BTC) to this address. Sending any other coin may result in permanent loss. Deposits are credited after 3 network confirmations.
+            </p>
+          </div>
+        </div>
+
+        {/* Proof of Payment Section */}
+        <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-8">
+          <h3 className="text-xl font-bold text-white mb-6">Submit Proof of Payment</h3>
+          
+          {success ? (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-green-500/10 border border-green-500/20 p-8 rounded-2xl text-center space-y-4"
+            >
+              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto text-green-500">
+                <Check size={32} />
+              </div>
+              <h4 className="text-xl font-bold text-white">Submission Received</h4>
+              <p className="text-sm text-gray-400">Our team will verify your transaction shortly. You'll be notified once it's confirmed.</p>
+              <button 
+                onClick={() => setSuccess(false)}
+                className="text-[#C9A96E] font-bold text-sm hover:underline"
+              >
+                Submit another deposit
+              </button>
+            </motion.div>
+          ) : (
+            <form onSubmit={handleSubmitProof} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-400">Amount (BTC)</label>
+                <input
+                  type="number"
+                  step="0.00000001"
+                  required
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
+                  placeholder="0.0000"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-400">Transaction Hash (TXID)</label>
+                <input
+                  type="text"
+                  required
+                  value={txHash}
+                  onChange={(e) => setTxHash(e.target.value)}
+                  className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
+                  placeholder="Enter transaction hash"
+                />
+              </div>
+
+              <div className="p-4 bg-yellow-500/5 border border-yellow-500/20 rounded-xl flex gap-4">
+                <AlertTriangle className="text-yellow-500 shrink-0" size={20} />
+                <p className="text-xs text-yellow-200 leading-relaxed">
+                  Providing a false transaction hash may lead to account suspension. Ensure you've actually sent the BTC before submitting.
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-4 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all flex items-center justify-center gap-2 text-lg disabled:opacity-50"
+              >
+                <Upload size={20} />
+                {loading ? "Submitting..." : "Submit Proof"}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
