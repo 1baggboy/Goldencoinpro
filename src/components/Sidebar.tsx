@@ -8,7 +8,8 @@ import {
   Settings, 
   LogOut,
   UserCog,
-  Coins
+  Coins,
+  TrendingUp
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { auth } from "../firebase";
@@ -21,8 +22,10 @@ export const Sidebar = () => {
   const menuItems = [
     { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
     { name: "Deposit BTC", icon: ArrowUpCircle, path: "/deposit" },
+    { name: "Invest BTC", icon: TrendingUp, path: "/invest" },
     { name: "Transactions", icon: History, path: "/transactions" },
     { name: "KYC Verification", icon: ShieldCheck, path: "/kyc" },
+    { name: "Profile", icon: Settings, path: "/profile" },
   ];
 
   if (isAdmin) {

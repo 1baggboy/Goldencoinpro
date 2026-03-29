@@ -24,7 +24,8 @@ export const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalDeposits: 0,
-    activeKyc: 0
+    activeKyc: 0,
+    activeInvestments: 0
   });
 
   useEffect(() => {
@@ -33,6 +34,12 @@ export const AdminDashboard = () => {
       const u = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setUsers(u);
       setStats(prev => ({ ...prev, totalUsers: u.length }));
+    });
+
+    // Fetch active investments count
+    const qI = query(collection(db, "investments"), where("status", "==", "active"));
+    const unsubI = onSnapshot(qI, (snap) => {
+      setStats(prev => ({ ...prev, activeInvestments: snap.docs.length }));
     });
 
     // Fetch pending transactions
@@ -94,8 +101,9 @@ export const AdminDashboard = () => {
       </div>
 
       {/* Admin Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <AdminStatCard title="Total Users" value={stats.totalUsers} icon={Users} />
+        <AdminStatCard title="Active Investments" value={stats.activeInvestments} icon={TrendingUp} color="green" />
         <AdminStatCard title="Pending Deposits" value={pendingDeposits.length} icon={ArrowDownCircle} color="yellow" />
         <AdminStatCard title="Pending KYC" value={pendingKyc.length} icon={ShieldCheck} color="blue" />
       </div>

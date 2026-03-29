@@ -6,7 +6,8 @@ import {
   Wallet, 
   Clock,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  Zap
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -21,6 +22,8 @@ import { useAuth } from "../AuthContext";
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 import { cn } from "../lib/utils";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase";
 
 const data = [
   { name: "Mon", value: 4000 },
@@ -33,8 +36,9 @@ const data = [
 ];
 
 export const Dashboard = () => {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const [btcPrice, setBtcPrice] = useState<number | null>(null);
+  const [activeInvestmentsCount, setActiveInvestmentsCount] = useState(0);
 
   useEffect(() => {
     const fetchPrice = async () => {
@@ -48,8 +52,21 @@ export const Dashboard = () => {
     };
     fetchPrice();
     const interval = setInterval(fetchPrice, 30000);
-    return () => clearInterval(interval);
-  }, []);
+
+    // Fetch active investments count
+    let unsubInvestments = () => {};
+    if (user) {
+      const q = query(collection(db, "investments"), where("userId", "==", user.uid), where("status", "==", "active"));
+      unsubInvestments = onSnapshot(q, (snap) => {
+        setActiveInvestmentsCount(snap.docs.length);
+      });
+    }
+
+    return () => {
+      clearInterval(interval);
+      unsubInvestments();
+    };
+  }, [user]);
 
   const usdBalance = (profile?.btcBalance || 0) * (btcPrice || 65000);
 
@@ -74,7 +91,7 @@ export const Dashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         <StatCard 
           title="BTC Balance" 
           value={`${profile?.btcBalance?.toFixed(4) || "0.0000"} BTC`} 
@@ -88,6 +105,13 @@ export const Dashboard = () => {
           subValue="Lifetime deposits"
           icon={TrendingUp}
           color="green"
+        />
+        <StatCard 
+          title="Active Investments" 
+          value={activeInvestmentsCount} 
+          subValue={activeInvestmentsCount > 0 ? "Cycles in progress" : "No active plans"}
+          icon={Zap}
+          color="gold"
         />
         <StatCard 
           title="KYC Status" 

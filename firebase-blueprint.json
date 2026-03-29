@@ -8,6 +8,9 @@
         "uid": { "type": "string", "description": "Firebase Auth UID" },
         "email": { "type": "string", "format": "email" },
         "displayName": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "gender": { "type": "string", "enum": ["male", "female", "other"] },
+        "photoURL": { "type": "string" },
         "role": { "type": "string", "enum": ["user", "admin"] },
         "btcBalance": { "type": "number", "description": "Current BTC balance" },
         "totalDeposited": { "type": "number", "description": "Total BTC deposited" },
@@ -46,6 +49,22 @@
         "submittedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "fullName", "idType", "status", "submittedAt"]
+    },
+    "investments": {
+      "title": "Investment",
+      "description": "User investment plans and returns.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "planId": { "type": "string" },
+        "planName": { "type": "string" },
+        "amountBtc": { "type": "number" },
+        "expectedReturnBtc": { "type": "number" },
+        "startTime": { "type": "number", "description": "Timestamp in ms" },
+        "endTime": { "type": "number", "description": "Timestamp in ms" },
+        "status": { "type": "string", "enum": ["active", "completed"] }
+      },
+      "required": ["userId", "planId", "amountBtc", "expectedReturnBtc", "startTime", "endTime", "status"]
     }
   },
   "firestore": {
@@ -60,6 +79,10 @@
     "/kyc_submissions/{submissionId}": {
       "schema": "kyc_submissions",
       "description": "KYC verification requests"
+    },
+    "/investments/{investmentId}": {
+      "schema": "investments",
+      "description": "User investment records"
     }
   }
 }

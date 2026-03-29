@@ -1,5 +1,6 @@
 import React from "react";
 import { Bell, Search, User, Menu } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 
 export const Navbar = () => {
@@ -27,15 +28,19 @@ export const Navbar = () => {
           <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-[#0B0B0B]"></span>
         </button>
 
-        <div className="flex items-center gap-3 pl-4 border-l border-[#C9A96E]/10">
+        <Link to="/profile" className="flex items-center gap-3 pl-4 border-l border-[#C9A96E]/10 hover:opacity-80 transition-opacity">
           <div className="text-right hidden sm:block">
             <p className="text-sm font-semibold text-white">{profile?.displayName || "User"}</p>
             <p className="text-xs text-gray-500 capitalize">{profile?.role || "Member"}</p>
           </div>
           <div className="w-10 h-10 bg-[#C9A96E]/10 border border-[#C9A96E]/30 rounded-full flex items-center justify-center overflow-hidden">
-            <User className="text-[#C9A96E]" size={20} />
+            {profile?.photoURL ? (
+              <img src={profile.photoURL} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            ) : (
+              <User className="text-[#C9A96E]" size={20} />
+            )}
           </div>
-        </div>
+        </Link>
       </div>
     </header>
   );

@@ -42,6 +42,7 @@ export const UserDetail = () => {
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [investments, setInvestments] = useState<any[]>([]);
   const [btcPrice, setBtcPrice] = useState<number>(65000);
   const [loading, setLoading] = useState(true);
 
@@ -57,10 +58,17 @@ export const UserDetail = () => {
     });
 
     // Fetch user transactions
-    const q = query(collection(db, "transactions"), where("userId", "==", userId));
-    const unsubTx = onSnapshot(q, (snap) => {
+    const qTx = query(collection(db, "transactions"), where("userId", "==", userId));
+    const unsubTx = onSnapshot(qTx, (snap) => {
       const txs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setTransactions(txs.sort((a: any, b: any) => (b.timestamp || 0) - (a.timestamp || 0)));
+    });
+
+    // Fetch user investments
+    const qInv = query(collection(db, "investments"), where("userId", "==", userId));
+    const unsubInv = onSnapshot(qInv, (snap) => {
+      const invs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setInvestments(invs.sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0)));
     });
 
     // Fetch BTC price
@@ -72,6 +80,7 @@ export const UserDetail = () => {
     return () => {
       unsubUser();
       unsubTx();
+      unsubInv();
     };
   }, [userId]);
 
@@ -236,6 +245,43 @@ export const UserDetail = () => {
               ))
             )}
           </div>
+        </div>
+      </div>
+
+      {/* User Investments */}
+      <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+        <h3 className="text-xl font-bold text-white mb-6">User Investments</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {investments.length === 0 ? (
+            <div className="col-span-full py-10 text-center text-gray-500">No investments found for this user.</div>
+          ) : (
+            investments.map(inv => (
+              <div key={inv.id} className="p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <p className="text-sm font-bold text-white">{inv.planName}</p>
+                    <p className="text-xs text-gray-500">{inv.createdAt ? format(new Date(inv.createdAt), "MMM dd, yyyy HH:mm") : "---"}</p>
+                  </div>
+                  <span className={cn(
+                    "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                    inv.status === 'active' ? "bg-blue-500/10 text-blue-500" : "bg-green-500/10 text-green-500"
+                  )}>
+                    {inv.status}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-[10px] text-gray-500 uppercase font-bold">Invested</p>
+                    <p className="text-sm font-bold text-white">{inv.amount} BTC</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-gray-500 uppercase font-bold">Expected</p>
+                    <p className="text-sm font-bold text-[#C9A96E]">{inv.expectedReturn} BTC</p>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
