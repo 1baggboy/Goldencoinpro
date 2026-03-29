@@ -105,10 +105,10 @@ export const Dashboard = () => {
             <ArrowDownCircle size={18} />
             Deposit
           </Link>
-          <button className="px-6 py-3 bg-[#121212] text-white font-bold rounded-xl border border-[#C9A96E]/20 hover:bg-[#1A1A1A] transition-all flex items-center gap-2">
+          <Link to="/withdraw" className="px-6 py-3 bg-[#121212] text-white font-bold rounded-xl border border-[#C9A96E]/20 hover:bg-[#1A1A1A] transition-all flex items-center gap-2">
             <ArrowUpCircle size={18} />
             Withdraw
-          </button>
+          </Link>
         </div>
       </div>
 

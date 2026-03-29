@@ -8,6 +8,7 @@ import { Register } from "./pages/Register";
 import { Transactions } from "./pages/Transactions";
 import { Deposit } from "./pages/Deposit";
 import { KYC } from "./pages/KYC";
+import { Withdraw } from "./pages/Withdraw";
 import { AdminDashboard } from "./pages/AdminDashboard";
 import { UserDetail } from "./pages/UserDetail";
 import { Profile } from "./pages/Profile";
@@ -54,6 +55,14 @@ export default function App() {
             <ProtectedRoute>
               <Layout>
                 <Deposit />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/withdraw" element={
+            <ProtectedRoute>
+              <Layout>
+                <Withdraw />
               </Layout>
             </ProtectedRoute>
           } />

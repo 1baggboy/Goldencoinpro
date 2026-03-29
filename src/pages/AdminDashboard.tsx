@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { 
   Users, 
   ArrowDownCircle, 
+  ArrowUpCircle,
   ShieldCheck, 
   TrendingUp,
   Search,
@@ -20,6 +21,7 @@ import { Link } from "react-router-dom";
 export const AdminDashboard = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [pendingDeposits, setPendingDeposits] = useState<any[]>([]);
+  const [pendingWithdrawals, setPendingWithdrawals] = useState<any[]>([]);
   const [pendingKyc, setPendingKyc] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -42,11 +44,18 @@ export const AdminDashboard = () => {
       setStats(prev => ({ ...prev, activeInvestments: snap.docs.length }));
     });
 
-    // Fetch pending transactions
-    const qT = query(collection(db, "transactions"), where("status", "==", "pending"));
-    const unsubT = onSnapshot(qT, (snap) => {
+    // Fetch pending deposits
+    const qD = query(collection(db, "transactions"), where("status", "==", "pending"), where("type", "==", "deposit"));
+    const unsubD = onSnapshot(qD, (snap) => {
       const t = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setPendingDeposits(t);
+    });
+
+    // Fetch pending withdrawals
+    const qW = query(collection(db, "transactions"), where("status", "==", "pending"), where("type", "==", "withdrawal"));
+    const unsubW = onSnapshot(qW, (snap) => {
+      const t = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setPendingWithdrawals(t);
     });
 
     // Fetch pending KYC
@@ -58,18 +67,16 @@ export const AdminDashboard = () => {
 
     return () => {
       unsubUsers();
-      unsubT();
+      unsubI();
+      unsubD();
+      unsubW();
       unsubK();
     };
   }, []);
 
   const approveDeposit = async (tx: any) => {
     try {
-      // Update transaction
-      await updateDoc(doc(db, "transactions", tx.id), {
-        status: "confirmed"
-      });
-      // Update user balance
+      await updateDoc(doc(db, "transactions", tx.id), { status: "confirmed" });
       await updateDoc(doc(db, "users", tx.userId), {
         btcBalance: increment(tx.amount),
         totalDeposited: increment(tx.amount)
@@ -79,13 +86,28 @@ export const AdminDashboard = () => {
     }
   };
 
-  const rejectDeposit = async (txId: string) => {
+  const approveWithdrawal = async (tx: any) => {
+    try {
+      await updateDoc(doc(db, "transactions", tx.id), { status: "confirmed" });
+      await updateDoc(doc(db, "users", tx.userId), {
+        btcBalance: increment(-tx.amount)
+      });
+    } catch (e) {
+      console.error("Approve withdrawal error:", e);
+    }
+  };
+
+  const rejectTransaction = async (txId: string) => {
     await updateDoc(doc(db, "transactions", txId), { status: "failed" });
   };
 
   const approveKyc = async (kyc: any) => {
     await updateDoc(doc(db, "kyc_submissions", kyc.id), { status: "approved" });
     await updateDoc(doc(db, "users", kyc.userId), { kycStatus: "verified" });
+  };
+
+  const rejectKyc = async (kycId: string) => {
+    await updateDoc(doc(db, "kyc_submissions", kycId), { status: "rejected" });
   };
 
   return (
@@ -101,14 +123,15 @@ export const AdminDashboard = () => {
       </div>
 
       {/* Admin Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <AdminStatCard title="Total Users" value={stats.totalUsers} icon={Users} />
-        <AdminStatCard title="Active Investments" value={stats.activeInvestments} icon={TrendingUp} color="green" />
+        <AdminStatCard title="Active Plans" value={stats.activeInvestments} icon={TrendingUp} color="green" />
         <AdminStatCard title="Pending Deposits" value={pendingDeposits.length} icon={ArrowDownCircle} color="yellow" />
+        <AdminStatCard title="Pending Withdraws" value={pendingWithdrawals.length} icon={ArrowUpCircle} color="red" />
         <AdminStatCard title="Pending KYC" value={pendingKyc.length} icon={ShieldCheck} color="blue" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Pending Deposits */}
         <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
           <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
@@ -123,7 +146,7 @@ export const AdminDashboard = () => {
                 <div key={tx.id} className="p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl flex items-center justify-between group">
                   <div>
                     <p className="text-sm font-bold text-white">{tx.amount} BTC</p>
-                    <p className="text-xs text-gray-500 font-mono mt-1">{tx.txHash.substring(0, 16)}...</p>
+                    <p className="text-[10px] text-gray-500 font-mono mt-1">{tx.txHash?.substring(0, 16)}...</p>
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button 
@@ -133,7 +156,43 @@ export const AdminDashboard = () => {
                       <Check size={18} />
                     </button>
                     <button 
-                      onClick={() => rejectDeposit(tx.id)}
+                      onClick={() => rejectTransaction(tx.id)}
+                      className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Pending Withdrawals */}
+        <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <ArrowUpCircle size={20} className="text-red-500" />
+            Pending Withdraws
+          </h3>
+          <div className="space-y-4">
+            {pendingWithdrawals.length === 0 ? (
+              <p className="text-sm text-gray-500 py-10 text-center">No pending withdrawals.</p>
+            ) : (
+              pendingWithdrawals.map(tx => (
+                <div key={tx.id} className="p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl flex items-center justify-between group">
+                  <div>
+                    <p className="text-sm font-bold text-white">{tx.amount} BTC</p>
+                    <p className="text-[10px] text-gray-500 font-mono mt-1">{tx.walletAddress?.substring(0, 16)}...</p>
+                  </div>
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                      onClick={() => approveWithdrawal(tx)}
+                      className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500/20 transition-colors"
+                    >
+                      <Check size={18} />
+                    </button>
+                    <button 
+                      onClick={() => rejectTransaction(tx.id)}
                       className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
                     >
                       <X size={18} />
@@ -159,7 +218,7 @@ export const AdminDashboard = () => {
                 <div key={kyc.id} className="p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl flex items-center justify-between group">
                   <div>
                     <p className="text-sm font-bold text-white">{kyc.fullName}</p>
-                    <p className="text-xs text-gray-500 mt-1 capitalize">{kyc.idType.replace('_', ' ')}: {kyc.idNumber}</p>
+                    <p className="text-xs text-gray-500 mt-1 capitalize">{kyc.idType?.replace('_', ' ')}: {kyc.idNumber}</p>
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button 
@@ -168,7 +227,10 @@ export const AdminDashboard = () => {
                     >
                       <Check size={18} />
                     </button>
-                    <button className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors">
+                    <button 
+                      onClick={() => rejectKyc(kyc.id)}
+                      className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
+                    >
                       <X size={18} />
                     </button>
                   </div>
@@ -267,6 +329,8 @@ const AdminStatCard = ({ title, value, icon: Icon, color }: any) => (
       "w-12 h-12 rounded-xl flex items-center justify-center",
       color === 'yellow' ? "bg-yellow-500/10 text-yellow-500" : 
       color === 'blue' ? "bg-blue-500/10 text-blue-500" : 
+      color === 'red' ? "bg-red-500/10 text-red-500" :
+      color === 'green' ? "bg-green-500/10 text-green-500" :
       "bg-[#C9A96E]/10 text-[#C9A96E]"
     )}>
       <Icon size={24} />

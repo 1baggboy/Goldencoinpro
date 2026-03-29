@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Copy, 
   Check, 
@@ -9,20 +9,58 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { motion } from "motion/react";
 
 export const Deposit = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [copied, setCopied] = useState(false);
   const [amount, setAmount] = useState("");
   const [txHash, setTxHash] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [btcPrice, setBtcPrice] = useState<number>(65000);
+  const [dailyDeposited, setDailyDeposited] = useState(0);
 
   // In a real app, this would be generated uniquely per user
   const walletAddress = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
+
+  useEffect(() => {
+    // Fetch BTC price
+    fetch("/api/market/btc-price")
+      .then(res => res.json())
+      .then(data => setBtcPrice(data.usd))
+      .catch(console.error);
+
+    // Fetch today's deposits to calculate daily limit
+    if (user) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const q = query(
+        collection(db, "transactions"), 
+        where("userId", "==", user.uid), 
+        where("type", "==", "deposit"),
+        where("status", "in", ["pending", "confirmed"])
+      );
+
+      const unsub = onSnapshot(q, (snap) => {
+        let total = 0;
+        snap.docs.forEach(doc => {
+          const data = doc.data();
+          const txDate = new Date(data.timestamp);
+          if (txDate >= today) {
+            total += data.amount;
+          }
+        });
+        setDailyDeposited(total);
+      });
+
+      return () => unsub();
+    }
+  }, [user]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(walletAddress);
@@ -33,12 +71,30 @@ export const Deposit = () => {
   const handleSubmitProof = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    setError(null);
+
+    const amountBtc = parseFloat(amount);
+    const amountUsd = amountBtc * btcPrice;
+    const dailyDepositedUsd = dailyDeposited * btcPrice;
+
+    // 1. Check Minimum ($50)
+    if (amountUsd < 50) {
+      setError("Minimum deposit amount is $50 worth of BTC.");
+      return;
+    }
+
+    // 2. Check Daily Maximum ($50,000)
+    if (dailyDepositedUsd + amountUsd > 50000) {
+      setError(`Daily deposit limit exceeded. You have already deposited $${dailyDepositedUsd.toLocaleString()} today. Remaining limit: $${(50000 - dailyDepositedUsd).toLocaleString()}`);
+      return;
+    }
+
     setLoading(true);
     try {
       await addDoc(collection(db, "transactions"), {
         userId: user.uid,
         type: "deposit",
-        amount: parseFloat(amount),
+        amount: amountBtc,
         status: "pending",
         txHash: txHash,
         timestamp: new Date().toISOString(),
@@ -48,6 +104,7 @@ export const Deposit = () => {
       setTxHash("");
     } catch (err) {
       console.error("Deposit error:", err);
+      setError("An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -119,17 +176,30 @@ export const Deposit = () => {
             </motion.div>
           ) : (
             <form onSubmit={handleSubmitProof} className="space-y-6">
+              {error && (
+                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-500 text-sm">
+                  <AlertTriangle size={18} />
+                  {error}
+                </div>
+              )}
+
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-400">Amount (BTC)</label>
-                <input
-                  type="number"
-                  step="0.00000001"
-                  required
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
-                  placeholder="0.0000"
-                />
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.00000001"
+                    required
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
+                    placeholder="0.0000"
+                  />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-500">
+                    ≈ ${(parseFloat(amount || "0") * btcPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </div>
+                </div>
+                <p className="text-[10px] text-gray-500 px-1">Daily used: ${(dailyDeposited * btcPrice).toLocaleString()} / $50,000</p>
               </div>
 
               <div className="space-y-2">
