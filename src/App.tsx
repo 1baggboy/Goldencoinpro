@@ -9,6 +9,7 @@ import { Transactions } from "./pages/Transactions";
 import { Deposit } from "./pages/Deposit";
 import { KYC } from "./pages/KYC";
 import { AdminDashboard } from "./pages/AdminDashboard";
+import { UserDetail } from "./pages/UserDetail";
 import { Landing } from "./pages/Landing";
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode, adminOnly?: boolean }> = ({ children, adminOnly }) => {
@@ -67,6 +68,14 @@ export default function App() {
             <ProtectedRoute adminOnly>
               <Layout>
                 <AdminDashboard />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/admin/user/:userId" element={
+            <ProtectedRoute adminOnly>
+              <Layout>
+                <UserDetail />
               </Layout>
             </ProtectedRoute>
           } />

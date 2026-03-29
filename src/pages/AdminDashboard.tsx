@@ -8,12 +8,14 @@ import {
   MoreVertical,
   Check,
   X,
-  AlertCircle
+  AlertCircle,
+  Eye
 } from "lucide-react";
 import { collection, query, onSnapshot, doc, updateDoc, increment, getDocs, where } from "firebase/firestore";
 import { db } from "../firebase";
 import { cn } from "../lib/utils";
 import { format } from "date-fns";
+import { Link } from "react-router-dom";
 
 export const AdminDashboard = () => {
   const [users, setUsers] = useState<any[]>([]);
@@ -224,9 +226,18 @@ export const AdminDashboard = () => {
                     {u.createdAt ? format(new Date(u.createdAt), "MMM dd, yyyy") : "---"}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="p-2 text-gray-500 hover:text-white transition-colors">
-                      <MoreVertical size={18} />
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      <Link 
+                        to={`/admin/user/${u.id}`}
+                        className="p-2 text-gray-500 hover:text-[#C9A96E] transition-colors flex items-center gap-1 text-xs font-bold"
+                      >
+                        <Eye size={16} />
+                        View
+                      </Link>
+                      <button className="p-2 text-gray-500 hover:text-white transition-colors">
+                        <MoreVertical size={18} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

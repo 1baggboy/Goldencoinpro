@@ -25,11 +25,12 @@ export const Register = () => {
       await updateProfile(user, { displayName: name });
 
       // Create user profile in Firestore
+      const isAdminEmail = user.email === "lookuptoadams@gmail.com";
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         email: user.email,
         displayName: name,
-        role: "user",
+        role: isAdminEmail ? "admin" : "user",
         btcBalance: 0,
         totalDeposited: 0,
         kycStatus: "not_submitted",
