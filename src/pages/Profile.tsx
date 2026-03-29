@@ -13,6 +13,7 @@ export const Profile = () => {
   const [gender, setGender] = useState(profile?.gender || "");
   const [photoURL, setPhotoURL] = useState(profile?.photoURL || "");
   const [updating, setUpdating] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   // Update local state when profile loads
@@ -24,6 +25,36 @@ export const Profile = () => {
       setPhotoURL(profile.photoURL || "");
     }
   }, [profile]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    // Check file size (max 1MB for Firestore document limit)
+    if (file.size > 1024 * 1024) {
+      setMessage({ type: 'error', text: "Image too large. Max 1MB." });
+      return;
+    }
+
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result as string;
+      try {
+        await updateDoc(doc(db, "users", user.uid), {
+          photoURL: base64String
+        });
+        setPhotoURL(base64String);
+        setMessage({ type: 'success', text: "Profile picture updated!" });
+      } catch (error) {
+        console.error("Upload error:", error);
+        setMessage({ type: 'error', text: "Failed to upload image." });
+      } finally {
+        setUploading(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,15 +103,23 @@ export const Profile = () => {
           <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-8 text-center relative overflow-hidden group">
             <div className="relative inline-block mb-4">
               <div className="w-24 h-24 bg-[#C9A96E]/10 border-2 border-[#C9A96E]/30 rounded-full flex items-center justify-center text-[#C9A96E] text-4xl font-bold overflow-hidden">
-                {photoURL ? (
+                {uploading ? (
+                  <div className="animate-pulse">...</div>
+                ) : photoURL ? (
                   <img src={photoURL} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
                   profile?.displayName?.charAt(0) || "U"
                 )}
               </div>
-              <div className="absolute bottom-0 right-0 p-2 bg-[#C9A96E] text-[#0B0B0B] rounded-full shadow-lg">
+              <label className="absolute bottom-0 right-0 p-2 bg-[#C9A96E] text-[#0B0B0B] rounded-full shadow-lg cursor-pointer hover:bg-[#D4B985] transition-all">
                 <Camera size={16} />
-              </div>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleFileChange} 
+                  className="hidden" 
+                />
+              </label>
             </div>
             <h3 className="text-xl font-bold text-white truncate">{profile?.displayName}</h3>
             <p className="text-sm text-gray-500 mb-6 truncate">{profile?.email}</p>
@@ -166,20 +205,6 @@ export const Profile = () => {
                       <option value="female">Female</option>
                       <option value="other">Other</option>
                     </select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-400">Profile Picture URL</label>
-                  <div className="relative">
-                    <Camera className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                    <input
-                      type="url"
-                      value={photoURL}
-                      onChange={(e) => setPhotoURL(e.target.value)}
-                      className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-3 pl-12 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
-                      placeholder="https://example.com/photo.jpg"
-                    />
                   </div>
                 </div>
               </div>

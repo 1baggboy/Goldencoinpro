@@ -11,6 +11,8 @@
         "phoneNumber": { "type": "string" },
         "gender": { "type": "string", "enum": ["male", "female", "other"] },
         "photoURL": { "type": "string" },
+        "btcWalletAddress": { "type": "string", "description": "User's personal BTC wallet address" },
+        "status": { "type": "string", "enum": ["active", "restricted"], "description": "Account status" },
         "role": { "type": "string", "enum": ["user", "admin"] },
         "btcBalance": { "type": "number", "description": "Current BTC balance" },
         "totalDeposited": { "type": "number", "description": "Total BTC deposited" },

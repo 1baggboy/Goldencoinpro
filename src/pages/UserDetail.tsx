@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, collection, query, where, onSnapshot, updateDoc } from "firebase/firestore";
-import { db } from "../firebase";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { db, auth } from "../firebase";
 import { 
   TrendingUp, 
   ArrowDownCircle, 
@@ -13,7 +14,11 @@ import {
   User,
   Mail,
   Calendar,
-  Settings
+  Settings,
+  Lock,
+  Unlock,
+  Key,
+  Save
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -45,6 +50,12 @@ export const UserDetail = () => {
   const [investments, setInvestments] = useState<any[]>([]);
   const [btcPrice, setBtcPrice] = useState<number>(65000);
   const [loading, setLoading] = useState(true);
+  
+  // Edit states
+  const [editBalance, setEditBalance] = useState<string>("");
+  const [editWallet, setEditWallet] = useState<string>("");
+  const [updating, setUpdating] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -52,7 +63,10 @@ export const UserDetail = () => {
     // Fetch user profile
     const unsubUser = onSnapshot(doc(db, "users", userId), (doc) => {
       if (doc.exists()) {
-        setUserProfile({ id: doc.id, ...doc.data() });
+        const data = doc.data();
+        setUserProfile({ id: doc.id, ...data });
+        setEditBalance(data.btcBalance?.toString() || "0");
+        setEditWallet(data.btcWalletAddress || "");
       }
       setLoading(false);
     });
@@ -67,7 +81,7 @@ export const UserDetail = () => {
     // Fetch user investments
     const qInv = query(collection(db, "investments"), where("userId", "==", userId));
     const unsubInv = onSnapshot(qInv, (snap) => {
-      const invs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const invs = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
       setInvestments(invs.sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0)));
     });
 
@@ -84,10 +98,44 @@ export const UserDetail = () => {
     };
   }, [userId]);
 
-  const updateBalance = async (amount: number) => {
+  const handleSaveAdminEdits = async () => {
     if (!userId) return;
-    const newBalance = (userProfile?.btcBalance || 0) + amount;
-    await updateDoc(doc(db, "users", userId), { btcBalance: newBalance });
+    setUpdating(true);
+    try {
+      await updateDoc(doc(db, "users", userId), {
+        btcBalance: parseFloat(editBalance),
+        btcWalletAddress: editWallet
+      });
+      setMessage({ type: 'success', text: "User updated successfully!" });
+    } catch (e) {
+      console.error(e);
+      setMessage({ type: 'error', text: "Failed to update user." });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const toggleRestriction = async () => {
+    if (!userId || !userProfile) return;
+    const newStatus = userProfile.status === 'restricted' ? 'active' : 'restricted';
+    try {
+      await updateDoc(doc(db, "users", userId), { status: newStatus });
+      setMessage({ type: 'success', text: `User ${newStatus === 'restricted' ? 'restricted' : 'unrestricted'} successfully!` });
+    } catch (e) {
+      console.error(e);
+      setMessage({ type: 'error', text: "Failed to update status." });
+    }
+  };
+
+  const sendResetEmail = async () => {
+    if (!userProfile?.email) return;
+    try {
+      await sendPasswordResetEmail(auth, userProfile.email);
+      setMessage({ type: 'success', text: "Password reset email sent!" });
+    } catch (e) {
+      console.error(e);
+      setMessage({ type: 'error', text: "Failed to send reset email." });
+    }
   };
 
   if (loading) return <div className="flex items-center justify-center h-96 text-[#C9A96E]">Loading user data...</div>;
@@ -108,142 +156,193 @@ export const UserDetail = () => {
         </button>
         <div className="flex gap-3">
           <button 
-            onClick={() => updateBalance(0.1)}
-            className="px-4 py-2 bg-green-500/10 text-green-500 rounded-lg text-sm font-bold hover:bg-green-500/20 transition-colors"
+            onClick={toggleRestriction}
+            className={cn(
+              "px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2",
+              userProfile.status === 'restricted' 
+                ? "bg-green-500/10 text-green-500 hover:bg-green-500/20" 
+                : "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+            )}
           >
-            +0.1 BTC
+            {userProfile.status === 'restricted' ? <Unlock size={16} /> : <Lock size={16} />}
+            {userProfile.status === 'restricted' ? "Unrestrict Account" : "Restrict Account"}
           </button>
           <button 
-            onClick={() => updateBalance(-0.1)}
-            className="px-4 py-2 bg-red-500/10 text-red-500 rounded-lg text-sm font-bold hover:bg-red-500/20 transition-colors"
+            onClick={sendResetEmail}
+            className="px-4 py-2 bg-[#C9A96E]/10 text-[#C9A96E] rounded-lg text-sm font-bold hover:bg-[#C9A96E]/20 transition-colors flex items-center gap-2"
           >
-            -0.1 BTC
+            <Key size={16} />
+            Reset Password
           </button>
         </div>
       </div>
 
-      {/* User Identity Card */}
-      <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-8 flex flex-col md:flex-row gap-8 items-center md:items-start">
-        <div className="w-24 h-24 bg-[#C9A96E]/10 rounded-3xl flex items-center justify-center text-[#C9A96E] text-4xl font-bold">
-          {userProfile.displayName?.charAt(0)}
+      {message && (
+        <div className={cn(
+          "p-4 rounded-xl flex items-center gap-3 text-sm font-medium",
+          message.type === 'success' ? "bg-green-500/10 text-green-500 border border-green-500/20" : "bg-red-500/10 text-red-500 border border-red-500/20"
+        )}>
+          <AlertCircle size={18} />
+          {message.text}
         </div>
-        <div className="flex-1 text-center md:text-left">
-          <h1 className="text-3xl font-bold text-white mb-2">{userProfile.displayName}</h1>
-          <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm text-gray-400">
-            <div className="flex items-center gap-2">
-              <Mail size={16} className="text-[#C9A96E]" />
-              {userProfile.email}
-            </div>
-            <div className="flex items-center gap-2">
-              <User size={16} className="text-[#C9A96E]" />
-              Role: <span className="text-white capitalize">{userProfile.role}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Calendar size={16} className="text-[#C9A96E]" />
-              Joined: <span className="text-white">{userProfile.createdAt ? format(new Date(userProfile.createdAt), "MMM dd, yyyy") : "---"}</span>
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-col items-end gap-2">
-           <span className={cn(
-            "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest",
-            userProfile.kycStatus === 'verified' ? "bg-green-500/10 text-green-500" : 
-            userProfile.kycStatus === 'pending' ? "bg-yellow-500/10 text-yellow-500" : 
-            "bg-gray-500/10 text-gray-500"
-          )}>
-            KYC: {userProfile.kycStatus?.replace('_', ' ')}
-          </span>
-          <p className="text-xs text-gray-500 font-mono">UID: {userProfile.uid}</p>
-        </div>
-      </div>
+      )}
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard 
-          title="Current Balance" 
-          value={`${userProfile.btcBalance?.toFixed(4)} BTC`} 
-          subValue={`≈ $${usdBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
-          icon={Wallet}
-          color="gold"
-        />
-        <StatCard 
-          title="Total Deposited" 
-          value={`${userProfile.totalDeposited?.toFixed(4)} BTC`} 
-          subValue="Lifetime volume"
-          icon={TrendingUp}
-          color="green"
-        />
-        <StatCard 
-          title="Live BTC Price" 
-          value={`$${btcPrice.toLocaleString()}`} 
-          subValue="Market Rate"
-          icon={TrendingUp}
-          color="gold"
-        />
-      </div>
-
-      {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Performance Chart */}
-        <div className="lg:col-span-2 bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-white mb-8">User Portfolio Performance</h3>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#C9A96E" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#C9A96E" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1A1A1A" vertical={false} />
-                <XAxis dataKey="name" stroke="#4B5563" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#4B5563" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val}`} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#121212', border: '1px solid rgba(201, 169, 110, 0.2)', borderRadius: '12px' }}
-                  itemStyle={{ color: '#C9A96E' }}
+        {/* Left Column: Profile & Admin Controls */}
+        <div className="lg:col-span-1 space-y-8">
+          {/* User Identity Card */}
+          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6 text-center">
+            <div className="w-20 h-20 bg-[#C9A96E]/10 rounded-3xl flex items-center justify-center text-[#C9A96E] text-3xl font-bold mx-auto mb-4 overflow-hidden">
+              {userProfile.photoURL ? (
+                <img src={userProfile.photoURL} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              ) : (
+                userProfile.displayName?.charAt(0)
+              )}
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-1">{userProfile.displayName}</h1>
+            <p className="text-sm text-gray-500 mb-4">{userProfile.email}</p>
+            
+            <div className="flex flex-col gap-2">
+              <span className={cn(
+                "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mx-auto",
+                userProfile.kycStatus === 'verified' ? "bg-green-500/10 text-green-500" : 
+                userProfile.kycStatus === 'pending' ? "bg-yellow-500/10 text-yellow-500" : 
+                "bg-gray-500/10 text-gray-500"
+              )}>
+                KYC: {userProfile.kycStatus?.replace('_', ' ')}
+              </span>
+              <span className={cn(
+                "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mx-auto",
+                userProfile.status === 'restricted' ? "bg-red-500/10 text-red-500" : "bg-green-500/10 text-green-500"
+              )}>
+                Status: {userProfile.status || 'active'}
+              </span>
+            </div>
+          </div>
+
+          {/* Admin Edit Form */}
+          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6 space-y-6">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <Settings size={18} className="text-[#C9A96E]" />
+              Quick Edit
+            </h3>
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">BTC Balance</label>
+                <input 
+                  type="number"
+                  step="0.0001"
+                  value={editBalance}
+                  onChange={(e) => setEditBalance(e.target.value)}
+                  className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-3 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono"
                 />
-                <Area type="monotone" dataKey="value" stroke="#C9A96E" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
-              </AreaChart>
-            </ResponsiveContainer>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">BTC Wallet Address</label>
+                <input 
+                  type="text"
+                  value={editWallet}
+                  onChange={(e) => setEditWallet(e.target.value)}
+                  className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-3 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono text-xs"
+                  placeholder="Enter BTC address"
+                />
+              </div>
+
+              <button 
+                onClick={handleSaveAdminEdits}
+                disabled={updating}
+                className="w-full bg-[#C9A96E] text-[#0B0B0B] font-bold py-3 rounded-xl hover:bg-[#D4B985] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <Save size={18} />
+                {updating ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Transaction History */}
-        <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-white mb-6">User Transactions</h3>
-          <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-            {transactions.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-10">No transactions found.</p>
-            ) : (
-              transactions.map(tx => (
-                <div key={tx.id} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center",
-                      tx.type === 'deposit' ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
-                    )}>
-                      {tx.type === 'deposit' ? <ArrowDownCircle size={14} /> : <ArrowUpCircle size={14} />}
+        {/* Right Column: Stats & History */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <StatCard 
+              title="Current Balance" 
+              value={`${userProfile.btcBalance?.toFixed(4)} BTC`} 
+              subValue={`≈ $${usdBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+              icon={Wallet}
+              color="gold"
+            />
+            <StatCard 
+              title="Total Deposited" 
+              value={`${userProfile.totalDeposited?.toFixed(4)} BTC`} 
+              subValue="Lifetime volume"
+              icon={TrendingUp}
+              color="green"
+            />
+          </div>
+
+          {/* Performance Chart */}
+          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+            <h3 className="text-xl font-bold text-white mb-8">User Portfolio Performance</h3>
+            <div className="h-[250px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#C9A96E" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#C9A96E" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1A1A1A" vertical={false} />
+                  <XAxis dataKey="name" stroke="#4B5563" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#4B5563" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val}`} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#121212', border: '1px solid rgba(201, 169, 110, 0.2)', borderRadius: '12px' }}
+                    itemStyle={{ color: '#C9A96E' }}
+                  />
+                  <Area type="monotone" dataKey="value" stroke="#C9A96E" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Transaction History */}
+          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+            <h3 className="text-xl font-bold text-white mb-6">User Transactions</h3>
+            <div className="space-y-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+              {transactions.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-10">No transactions found.</p>
+              ) : (
+                transactions.map(tx => (
+                  <div key={tx.id} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center",
+                        tx.type === 'deposit' ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
+                      )}>
+                        {tx.type === 'deposit' ? <ArrowDownCircle size={14} /> : <ArrowUpCircle size={14} />}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-white capitalize">{tx.type}</p>
+                        <p className="text-[10px] text-gray-500">{tx.timestamp ? format(new Date(tx.timestamp), "MMM dd, HH:mm") : "---"}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs font-bold text-white capitalize">{tx.type}</p>
-                      <p className="text-[10px] text-gray-500">{tx.timestamp ? format(new Date(tx.timestamp), "MMM dd, HH:mm") : "---"}</p>
+                    <div className="text-right">
+                      <p className={cn("text-xs font-bold", tx.type === 'deposit' ? "text-green-500" : "text-red-500")}>
+                        {tx.type === 'deposit' ? '+' : '-'}{tx.amount} BTC
+                      </p>
+                      <p className={cn(
+                        "text-[8px] uppercase font-bold",
+                        tx.status === 'confirmed' ? "text-green-500" : tx.status === 'pending' ? "text-yellow-500" : "text-red-500"
+                      )}>
+                        {tx.status}
+                      </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className={cn("text-xs font-bold", tx.type === 'deposit' ? "text-green-500" : "text-red-500")}>
-                      {tx.type === 'deposit' ? '+' : '-'}{tx.amount} BTC
-                    </p>
-                    <p className={cn(
-                      "text-[8px] uppercase font-bold",
-                      tx.status === 'confirmed' ? "text-green-500" : tx.status === 'pending' ? "text-yellow-500" : "text-red-500"
-                    )}>
-                      {tx.status}
-                    </p>
-                  </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -272,11 +371,11 @@ export const UserDetail = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-[10px] text-gray-500 uppercase font-bold">Invested</p>
-                    <p className="text-sm font-bold text-white">{inv.amount} BTC</p>
+                    <p className="text-sm font-bold text-white">{inv.amountBtc} BTC</p>
                   </div>
                   <div>
                     <p className="text-[10px] text-gray-500 uppercase font-bold">Expected</p>
-                    <p className="text-sm font-bold text-[#C9A96E]">{inv.expectedReturn} BTC</p>
+                    <p className="text-sm font-bold text-[#C9A96E]">{inv.expectedReturnBtc?.toFixed(4)} BTC</p>
                   </div>
                 </div>
               </div>

@@ -12,6 +12,11 @@ interface UserProfile {
   totalDeposited: number;
   kycStatus: "not_submitted" | "pending" | "verified" | "rejected";
   createdAt: string;
+  status: "active" | "restricted";
+  photoURL?: string;
+  phoneNumber?: string;
+  gender?: string;
+  btcWalletAddress?: string;
 }
 
 interface AuthContextType {
@@ -19,6 +24,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   isAdmin: boolean;
+  isRestricted: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -26,6 +32,7 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   isAdmin: false,
+  isRestricted: false,
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -61,9 +68,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const isAdmin = profile?.role === "admin" || user?.email === "lookuptoadams@gmail.com";
+  const isRestricted = profile?.status === "restricted";
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, isAdmin }}>
+    <AuthContext.Provider value={{ user, profile, loading, isAdmin, isRestricted }}>
       {children}
     </AuthContext.Provider>
   );

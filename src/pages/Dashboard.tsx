@@ -7,7 +7,8 @@ import {
   Clock,
   ShieldCheck,
   AlertCircle,
-  Zap
+  Zap,
+  Lock
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -36,7 +37,7 @@ const data = [
 ];
 
 export const Dashboard = () => {
-  const { profile, user } = useAuth();
+  const { profile, user, isRestricted } = useAuth();
   const [btcPrice, setBtcPrice] = useState<number | null>(null);
   const [activeInvestmentsCount, setActiveInvestmentsCount] = useState(0);
 
@@ -69,6 +70,27 @@ export const Dashboard = () => {
   }, [user]);
 
   const usdBalance = (profile?.btcBalance || 0) * (btcPrice || 65000);
+
+  if (isRestricted) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+        <div className="w-20 h-20 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mb-6">
+          <Lock size={40} />
+        </div>
+        <h1 className="text-3xl font-bold text-white mb-4">Account Restricted</h1>
+        <p className="text-gray-400 max-w-md mb-8">
+          Your account has been restricted due to suspicious activity or a violation of our terms of service. 
+          Please contact support to resolve this issue.
+        </p>
+        <button 
+          onClick={() => window.location.href = "mailto:support@goldencoin.com"}
+          className="px-8 py-3 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all"
+        >
+          Contact Support
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
