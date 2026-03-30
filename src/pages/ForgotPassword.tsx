@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "../firebase";
-import { Coins, Mail, ArrowRight, ArrowLeft, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Mail, ArrowRight, ArrowLeft, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
 
 export const ForgotPassword = () => {
@@ -41,10 +41,7 @@ export const ForgotPassword = () => {
       >
         <div className="text-center mb-10">
           <Link to="/" className="inline-flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-[#C9A96E] rounded-lg flex items-center justify-center">
-              <Coins className="text-[#0B0B0B]" size={24} />
-            </div>
-            <span className="text-2xl font-bold tracking-tighter text-[#C9A96E]">GOLDENCOIN</span>
+            <img src="/logo.png" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
           </Link>
           <h2 className="text-3xl font-bold text-white tracking-tight">Reset Password</h2>
           <p className="text-gray-500 mt-2">Enter your email to receive a password reset link.</p>

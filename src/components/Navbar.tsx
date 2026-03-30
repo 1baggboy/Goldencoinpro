@@ -14,7 +14,7 @@ export const Navbar = () => {
     <header className="h-20 bg-[#0B0B0B]/80 backdrop-blur-md border-b border-[#C9A96E]/10 px-4 md:px-8 flex items-center justify-between sticky top-0 z-50">
       <div className="flex items-center gap-4 md:hidden">
         <Menu className="text-[#C9A96E]" size={24} />
-        <span className="text-xl font-bold text-[#C9A96E]">GOLDENCOIN</span>
+        <img src="/logo.png" alt="GOLDENCOIN" className="h-8 w-auto" referrerPolicy="no-referrer" />
       </div>
 
       <div className="hidden md:flex items-center gap-4 bg-[#121212] px-4 py-2 rounded-xl border border-[#C9A96E]/10 w-96">
@@ -29,6 +29,7 @@ export const Navbar = () => {
       <div className="flex items-center gap-4 md:gap-6">
         <div className="hidden lg:flex items-center gap-6 mr-4">
           <Link to="/faq" className="text-sm font-medium text-gray-400 hover:text-[#C9A96E] transition-colors">FAQ</Link>
+          <a href="mailto:lookuptoadams@gmail.com" className="text-sm font-medium text-gray-400 hover:text-[#C9A96E] transition-colors">Support</a>
           <Link to="/dashboard" className="text-sm font-medium text-gray-400 hover:text-[#C9A96E] transition-colors">Dashboard</Link>
         </div>
 

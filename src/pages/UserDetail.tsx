@@ -23,7 +23,8 @@ import {
   Key,
   Save,
   Camera,
-  FileText
+  FileText,
+  Zap
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -61,6 +62,7 @@ export const UserDetail = () => {
   
   // Edit states
   const [editBalance, setEditBalance] = useState<string>("");
+  const [editTradingBalance, setEditTradingBalance] = useState<string>("");
   const [editWallet, setEditWallet] = useState<string>("");
   const [updating, setUpdating] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -79,6 +81,7 @@ export const UserDetail = () => {
         const data = doc.data();
         setUserProfile({ id: doc.id, ...data });
         setEditBalance(data.btcBalance?.toString() || "0");
+        setEditTradingBalance(data.tradingBalanceBtc?.toString() || "0");
         setEditWallet(data.btcWalletAddress || "");
       }
       setLoading(false);
@@ -130,6 +133,7 @@ export const UserDetail = () => {
     try {
       await updateDoc(doc(db, "users", userId), {
         btcBalance: parseFloat(editBalance),
+        tradingBalanceBtc: parseFloat(editTradingBalance),
         btcWalletAddress: editWallet
       });
       setMessage({ type: 'success', text: "User updated successfully!" });
@@ -270,6 +274,9 @@ export const UserDetail = () => {
             <p className="text-sm text-gray-500 mb-4">{userProfile.email}</p>
             
             <div className="flex flex-col gap-2">
+              <span className="px-3 py-1 bg-[#C9A96E]/10 text-[#C9A96E] text-[10px] font-bold rounded-full uppercase tracking-widest mx-auto border border-[#C9A96E]/20">
+                Member
+              </span>
               <span className={cn(
                 "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mx-auto",
                 userProfile.kycStatus === 'verified' ? "bg-green-500/10 text-green-500" : 
@@ -305,6 +312,17 @@ export const UserDetail = () => {
                   className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-3 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono"
                 />
               </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Trading Balance (BTC)</label>
+                <input 
+                  type="number"
+                  step="0.0001"
+                  value={editTradingBalance}
+                  onChange={(e) => setEditTradingBalance(e.target.value)}
+                  className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-3 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono"
+                />
+              </div>
               
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">BTC Wallet Address</label>
@@ -335,9 +353,16 @@ export const UserDetail = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <StatCard 
               title="Current Balance" 
-              value={`${userProfile.btcBalance?.toFixed(4)} BTC`} 
-              subValue={`≈ $${usdBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+              value={`$${usdBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} 
+              subValue={`${userProfile.btcBalance?.toFixed(4)} BTC`}
               icon={Wallet}
+              color="gold"
+            />
+            <StatCard 
+              title="Trading Balance" 
+              value={`${userProfile.tradingBalanceBtc?.toFixed(4) || "0.0000"} BTC`} 
+              subValue={`≈ $${((userProfile.tradingBalanceBtc || 0) * btcPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+              icon={Zap}
               color="gold"
             />
             <StatCard 
@@ -346,6 +371,13 @@ export const UserDetail = () => {
               subValue="Lifetime volume"
               icon={TrendingUp}
               color="green"
+            />
+            <StatCard 
+              title="Referral Bonus" 
+              value={`${userProfile.referralBonusEarned?.toFixed(6) || "0.000000"} BTC`} 
+              subValue={`Code: ${userProfile.referralCode || 'N/A'}`}
+              icon={TrendingUp}
+              color="gold"
             />
           </div>
 

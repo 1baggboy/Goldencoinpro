@@ -1,9 +1,9 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, getDocs, query, collection, where } from "firebase/firestore";
 import { auth, db } from "../firebase";
-import { Coins, Mail, Lock, User, ArrowRight, ShieldCheck, Check, X, AlertCircle } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, ShieldCheck, Check, X, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "../lib/utils";
 
@@ -11,9 +11,12 @@ export const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [referralInput, setReferralInput] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const referralCode = searchParams.get("ref");
 
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const passwordCriteria = {
@@ -25,11 +28,26 @@ export const Register = () => {
   const isPasswordStrong = Object.values(passwordCriteria).every(Boolean);
   const canSubmit = name.length > 2 && isEmailValid && isPasswordStrong;
 
+  const generateReferralCode = () => {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     try {
+      // 1. Check if referral code is valid if provided
+      let referredByUid = "";
+      const finalReferralCode = referralCode || referralInput;
+      if (finalReferralCode) {
+        const q = query(collection(db, "users"), where("referralCode", "==", finalReferralCode));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          referredByUid = snap.docs[0].id;
+        }
+      }
+
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
@@ -43,7 +61,12 @@ export const Register = () => {
         displayName: name,
         role: isAdminEmail ? "admin" : "user",
         btcBalance: 0,
+        tradingBalanceBtc: 0,
         totalDeposited: 0,
+        referralCode: generateReferralCode(),
+        referredBy: referredByUid,
+        referralBonusEarned: 0,
+        hasTraded: false,
         kycStatus: "not_submitted",
         createdAt: new Date().toISOString(),
       });
@@ -69,10 +92,7 @@ export const Register = () => {
       >
         <div className="text-center mb-10">
           <Link to="/" className="inline-flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-[#C9A96E] rounded-lg flex items-center justify-center">
-              <Coins className="text-[#0B0B0B]" size={24} />
-            </div>
-            <span className="text-2xl font-bold tracking-tighter text-[#C9A96E]">GOLDENCOIN</span>
+            <img src="/logo.png" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
           </Link>
           <h2 className="text-3xl font-bold text-white tracking-tight">Create Account</h2>
           <p className="text-gray-500 mt-2">Join Goldencoin and start managing your assets.</p>
@@ -149,6 +169,21 @@ export const Register = () => {
                 <PasswordCriterion met={passwordCriteria.special} text="Special char" />
               </div>
             )}
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-400 ml-1">Referral Code (Optional)</label>
+            <div className="relative group">
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#C9A96E] transition-colors" size={20} />
+              <input
+                type="text"
+                value={referralInput || referralCode || ""}
+                onChange={(e) => setReferralInput(e.target.value)}
+                disabled={!!referralCode}
+                className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 pl-12 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all disabled:opacity-50"
+                placeholder="ABC123"
+              />
+            </div>
           </div>
 
           <div className="flex items-start gap-3 ml-1">

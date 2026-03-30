@@ -105,9 +105,16 @@ export const Transactions = () => {
                       </div>
                     </td>
                     <td className="px-6 py-5">
-                      <span className={cn("text-sm font-bold", tx.type === 'deposit' ? "text-green-500" : "text-red-500")}>
-                        {tx.type === 'deposit' ? '+' : '-'}{tx.amount.toFixed(4)} BTC
-                      </span>
+                      <div className="flex flex-col">
+                        <span className={cn("text-sm font-bold", tx.type === 'deposit' ? "text-green-500" : "text-red-500")}>
+                          {tx.type === 'deposit' ? '+' : '-'}{(tx.amountBtc || tx.amount).toFixed(4)} BTC
+                        </span>
+                        {tx.amountUsd && (
+                          <span className="text-[10px] text-gray-500">
+                            ≈ ${tx.amountUsd.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-5">
                       <span className={cn(

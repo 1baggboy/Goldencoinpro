@@ -18,7 +18,7 @@ import { cn } from "../lib/utils";
 export const Withdraw = () => {
   const { user, profile } = useAuth();
   const { addNotification } = useNotifications();
-  const [amount, setAmount] = useState("");
+  const [amountUsd, setAmountUsd] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -58,7 +58,7 @@ export const Withdraw = () => {
           const data = doc.data();
           const txDate = new Date(data.timestamp);
           if (txDate >= today) {
-            total += data.amount;
+            total += data.amountBtc || 0;
           }
         });
         setDailyWithdrawn(total);
@@ -77,8 +77,8 @@ export const Withdraw = () => {
     if (!user || !profile) return;
     setError(null);
 
-    const amountBtc = parseFloat(amount);
-    const amountUsd = amountBtc * btcPrice;
+    const valUsd = parseFloat(amountUsd);
+    const amountBtc = valUsd / btcPrice;
     const dailyWithdrawnUsd = dailyWithdrawn * btcPrice;
 
     // 1. Check KYC
@@ -94,13 +94,13 @@ export const Withdraw = () => {
     }
 
     // 3. Check Minimum ($50)
-    if (amountUsd < 50) {
-      setError("Minimum withdrawal amount is $50 worth of BTC.");
+    if (valUsd < 50) {
+      setError("Minimum withdrawal amount is $50.");
       return;
     }
 
     // 4. Check Daily Maximum ($50,000)
-    if (dailyWithdrawnUsd + amountUsd > 50000) {
+    if (dailyWithdrawnUsd + valUsd > 50000) {
       setError(`Daily withdrawal limit exceeded. You have already withdrawn $${dailyWithdrawnUsd.toLocaleString()} today. Remaining limit: $${(50000 - dailyWithdrawnUsd).toLocaleString()}`);
       return;
     }
@@ -110,14 +110,15 @@ export const Withdraw = () => {
       await addDoc(collection(db, "transactions"), {
         userId: user.uid,
         type: "withdrawal",
-        amount: amountBtc,
+        amountUsd: valUsd,
+        amountBtc: amountBtc,
         status: "pending",
         walletAddress: walletAddress,
         timestamp: new Date().toISOString(),
       });
-      await addNotification(user.uid, "Withdrawal Requested", `Your withdrawal request for ${amountBtc} BTC (~$${amountUsd.toLocaleString()}) has been submitted and is pending approval.`, "info");
+      await addNotification(user.uid, "Withdrawal Requested", `Your withdrawal request for $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC) has been submitted and is pending approval.`, "info");
       setSuccess(true);
-      setAmount("");
+      setAmountUsd("");
       setWalletAddress("");
     } catch (err) {
       console.error("Withdrawal error:", err);
@@ -127,7 +128,8 @@ export const Withdraw = () => {
     }
   };
 
-  const usdValue = parseFloat(amount || "0") * btcPrice;
+  const valUsd = parseFloat(amountUsd || "0");
+  const amountBtc = valUsd / btcPrice;
   const dailyWithdrawnUsd = dailyWithdrawn * btcPrice;
 
   return (
@@ -137,8 +139,8 @@ export const Withdraw = () => {
           <ArrowUpCircle size={28} />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Withdraw Bitcoin</h1>
-          <p className="text-gray-400">Request a withdrawal to your external BTC wallet.</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Withdraw Funds</h1>
+          <p className="text-gray-400">Enter the amount in USD you wish to withdraw. It will be converted from your BTC balance.</p>
         </div>
       </div>
 
@@ -223,7 +225,7 @@ export const Withdraw = () => {
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between px-1">
-                    <label className="text-sm font-bold text-gray-400 uppercase tracking-wider">Amount to Withdraw</label>
+                    <label className="text-sm font-bold text-gray-400 uppercase tracking-wider">Amount to Withdraw (USD)</label>
                     <div className="text-right">
                       <span className="text-[10px] text-gray-500 uppercase font-bold block">Available Balance</span>
                       <span className="text-sm font-bold text-[#C9A96E]">{profile?.btcBalance?.toFixed(8)} BTC</span>
@@ -236,20 +238,21 @@ export const Withdraw = () => {
                     </div>
                     <input
                       type="number"
-                      step="0.00000001"
+                      step="0.01"
                       required
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
+                      value={amountUsd}
+                      onChange={(e) => setAmountUsd(e.target.value)}
                       className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-2xl py-5 pl-12 pr-24 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono text-lg"
-                      placeholder="0.00000000"
+                      placeholder="0.00"
                     />
+                    <div className="absolute left-8 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</div>
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-3">
                       <span className="text-xs font-bold text-gray-400 border-r border-gray-800 pr-3">
-                        ≈ ${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        ≈ {amountBtc.toFixed(8)} BTC
                       </span>
                       <button 
                         type="button"
-                        onClick={() => setAmount(profile?.btcBalance?.toString() || "0")}
+                        onClick={() => setAmountUsd(((profile?.btcBalance || 0) * btcPrice).toFixed(2))}
                         className="px-3 py-1.5 bg-[#C9A96E]/10 text-[#C9A96E] text-[10px] font-bold rounded-lg border border-[#C9A96E]/20 hover:bg-[#C9A96E]/20 transition-all"
                       >
                         MAX
@@ -260,7 +263,7 @@ export const Withdraw = () => {
                   <div className="flex items-center justify-between px-2">
                     <div className="flex items-center gap-2 text-xs text-gray-500">
                       <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                      Estimated Value: <span className="text-white font-bold">${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                      BTC to Deduct: <span className="text-white font-bold">{amountBtc.toFixed(8)} BTC</span>
                     </div>
                     <p className="text-[10px] text-gray-500">Daily: ${dailyWithdrawnUsd.toLocaleString()} / $50,000</p>
                   </div>

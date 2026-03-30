@@ -37,7 +37,7 @@ export const Restricted = () => {
         <div className="grid grid-cols-1 gap-3">
           <button 
             className="w-full py-4 bg-white/5 text-white font-bold rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-2 border border-white/10"
-            onClick={() => window.location.href = "mailto:support@goldencoin.com"}
+            onClick={() => window.location.href = "mailto:lookuptoadams@gmail.com"}
           >
             <MessageSquare size={18} />
             Contact Support

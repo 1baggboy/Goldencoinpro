@@ -18,7 +18,7 @@ export const Deposit = () => {
   const { user, profile } = useAuth();
   const { addNotification } = useNotifications();
   const [copied, setCopied] = useState(false);
-  const [amount, setAmount] = useState("");
+  const [amountUsd, setAmountUsd] = useState("");
   const [txHash, setTxHash] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -61,7 +61,7 @@ export const Deposit = () => {
           const data = doc.data();
           const txDate = new Date(data.timestamp);
           if (txDate >= today) {
-            total += data.amount;
+            total += data.amountBtc || 0;
           }
         });
         setDailyDeposited(total);
@@ -86,18 +86,18 @@ export const Deposit = () => {
     if (!user) return;
     setError(null);
 
-    const amountBtc = parseFloat(amount);
-    const amountUsd = amountBtc * btcPrice;
+    const valUsd = parseFloat(amountUsd);
+    const amountBtc = valUsd / btcPrice;
     const dailyDepositedUsd = dailyDeposited * btcPrice;
 
     // 1. Check Minimum ($50)
-    if (amountUsd < 50) {
-      setError("Minimum deposit amount is $50 worth of BTC.");
+    if (valUsd < 50) {
+      setError("Minimum deposit amount is $50.");
       return;
     }
 
     // 2. Check Daily Maximum ($50,000)
-    if (dailyDepositedUsd + amountUsd > 50000) {
+    if (dailyDepositedUsd + valUsd > 50000) {
       setError(`Daily deposit limit exceeded. You have already deposited $${dailyDepositedUsd.toLocaleString()} today. Remaining limit: $${(50000 - dailyDepositedUsd).toLocaleString()}`);
       return;
     }
@@ -107,14 +107,15 @@ export const Deposit = () => {
       await addDoc(collection(db, "transactions"), {
         userId: user.uid,
         type: "deposit",
-        amount: amountBtc,
+        amountUsd: valUsd,
+        amountBtc: amountBtc,
         status: "pending",
         txHash: txHash,
         timestamp: new Date().toISOString(),
       });
-      await addNotification(user.uid, "Deposit Submitted", `Your deposit of ${amountBtc} BTC (~$${amountUsd.toLocaleString()}) has been submitted and is pending verification.`, "info");
+      await addNotification(user.uid, "Deposit Submitted", `Your deposit of $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC) has been submitted and is pending verification.`, "info");
       setSuccess(true);
-      setAmount("");
+      setAmountUsd("");
       setTxHash("");
     } catch (err) {
       console.error("Deposit error:", err);
@@ -131,8 +132,8 @@ export const Deposit = () => {
           <ArrowDownCircle size={28} />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Deposit Bitcoin</h1>
-          <p className="text-gray-400">Send BTC to your unique wallet address below.</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Deposit Funds</h1>
+          <p className="text-gray-400">Enter the amount in USD you wish to deposit. It will be converted to BTC.</p>
         </div>
       </div>
 
@@ -198,19 +199,20 @@ export const Deposit = () => {
               )}
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-400">Amount (BTC)</label>
+                <label className="text-sm font-medium text-gray-400">Amount (USD)</label>
                 <div className="relative">
                   <input
                     type="number"
-                    step="0.00000001"
+                    step="0.01"
                     required
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 pl-4 pr-24 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono"
-                    placeholder="0.0000"
+                    value={amountUsd}
+                    onChange={(e) => setAmountUsd(e.target.value)}
+                    className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 pl-8 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono"
+                    placeholder="0.00"
                   />
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</div>
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">
-                    ≈ ${ (parseFloat(amount || "0") * btcPrice).toLocaleString(undefined, { minimumFractionDigits: 2 }) }
+                    ≈ { (parseFloat(amountUsd || "0") / btcPrice).toFixed(8) } BTC
                   </div>
                 </div>
                 <p className="text-[10px] text-gray-500 px-1">Daily used: ${(dailyDeposited * btcPrice).toLocaleString()} / $50,000</p>

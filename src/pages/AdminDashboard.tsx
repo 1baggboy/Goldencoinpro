@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { useNotifications } from "../NotificationContext";
-import { collection, query, onSnapshot, doc, updateDoc, increment, getDocs, where } from "firebase/firestore";
+import { collection, query, onSnapshot, doc, updateDoc, increment, getDocs, where, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 import { cn } from "../lib/utils";
@@ -96,12 +96,41 @@ export const AdminDashboard = () => {
 
   const approveDeposit = async (tx: any) => {
     try {
+      const amountBtc = tx.amountBtc || tx.amount;
+      const amountUsd = tx.amountUsd || 0;
+      
       await updateDoc(doc(db, "transactions", tx.id), { status: "confirmed" });
+      
+      // Update user balance
       await updateDoc(doc(db, "users", tx.userId), {
-        btcBalance: increment(tx.amount),
-        totalDeposited: increment(tx.amount)
+        btcBalance: increment(amountBtc),
+        tradingBalanceBtc: increment(amountBtc),
+        totalDeposited: increment(amountBtc)
       });
-      await addNotification(tx.userId, "Deposit Approved", `Your deposit of ${tx.amount} BTC has been confirmed and added to your balance.`, "success");
+
+      // Handle Referral Bonus on first deposit
+      const userSnap = await getDoc(doc(db, "users", tx.userId));
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        if (userData.referredBy && !userData.hasTraded) {
+          const REFERRAL_BONUS_BTC = 0.0005; // Example bonus amount
+          
+          // Credit referrer
+          await updateDoc(doc(db, "users", userData.referredBy), {
+            btcBalance: increment(REFERRAL_BONUS_BTC),
+            referralBonusEarned: increment(REFERRAL_BONUS_BTC)
+          });
+          
+          // Mark user as having triggered the bonus
+          await updateDoc(doc(db, "users", tx.userId), {
+            hasTraded: true
+          });
+
+          await addNotification(userData.referredBy, "Referral Bonus Received", `You've earned ${REFERRAL_BONUS_BTC} BTC as a bonus for referring ${userData.displayName}.`, "success");
+        }
+      }
+
+      await addNotification(tx.userId, "Deposit Approved", `Your deposit of ${amountBtc} BTC ($${amountUsd}) has been confirmed and added to your balance.`, "success");
     } catch (e) {
       console.error("Approve deposit error:", e);
     }
@@ -109,11 +138,14 @@ export const AdminDashboard = () => {
 
   const approveWithdrawal = async (tx: any) => {
     try {
+      const amountBtc = tx.amountBtc || tx.amount;
+      const amountUsd = tx.amountUsd || 0;
+
       await updateDoc(doc(db, "transactions", tx.id), { status: "confirmed" });
       await updateDoc(doc(db, "users", tx.userId), {
-        btcBalance: increment(-tx.amount)
+        btcBalance: increment(-amountBtc)
       });
-      await addNotification(tx.userId, "Withdrawal Approved", `Your withdrawal request for ${tx.amount} BTC has been approved and processed.`, "success");
+      await addNotification(tx.userId, "Withdrawal Approved", `Your withdrawal request for ${amountBtc} BTC ($${amountUsd}) has been approved and processed.`, "success");
     } catch (e) {
       console.error("Approve withdrawal error:", e);
     }
@@ -458,9 +490,15 @@ export const AdminDashboard = () => {
             </div>
             <div className="p-8 space-y-6">
               <div className="flex justify-between items-center p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-2xl">
-                <div>
-                  <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Amount</p>
-                  <p className="text-2xl font-bold text-[#C9A96E]">{selectedTx.amount} BTC</p>
+                <div className="space-y-4 flex-1">
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Amount (BTC)</p>
+                    <p className="text-2xl font-bold text-[#C9A96E]">{selectedTx.amountBtc || selectedTx.amount} BTC</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Amount (USD)</p>
+                    <p className="text-xl font-bold text-white">${(selectedTx.amountUsd || 0).toLocaleString()}</p>
+                  </div>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Status</p>
@@ -601,7 +639,12 @@ export const AdminDashboard = () => {
                         {u.displayName?.charAt(0)}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-white">{u.displayName}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-bold text-white">{u.displayName}</p>
+                          <span className="px-1.5 py-0.5 bg-[#C9A96E]/10 text-[#C9A96E] text-[8px] font-bold rounded-full uppercase tracking-widest border border-[#C9A96E]/20">
+                            Member
+                          </span>
+                        </div>
                         <p className="text-[10px] text-gray-500">{u.email}</p>
                       </div>
                     </div>

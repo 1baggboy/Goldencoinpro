@@ -8,7 +8,10 @@ import {
   ShieldCheck,
   AlertCircle,
   Zap,
-  Lock
+  Lock,
+  Copy,
+  Check,
+  Users
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -23,7 +26,7 @@ import { useAuth } from "../AuthContext";
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 import { cn } from "../lib/utils";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { collection, query, where, onSnapshot, orderBy, limit } from "firebase/firestore";
 import { db } from "../firebase";
 import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 
@@ -41,6 +44,8 @@ export const Dashboard = () => {
   const { profile, user, isRestricted } = useAuth();
   const [prices, setPrices] = useState<any>(null);
   const [activeInvestmentsCount, setActiveInvestmentsCount] = useState(0);
+  const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const fetchPrices = async () => {
@@ -57,20 +62,41 @@ export const Dashboard = () => {
 
     // Fetch active investments count
     let unsubInvestments = () => {};
+    let unsubTransactions = () => {};
+
     if (user) {
       const q = query(collection(db, "investments"), where("userId", "==", user.uid), where("status", "==", "active"));
       unsubInvestments = onSnapshot(q, (snap) => {
         setActiveInvestmentsCount(snap.docs.length);
       }, (error) => handleFirestoreError(error, OperationType.LIST, "investments"));
+
+      const txQ = query(
+        collection(db, "transactions"), 
+        where("userId", "==", user.uid),
+        orderBy("createdAt", "desc"),
+        limit(5)
+      );
+      unsubTransactions = onSnapshot(txQ, (snap) => {
+        setRecentTransactions(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      }, (error) => handleFirestoreError(error, OperationType.LIST, "transactions"));
     }
 
     return () => {
       clearInterval(interval);
       unsubInvestments();
+      unsubTransactions();
     };
   }, [user]);
 
   const usdBalance = (profile?.btcBalance || 0) * (prices?.btc?.usd || 65000);
+  const tradingUsdBalance = (profile?.tradingBalanceBtc || 0) * (prices?.btc?.usd || 65000);
+  const referralLink = `${window.location.origin}/register?ref=${profile?.referralCode || ''}`;
+
+  const copyReferral = () => {
+    navigator.clipboard.writeText(referralLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   if (isRestricted) {
     return (
@@ -84,7 +110,7 @@ export const Dashboard = () => {
           Please contact support to resolve this issue.
         </p>
         <button 
-          onClick={() => window.location.href = "mailto:support@goldencoin.com"}
+          onClick={() => window.location.href = "mailto:lookuptoadams@gmail.com"}
           className="px-8 py-3 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all"
         >
           Contact Support
@@ -98,7 +124,12 @@ export const Dashboard = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Welcome back, {profile?.displayName?.split(' ')[0]}!</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-white tracking-tight">Welcome back, {profile?.displayName?.split(' ')[0]}!</h1>
+            <span className="px-2 py-0.5 bg-[#C9A96E]/10 text-[#C9A96E] text-[10px] font-bold rounded-full uppercase tracking-widest border border-[#C9A96E]/20">
+              Member
+            </span>
+          </div>
           <p className="text-gray-400 mt-1">Here's what's happening with your portfolio today.</p>
         </div>
         <div className="flex gap-3">
@@ -114,12 +145,19 @@ export const Dashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
         <StatCard 
-          title="BTC Balance" 
-          value={`${profile?.btcBalance?.toFixed(4) || "0.0000"} BTC`} 
-          subValue={`≈ $${usdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          title="Account Balance" 
+          value={`$${usdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
+          subValue={`${profile?.btcBalance?.toFixed(4) || "0.0000"} BTC`}
           icon={Wallet}
+          color="gold"
+        />
+        <StatCard 
+          title="Trading Balance" 
+          value={`${profile?.tradingBalanceBtc?.toFixed(4) || "0.0000"} BTC`} 
+          subValue={`≈ $${tradingUsdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          icon={Zap}
           color="gold"
         />
         <StatCard 
@@ -167,7 +205,7 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      {/* Main Content Grid */}
+      {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Chart */}
         <div className="lg:col-span-2 bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
@@ -200,17 +238,61 @@ export const Dashboard = () => {
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-white">Recent Activity</h3>
-            <Link to="/transactions" className="text-sm text-[#C9A96E] hover:underline">View all</Link>
+        {/* Referral & Activity Column */}
+        <div className="space-y-8">
+          {/* Referral Card */}
+          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-[#C9A96E]/10 text-[#C9A96E] rounded-xl flex items-center justify-center">
+                <Users size={20} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">Refer & Earn</h3>
+                <p className="text-xs text-gray-500">Invite friends and earn BTC</p>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="bg-[#0B0B0B] border border-[#C9A96E]/20 rounded-xl p-3 flex items-center justify-between gap-2">
+                <span className="text-xs text-gray-400 truncate flex-1">{referralLink}</span>
+                <button 
+                  onClick={copyReferral}
+                  className="p-2 hover:bg-[#C9A96E]/10 text-[#C9A96E] rounded-lg transition-all"
+                >
+                  {copied ? <Check size={16} /> : <Copy size={16} />}
+                </button>
+              </div>
+              
+              <div className="flex items-center justify-between pt-2 border-t border-[#C9A96E]/10">
+                <span className="text-sm text-gray-400">Bonus Earned</span>
+                <span className="text-sm font-bold text-[#C9A96E]">{profile?.referralBonusEarned?.toFixed(6) || "0.000000"} BTC</span>
+              </div>
+            </div>
           </div>
-          <div className="space-y-6">
-            <ActivityItem type="deposit" amount="0.0450" status="confirmed" date="2 hours ago" />
-            <ActivityItem type="withdrawal" amount="0.0120" status="pending" date="5 hours ago" />
-            <ActivityItem type="deposit" amount="0.1000" status="confirmed" date="Yesterday" />
-            <ActivityItem type="deposit" amount="0.0250" status="failed" date="2 days ago" />
+
+          {/* Recent Activity */}
+          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-white">Recent Activity</h3>
+              <Link to="/transactions" className="text-sm text-[#C9A96E] hover:underline">View all</Link>
+            </div>
+            <div className="space-y-6">
+              {recentTransactions.length > 0 ? (
+                recentTransactions.map((tx) => (
+                  <ActivityItem 
+                    key={tx.id}
+                    type={tx.type} 
+                    amount={tx.amountBtc || tx.amount} 
+                    status={tx.status} 
+                    date={tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : 'Pending'} 
+                  />
+                ))
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-sm text-gray-500">No recent activity</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

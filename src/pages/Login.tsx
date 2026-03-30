@@ -4,7 +4,7 @@ import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 
 import { auth, db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { verify } from "otplib";
-import { Coins, Mail, Lock, ArrowRight, Chrome, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
+import { Mail, Lock, ArrowRight, Chrome, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 export const Login = () => {
@@ -98,10 +98,7 @@ export const Login = () => {
       >
         <div className="text-center mb-10">
           <Link to="/" className="inline-flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-[#C9A96E] rounded-lg flex items-center justify-center">
-              <Coins className="text-[#0B0B0B]" size={24} />
-            </div>
-            <span className="text-2xl font-bold tracking-tighter text-[#C9A96E]">GOLDENCOIN</span>
+            <img src="/logo.png" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
           </Link>
           <h2 className="text-3xl font-bold text-white tracking-tight">Welcome Back</h2>
           <p className="text-gray-500 mt-2">Enter your credentials to access your account.</p>

@@ -105,7 +105,8 @@ export const Invest = () => {
 
       // 1. Deduct balance
       await updateDoc(doc(db, "users", user.uid), {
-        btcBalance: increment(-btcAmount)
+        btcBalance: increment(-btcAmount),
+        tradingBalanceBtc: increment(-btcAmount)
       });
 
       // 2. Create investment record
@@ -119,6 +120,22 @@ export const Invest = () => {
         endTime,
         status: "active"
       });
+
+      // 3. Handle Referral Reward if first trade
+      if (!profile.hasTraded) {
+        await updateDoc(doc(db, "users", user.uid), {
+          hasTraded: true
+        });
+
+        if (profile.referredBy) {
+          const bonusAmount = 0.0005; // Fixed referral bonus (~$32)
+          await updateDoc(doc(db, "users", profile.referredBy), {
+            btcBalance: increment(bonusAmount),
+            referralBonusEarned: increment(bonusAmount)
+          });
+          await addNotification(profile.referredBy, "Referral Bonus Received!", `You've earned ${bonusAmount} BTC because your referral ${profile.displayName} started trading.`, "success");
+        }
+      }
 
       await addNotification(user.uid, "Investment Started", `Your investment of ${btcAmount} BTC in the ${selectedPlan.name} has started.`, "success");
       setMessage({ type: 'success', text: "Investment started successfully!" });

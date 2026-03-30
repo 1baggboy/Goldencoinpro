@@ -5,7 +5,6 @@ import {
   Zap, 
   Globe, 
   ArrowRight, 
-  Coins, 
   Lock, 
   BarChart3,
   CheckCircle2
@@ -18,10 +17,7 @@ export const Landing = () => {
       {/* Navigation */}
       <nav className="h-20 border-b border-[#C9A96E]/10 px-6 md:px-12 flex items-center justify-between sticky top-0 bg-[#0B0B0B]/80 backdrop-blur-md z-50">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#C9A96E] rounded-lg flex items-center justify-center">
-            <Coins className="text-[#0B0B0B]" size={24} />
-          </div>
-          <span className="text-2xl font-bold tracking-tighter text-[#C9A96E]">GOLDENCOIN</span>
+          <img src="/logo.png" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
           <a href="#features" className="hover:text-[#C9A96E] transition-colors">Features</a>
@@ -97,6 +93,56 @@ export const Landing = () => {
         </div>
       </section>
 
+      {/* Referral Announcement Section */}
+      <section className="py-32 px-6 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-gradient-to-br from-[#121212] to-[#0B0B0B] border border-[#C9A96E]/20 rounded-[40px] p-8 md:p-16 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#C9A96E]/10 rounded-full blur-[80px] -mr-32 -mt-32"></div>
+            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <span className="inline-block px-4 py-1.5 bg-[#C9A96E]/10 text-[#C9A96E] text-xs font-bold rounded-full border border-[#C9A96E]/20 mb-6 uppercase tracking-widest">
+                  Limited Time Offer
+                </span>
+                <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+                  Refer & Earn <br />
+                  <span className="text-[#C9A96E]">0.0005 BTC</span> Bonus
+                </h2>
+                <p className="text-xl text-gray-400 mb-8 leading-relaxed">
+                  Invite your friends and family to join Goldencoin. When they sign up and make their first deposit, you'll receive a 0.0005 BTC bonus credited directly to your account.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Link to="/register" className="px-8 py-4 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all flex items-center justify-center gap-2 text-lg">
+                    Join Now & Refer <ArrowRight size={20} />
+                  </Link>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-6 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-3xl">
+                  <div className="text-3xl font-bold text-[#C9A96E] mb-2">01</div>
+                  <h4 className="font-bold mb-2">Share Link</h4>
+                  <p className="text-xs text-gray-500">Copy your unique referral link from your dashboard.</p>
+                </div>
+                <div className="p-6 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-3xl">
+                  <div className="text-3xl font-bold text-[#C9A96E] mb-2">02</div>
+                  <h4 className="font-bold mb-2">Friends Join</h4>
+                  <p className="text-xs text-gray-500">Your friends sign up using your unique referral code.</p>
+                </div>
+                <div className="p-6 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-3xl">
+                  <div className="text-3xl font-bold text-[#C9A96E] mb-2">03</div>
+                  <h4 className="font-bold mb-2">They Deposit</h4>
+                  <p className="text-xs text-gray-500">Bonus is triggered once their first deposit is approved.</p>
+                </div>
+                <div className="p-6 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-3xl">
+                  <div className="text-3xl font-bold text-[#C9A96E] mb-2">04</div>
+                  <h4 className="font-bold mb-2">Get Paid</h4>
+                  <p className="text-xs text-gray-500">0.0005 BTC is instantly credited to your balance.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Trust Section */}
       <section className="py-32 px-6">
         <div className="max-w-5xl mx-auto bg-[#121212] border border-[#C9A96E]/10 rounded-3xl p-12 md:p-20 text-center relative overflow-hidden">
@@ -108,7 +154,7 @@ export const Landing = () => {
             </Link>
           </div>
           <div className="absolute top-0 right-0 p-8 opacity-10">
-            <Coins size={200} className="text-[#C9A96E]" />
+            <img src="/logo.png" alt="" className="w-64 h-auto" referrerPolicy="no-referrer" />
           </div>
         </div>
       </section>
@@ -118,10 +164,7 @@ export const Landing = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 bg-[#C9A96E] rounded-lg flex items-center justify-center">
-                <Coins className="text-[#0B0B0B]" size={18} />
-              </div>
-              <span className="text-xl font-bold tracking-tighter text-[#C9A96E]">GOLDENCOIN</span>
+              <img src="/logo.png" alt="GOLDENCOIN" className="h-8 w-auto" referrerPolicy="no-referrer" />
             </div>
             <p className="text-gray-500 max-w-sm mb-8">
               Goldencoin Limited is a leading digital asset management platform providing secure and transparent Bitcoin solutions.

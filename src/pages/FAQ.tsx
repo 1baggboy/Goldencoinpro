@@ -8,7 +8,8 @@ import {
   ShieldCheck, 
   TrendingUp, 
   Wallet, 
-  ArrowRight 
+  ArrowRight,
+  Users
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "../lib/utils";
@@ -68,6 +69,24 @@ const faqs = [
       {
         q: "How do I enable 2FA?",
         a: "You can enable Two-Factor Authentication (2FA) in your Profile settings. We support TOTP-based apps like Google Authenticator or Authy."
+      }
+    ]
+  },
+  {
+    category: "Referral Program",
+    icon: Users,
+    questions: [
+      {
+        q: "How does the referral program work?",
+        a: "Our referral program allows you to earn bonuses by inviting others to join Goldencoin. Simply share your unique referral link or code found on your dashboard. When a new user signs up using your code and makes their first successful deposit, you'll receive a 0.0005 BTC bonus credited to your account."
+      },
+      {
+        q: "When will I receive my referral bonus?",
+        a: "The referral bonus is automatically credited to your balance as soon as the referred user's first deposit is approved by our administrative team. You will receive a notification once the bonus is added."
+      },
+      {
+        q: "Is there a limit to how many people I can refer?",
+        a: "No, there is no limit! You can refer as many friends and family members as you like and earn a bonus for each one who completes their first deposit."
       }
     ]
   }
@@ -182,10 +201,13 @@ export const FAQ = () => {
             <p className="text-[#0B0B0B]/70 text-sm">Our support team is available 24/7 to help you.</p>
           </div>
         </div>
-        <button className="px-8 py-3 bg-[#0B0B0B] text-white font-bold rounded-xl hover:bg-[#1A1A1A] transition-all flex items-center gap-2">
+        <a 
+          href="mailto:lookuptoadams@gmail.com" 
+          className="px-8 py-3 bg-[#0B0B0B] text-white font-bold rounded-xl hover:bg-[#1A1A1A] transition-all flex items-center gap-2"
+        >
           Contact Support
           <ArrowRight size={18} />
-        </button>
+        </a>
       </div>
     </div>
   );
