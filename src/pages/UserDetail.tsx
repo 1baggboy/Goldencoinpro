@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, collection, query, where, onSnapshot, updateDoc } from "firebase/firestore";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { db, auth } from "../firebase";
+import { useNotifications } from "../NotificationContext";
 import { 
   TrendingUp, 
   ArrowDownCircle, 
@@ -45,6 +46,7 @@ const chartData = [
 export const UserDetail = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const { addNotification } = useNotifications();
   const [userProfile, setUserProfile] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [investments, setInvestments] = useState<any[]>([]);
@@ -120,6 +122,13 @@ export const UserDetail = () => {
     const newStatus = userProfile.status === 'restricted' ? 'active' : 'restricted';
     try {
       await updateDoc(doc(db, "users", userId), { status: newStatus });
+      await addNotification(userId, 
+        newStatus === 'restricted' ? "Account Restricted" : "Account Activated", 
+        newStatus === 'restricted' ? 
+          "Your account has been restricted. Please contact support for more information." : 
+          "Your account has been activated. You can now access all features.",
+        newStatus === 'restricted' ? "warning" : "success"
+      );
       setMessage({ type: 'success', text: `User ${newStatus === 'restricted' ? 'restricted' : 'unrestricted'} successfully!` });
     } catch (e) {
       console.error(e);

@@ -38,21 +38,21 @@ const data = [
 
 export const Dashboard = () => {
   const { profile, user, isRestricted } = useAuth();
-  const [btcPrice, setBtcPrice] = useState<number | null>(null);
+  const [prices, setPrices] = useState<any>(null);
   const [activeInvestmentsCount, setActiveInvestmentsCount] = useState(0);
 
   useEffect(() => {
-    const fetchPrice = async () => {
+    const fetchPrices = async () => {
       try {
-        const res = await fetch("/api/market/btc-price");
+        const res = await fetch("/api/market/prices");
         const data = await res.json();
-        setBtcPrice(data.usd);
+        setPrices(data);
       } catch (e) {
         console.error("Price fetch error:", e);
       }
     };
-    fetchPrice();
-    const interval = setInterval(fetchPrice, 30000);
+    fetchPrices();
+    const interval = setInterval(fetchPrices, 30000);
 
     // Fetch active investments count
     let unsubInvestments = () => {};
@@ -69,7 +69,7 @@ export const Dashboard = () => {
     };
   }, [user]);
 
-  const usdBalance = (profile?.btcBalance || 0) * (btcPrice || 65000);
+  const usdBalance = (profile?.btcBalance || 0) * (prices?.btc?.usd || 65000);
 
   if (isRestricted) {
     return (
@@ -144,11 +144,26 @@ export const Dashboard = () => {
         />
         <StatCard 
           title="Live BTC Price" 
-          value={`$${btcPrice?.toLocaleString() || "---"}`} 
-          subValue="+2.4% last 24h"
+          value={`$${prices?.btc?.usd?.toLocaleString() || "---"}`} 
+          subValue={`${prices?.btc?.change >= 0 ? '+' : ''}${prices?.btc?.change?.toFixed(2)}% last 24h`}
           icon={TrendingUp}
-          color="gold"
+          color={prices?.btc?.change >= 0 ? "green" : "red"}
         />
+      </div>
+
+      {/* Market Ticker */}
+      <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-4 overflow-hidden">
+        <div className="flex items-center gap-8 animate-marquee whitespace-nowrap">
+          <TickerItem symbol="BTC" price={prices?.btc?.usd} change={prices?.btc?.change} />
+          <TickerItem symbol="ETH" price={prices?.eth?.usd} change={prices?.eth?.change} />
+          <TickerItem symbol="SOL" price={prices?.sol?.usd} change={prices?.sol?.change} />
+          <TickerItem symbol="ADA" price={prices?.ada?.usd} change={prices?.ada?.change} />
+          {/* Duplicate for seamless loop */}
+          <TickerItem symbol="BTC" price={prices?.btc?.usd} change={prices?.btc?.change} />
+          <TickerItem symbol="ETH" price={prices?.eth?.usd} change={prices?.eth?.change} />
+          <TickerItem symbol="SOL" price={prices?.sol?.usd} change={prices?.sol?.change} />
+          <TickerItem symbol="ADA" price={prices?.ada?.usd} change={prices?.ada?.change} />
+        </div>
       </div>
 
       {/* Main Content Grid */}
@@ -211,7 +226,7 @@ const StatCard = ({ title, value, subValue, icon: Icon, color }: any) => (
       <div>
         <p className="text-sm text-gray-500 font-medium mb-1">{title}</p>
         <h4 className="text-2xl font-bold text-white tracking-tight">{value}</h4>
-        <p className={cn("text-xs mt-1", color === 'green' ? "text-green-500" : color === 'yellow' ? "text-yellow-500" : "text-gray-400")}>
+        <p className={cn("text-xs mt-1", color === 'green' ? "text-green-500" : color === 'yellow' ? "text-yellow-500" : color === 'red' ? "text-red-500" : "text-gray-400")}>
           {subValue}
         </p>
       </div>
@@ -219,6 +234,7 @@ const StatCard = ({ title, value, subValue, icon: Icon, color }: any) => (
         "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110",
         color === 'gold' ? "bg-[#C9A96E]/10 text-[#C9A96E]" : 
         color === 'green' ? "bg-green-500/10 text-green-500" : 
+        color === 'red' ? "bg-red-500/10 text-red-500" :
         "bg-yellow-500/10 text-yellow-500"
       )}>
         <Icon size={24} />
@@ -226,6 +242,16 @@ const StatCard = ({ title, value, subValue, icon: Icon, color }: any) => (
     </div>
     <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-[#C9A96E]/5 rounded-full blur-2xl group-hover:bg-[#C9A96E]/10 transition-all duration-500"></div>
   </motion.div>
+);
+
+const TickerItem = ({ symbol, price, change }: any) => (
+  <div className="inline-flex items-center gap-3 px-6 border-r border-[#C9A96E]/10 last:border-none">
+    <span className="text-sm font-bold text-white">{symbol}</span>
+    <span className="text-sm font-medium text-gray-300">${price?.toLocaleString() || "---"}</span>
+    <span className={cn("text-xs font-bold", (change || 0) >= 0 ? "text-green-500" : "text-red-500")}>
+      {(change || 0) >= 0 ? '+' : ''}{(change || 0).toFixed(2)}%
+    </span>
+  </div>
 );
 
 const ActivityItem = ({ type, amount, status, date }: any) => (

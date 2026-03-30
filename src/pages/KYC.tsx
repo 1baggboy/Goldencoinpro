@@ -10,6 +10,7 @@ import {
   Info
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
+import { useNotifications } from "../NotificationContext";
 import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { motion } from "motion/react";
@@ -17,6 +18,7 @@ import { cn } from "../lib/utils";
 
 export const KYC = () => {
   const { user, profile } = useAuth();
+  const { addNotification } = useNotifications();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -46,6 +48,8 @@ export const KYC = () => {
       await updateDoc(doc(db, "users", user.uid), {
         kycStatus: "pending"
       });
+
+      await addNotification(user.uid, "KYC Submitted", "Your identity verification documents have been submitted and are pending review.", "info");
 
       setSuccess(true);
     } catch (err) {

@@ -1,10 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { Bell, Search, User, Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../AuthContext";
+import { useNotifications } from "../NotificationContext";
+import { NotificationDropdown } from "./NotificationDropdown";
 
 export const Navbar = () => {
   const { profile } = useAuth();
+  const { unreadCount } = useNotifications();
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   return (
     <header className="h-20 bg-[#0B0B0B]/80 backdrop-blur-md border-b border-[#C9A96E]/10 px-4 md:px-8 flex items-center justify-between sticky top-0 z-50">
@@ -23,10 +27,26 @@ export const Navbar = () => {
       </div>
 
       <div className="flex items-center gap-4 md:gap-6">
-        <button className="relative p-2 text-gray-400 hover:text-[#C9A96E] transition-colors">
-          <Bell size={22} />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-[#0B0B0B]"></span>
-        </button>
+        <div className="hidden lg:flex items-center gap-6 mr-4">
+          <Link to="/faq" className="text-sm font-medium text-gray-400 hover:text-[#C9A96E] transition-colors">FAQ</Link>
+          <Link to="/dashboard" className="text-sm font-medium text-gray-400 hover:text-[#C9A96E] transition-colors">Dashboard</Link>
+        </div>
+
+        <div className="relative">
+          <button 
+            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+            className="p-2 text-gray-400 hover:text-[#C9A96E] transition-colors relative"
+          >
+            <Bell size={22} />
+            {unreadCount > 0 && (
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-[#0B0B0B]"></span>
+            )}
+          </button>
+          <NotificationDropdown 
+            isOpen={isNotificationsOpen} 
+            onClose={() => setIsNotificationsOpen(false)} 
+          />
+        </div>
 
         <Link to="/profile" className="flex items-center gap-3 pl-4 border-l border-[#C9A96E]/10 hover:opacity-80 transition-opacity">
           <div className="text-right hidden sm:block">

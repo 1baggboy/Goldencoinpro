@@ -9,6 +9,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
+import { useNotifications } from "../NotificationContext";
 import { collection, addDoc, query, where, getDocs, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { motion } from "motion/react";
@@ -16,6 +17,7 @@ import { cn } from "../lib/utils";
 
 export const Withdraw = () => {
   const { user, profile } = useAuth();
+  const { addNotification } = useNotifications();
   const [amount, setAmount] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,11 +27,18 @@ export const Withdraw = () => {
   const [dailyWithdrawn, setDailyWithdrawn] = useState(0);
 
   useEffect(() => {
-    // Fetch BTC price
-    fetch("/api/market/btc-price")
-      .then(res => res.json())
-      .then(data => setBtcPrice(data.usd))
-      .catch(console.error);
+    const fetchBtcPrice = async () => {
+      try {
+        const res = await fetch("/api/market/btc-price");
+        const data = await res.json();
+        if (data.usd) setBtcPrice(data.usd);
+      } catch (err) {
+        console.error("Failed to fetch BTC price:", err);
+      }
+    };
+
+    fetchBtcPrice();
+    const interval = setInterval(fetchBtcPrice, 30000); // Update every 30s
 
     // Fetch today's withdrawals to calculate daily limit
     if (user) {
@@ -55,8 +64,12 @@ export const Withdraw = () => {
         setDailyWithdrawn(total);
       });
 
-      return () => unsub();
+      return () => {
+        unsub();
+        clearInterval(interval);
+      };
     }
+    return () => clearInterval(interval);
   }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -102,6 +115,7 @@ export const Withdraw = () => {
         walletAddress: walletAddress,
         timestamp: new Date().toISOString(),
       });
+      await addNotification(user.uid, "Withdrawal Requested", `Your withdrawal request for ${amountBtc} BTC (~$${amountUsd.toLocaleString()}) has been submitted and is pending approval.`, "info");
       setSuccess(true);
       setAmount("");
       setWalletAddress("");
@@ -207,31 +221,48 @@ export const Withdraw = () => {
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-400">Amount to Withdraw (BTC)</label>
-                  <div className="relative">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between px-1">
+                    <label className="text-sm font-bold text-gray-400 uppercase tracking-wider">Amount to Withdraw</label>
+                    <div className="text-right">
+                      <span className="text-[10px] text-gray-500 uppercase font-bold block">Available Balance</span>
+                      <span className="text-sm font-bold text-[#C9A96E]">{profile?.btcBalance?.toFixed(8)} BTC</span>
+                    </div>
+                  </div>
+                  
+                  <div className="relative group">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C9A96E]">
+                      <TrendingUp size={18} />
+                    </div>
                     <input
                       type="number"
                       step="0.00000001"
                       required
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
-                      className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono"
-                      placeholder="0.0000"
+                      className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-2xl py-5 pl-12 pr-24 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono text-lg"
+                      placeholder="0.00000000"
                     />
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-500">
-                      ≈ ${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-3">
+                      <span className="text-xs font-bold text-gray-400 border-r border-gray-800 pr-3">
+                        ≈ ${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </span>
+                      <button 
+                        type="button"
+                        onClick={() => setAmount(profile?.btcBalance?.toString() || "0")}
+                        className="px-3 py-1.5 bg-[#C9A96E]/10 text-[#C9A96E] text-[10px] font-bold rounded-lg border border-[#C9A96E]/20 hover:bg-[#C9A96E]/20 transition-all"
+                      >
+                        MAX
+                      </button>
                     </div>
                   </div>
-                  <div className="flex justify-between px-1">
-                    <p className="text-[10px] text-gray-500">Daily used: ${dailyWithdrawnUsd.toLocaleString()} / $50,000</p>
-                    <button 
-                      type="button"
-                      onClick={() => setAmount(profile?.btcBalance?.toString() || "0")}
-                      className="text-[10px] text-[#C9A96E] hover:underline"
-                    >
-                      Withdraw Max
-                    </button>
+                  
+                  <div className="flex items-center justify-between px-2">
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                      Estimated Value: <span className="text-white font-bold">${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <p className="text-[10px] text-gray-500">Daily: ${dailyWithdrawnUsd.toLocaleString()} / $50,000</p>
                   </div>
                 </div>
 

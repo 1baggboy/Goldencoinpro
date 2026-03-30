@@ -13,6 +13,7 @@ interface UserProfile {
   kycStatus: "not_submitted" | "pending" | "verified" | "rejected";
   createdAt: string;
   status: "active" | "restricted";
+  twoFactorEnabled?: boolean;
   photoURL?: string;
   phoneNumber?: string;
   gender?: string;

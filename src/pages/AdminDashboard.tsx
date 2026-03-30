@@ -10,8 +10,14 @@ import {
   Check,
   X,
   AlertCircle,
-  Eye
+  Eye,
+  ShieldAlert,
+  Shield,
+  ArrowUpDown,
+  Filter
 } from "lucide-react";
+import { useAuth } from "../AuthContext";
+import { useNotifications } from "../NotificationContext";
 import { collection, query, onSnapshot, doc, updateDoc, increment, getDocs, where } from "firebase/firestore";
 import { db } from "../firebase";
 import { cn } from "../lib/utils";
@@ -19,7 +25,13 @@ import { format } from "date-fns";
 import { Link } from "react-router-dom";
 
 export const AdminDashboard = () => {
+  const { addNotification } = useNotifications();
   const [users, setUsers] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("joined");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterKyc, setFilterKyc] = useState("all");
   const [pendingDeposits, setPendingDeposits] = useState<any[]>([]);
   const [pendingWithdrawals, setPendingWithdrawals] = useState<any[]>([]);
   const [pendingKyc, setPendingKyc] = useState<any[]>([]);
@@ -81,6 +93,7 @@ export const AdminDashboard = () => {
         btcBalance: increment(tx.amount),
         totalDeposited: increment(tx.amount)
       });
+      await addNotification(tx.userId, "Deposit Approved", `Your deposit of ${tx.amount} BTC has been confirmed and added to your balance.`, "success");
     } catch (e) {
       console.error("Approve deposit error:", e);
     }
@@ -92,22 +105,69 @@ export const AdminDashboard = () => {
       await updateDoc(doc(db, "users", tx.userId), {
         btcBalance: increment(-tx.amount)
       });
+      await addNotification(tx.userId, "Withdrawal Approved", `Your withdrawal request for ${tx.amount} BTC has been approved and processed.`, "success");
     } catch (e) {
       console.error("Approve withdrawal error:", e);
     }
   };
 
-  const rejectTransaction = async (txId: string) => {
+  const rejectTransaction = async (txId: string, userId: string, type: string, amount: number) => {
     await updateDoc(doc(db, "transactions", txId), { status: "failed" });
+    await addNotification(userId, `${type.charAt(0).toUpperCase() + type.slice(1)} Rejected`, `Your ${type} request for ${amount} BTC has been rejected. Please contact support for more information.`, "error");
   };
 
   const approveKyc = async (kyc: any) => {
     await updateDoc(doc(db, "kyc_submissions", kyc.id), { status: "approved" });
     await updateDoc(doc(db, "users", kyc.userId), { kycStatus: "verified" });
+    await addNotification(kyc.userId, "KYC Verified", "Your KYC verification has been approved. You can now access all features, including withdrawals.", "success");
   };
 
-  const rejectKyc = async (kycId: string) => {
+  const rejectKyc = async (kycId: string, userId: string) => {
     await updateDoc(doc(db, "kyc_submissions", kycId), { status: "rejected" });
+    await updateDoc(doc(db, "users", userId), { kycStatus: "rejected" });
+    await addNotification(userId, "KYC Rejected", "Your KYC verification has been rejected. Please review your documents and try again.", "error");
+  };
+
+  const toggleUserStatus = async (userId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'restricted' ? 'active' : 'restricted';
+    try {
+      await updateDoc(doc(db, "users", userId), { status: newStatus });
+      await addNotification(userId, 
+        newStatus === 'restricted' ? "Account Restricted" : "Account Activated", 
+        newStatus === 'restricted' ? 
+          "Your account has been restricted. Please contact support for more information." : 
+          "Your account has been activated. You can now access all features.",
+        newStatus === 'restricted' ? "warning" : "success"
+      );
+    } catch (e) {
+      console.error("Toggle user status error:", e);
+    }
+  };
+
+  const filteredAndSortedUsers = users
+    .filter(u => {
+      const matchesSearch = 
+        u.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        u.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = filterStatus === "all" || (u.status || "active") === filterStatus;
+      const matchesKyc = filterKyc === "all" || u.kycStatus === filterKyc;
+      return matchesSearch && matchesStatus && matchesKyc;
+    })
+    .sort((a, b) => {
+      let comparison = 0;
+      if (sortBy === "name") comparison = (a.displayName || "").localeCompare(b.displayName || "");
+      if (sortBy === "balance") comparison = (a.btcBalance || 0) - (b.btcBalance || 0);
+      if (sortBy === "joined") comparison = (a.createdAt || 0) - (b.createdAt || 0);
+      return sortOrder === "asc" ? comparison : -comparison;
+    });
+
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(field);
+      setSortOrder("asc");
+    }
   };
 
   return (
@@ -156,7 +216,7 @@ export const AdminDashboard = () => {
                       <Check size={18} />
                     </button>
                     <button 
-                      onClick={() => rejectTransaction(tx.id)}
+                      onClick={() => rejectTransaction(tx.id, tx.userId, tx.type, tx.amount)}
                       className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
                     >
                       <X size={18} />
@@ -192,7 +252,7 @@ export const AdminDashboard = () => {
                       <Check size={18} />
                     </button>
                     <button 
-                      onClick={() => rejectTransaction(tx.id)}
+                      onClick={() => rejectTransaction(tx.id, tx.userId, tx.type, tx.amount)}
                       className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
                     >
                       <X size={18} />
@@ -228,7 +288,7 @@ export const AdminDashboard = () => {
                       <Check size={18} />
                     </button>
                     <button 
-                      onClick={() => rejectKyc(kyc.id)}
+                      onClick={() => rejectKyc(kyc.id, kyc.userId)}
                       className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
                     >
                       <X size={18} />
@@ -243,30 +303,82 @@ export const AdminDashboard = () => {
 
       {/* User Management Table */}
       <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl overflow-hidden">
-        <div className="p-6 border-b border-[#C9A96E]/10 flex items-center justify-between">
+        <div className="p-6 border-b border-[#C9A96E]/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h3 className="text-xl font-bold text-white">All Users</h3>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
-            <input 
-              type="text" 
-              placeholder="Search users..." 
-              className="bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-lg py-2 pl-10 pr-4 text-sm text-white outline-none focus:border-[#C9A96E]/40"
-            />
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+              <input 
+                type="text" 
+                placeholder="Search users..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-lg py-2 pl-10 pr-4 text-sm text-white outline-none focus:border-[#C9A96E]/40"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter size={16} className="text-[#C9A96E]" />
+              <select 
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-lg py-2 px-3 text-xs text-gray-400 outline-none focus:border-[#C9A96E]/40"
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="restricted">Restricted</option>
+              </select>
+              <select 
+                value={filterKyc}
+                onChange={(e) => setFilterKyc(e.target.value)}
+                className="bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-lg py-2 px-3 text-xs text-gray-400 outline-none focus:border-[#C9A96E]/40"
+              >
+                <option value="all">All KYC</option>
+                <option value="verified">Verified</option>
+                <option value="pending">Pending</option>
+                <option value="not_submitted">Not Submitted</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#0B0B0B]/50 border-b border-[#C9A96E]/10">
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">User</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">BTC Balance</th>
+                <th 
+                  className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest cursor-pointer hover:text-[#C9A96E] transition-colors"
+                  onClick={() => handleSort("name")}
+                >
+                  <div className="flex items-center gap-2">
+                    User
+                    <ArrowUpDown size={12} className={sortBy === "name" ? "text-[#C9A96E]" : "text-gray-600"} />
+                  </div>
+                </th>
+                <th 
+                  className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest cursor-pointer hover:text-[#C9A96E] transition-colors"
+                  onClick={() => handleSort("balance")}
+                >
+                  <div className="flex items-center gap-2">
+                    BTC Balance
+                    <ArrowUpDown size={12} className={sortBy === "balance" ? "text-[#C9A96E]" : "text-gray-600"} />
+                  </div>
+                </th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">Status</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">KYC Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">Joined</th>
+                <th 
+                  className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest cursor-pointer hover:text-[#C9A96E] transition-colors"
+                  onClick={() => handleSort("joined")}
+                >
+                  <div className="flex items-center gap-2">
+                    Joined
+                    <ArrowUpDown size={12} className={sortBy === "joined" ? "text-[#C9A96E]" : "text-gray-600"} />
+                  </div>
+                </th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#C9A96E]/5">
-              {users.map(u => (
+              {filteredAndSortedUsers.map(u => (
                 <tr key={u.id} className="hover:bg-[#C9A96E]/5 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -281,6 +393,26 @@ export const AdminDashboard = () => {
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-sm font-bold text-[#C9A96E]">{u.btcBalance?.toFixed(4)} BTC</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                        u.status === 'restricted' ? "bg-red-500/10 text-red-500" : "bg-green-500/10 text-green-500"
+                      )}>
+                        {u.status || 'active'}
+                      </span>
+                      <button 
+                        onClick={() => toggleUserStatus(u.id, u.status || 'active')}
+                        className={cn(
+                          "p-1 rounded-md transition-colors",
+                          u.status === 'restricted' ? "text-green-500 hover:bg-green-500/10" : "text-red-500 hover:bg-red-500/10"
+                        )}
+                        title={u.status === 'restricted' ? "Activate User" : "Restrict User"}
+                      >
+                        {u.status === 'restricted' ? <Shield size={14} /> : <ShieldAlert size={14} />}
+                      </button>
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <span className={cn(

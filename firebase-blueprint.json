@@ -17,6 +17,8 @@
         "btcBalance": { "type": "number", "description": "Current BTC balance" },
         "totalDeposited": { "type": "number", "description": "Total BTC deposited" },
         "kycStatus": { "type": "string", "enum": ["not_submitted", "pending", "verified", "rejected"] },
+        "twoFactorEnabled": { "type": "boolean", "description": "Whether 2FA is enabled" },
+        "twoFactorSecret": { "type": "string", "description": "TOTP secret key (encrypted or sensitive)" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "email", "role", "btcBalance", "kycStatus"]
@@ -67,6 +69,20 @@
         "status": { "type": "string", "enum": ["active", "completed"] }
       },
       "required": ["userId", "planId", "amountBtc", "expectedReturnBtc", "startTime", "endTime", "status"]
+    },
+    "notifications": {
+      "title": "Notification",
+      "description": "User notifications for account activity",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["info", "success", "warning", "error"] },
+        "read": { "type": "boolean" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "message", "type", "read", "timestamp"]
     }
   },
   "firestore": {
@@ -85,6 +101,10 @@
     "/investments/{investmentId}": {
       "schema": "investments",
       "description": "User investment records"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "notifications",
+      "description": "User notifications"
     }
   }
 }

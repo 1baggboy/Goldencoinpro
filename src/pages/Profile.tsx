@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { User, Mail, ShieldCheck, Save, Camera, AlertCircle, Phone, Users } from "lucide-react";
+import { User, Mail, ShieldCheck, Save, Camera, AlertCircle, Phone, Users, Lock, ShieldAlert } from "lucide-react";
 import { useAuth } from "../AuthContext";
+import { useNotifications } from "../NotificationContext";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { motion } from "motion/react";
 import { cn } from "../lib/utils";
+import { Link } from "react-router-dom";
 
 export const Profile = () => {
   const { profile, user } = useAuth();
+  const { addNotification } = useNotifications();
   const [displayName, setDisplayName] = useState(profile?.displayName || "");
   const [phoneNumber, setPhoneNumber] = useState(profile?.phoneNumber || "");
   const [gender, setGender] = useState(profile?.gender || "");
@@ -45,6 +48,7 @@ export const Profile = () => {
           photoURL: base64String
         });
         setPhotoURL(base64String);
+        await addNotification(user.uid, "Profile Updated", "Your profile picture has been updated successfully.", "success");
         setMessage({ type: 'success', text: "Profile picture updated!" });
       } catch (error) {
         console.error("Upload error:", error);
@@ -70,6 +74,7 @@ export const Profile = () => {
         gender,
         photoURL
       });
+      await addNotification(user.uid, "Profile Updated", "Your personal information has been updated successfully.", "success");
       setMessage({ type: 'success', text: "Profile updated successfully!" });
     } catch (error) {
       console.error("Update profile error:", error);
@@ -151,6 +156,31 @@ export const Profile = () => {
                 <span className="text-xs text-gray-500">Account ID</span>
                 <span className="text-[10px] font-mono text-gray-500">{user?.uid.substring(0, 12)}...</span>
               </div>
+            </div>
+          </div>
+
+          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+            <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-widest">Security</h4>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Lock size={14} className="text-gray-500" />
+                  <span className="text-xs text-gray-500">2FA Status</span>
+                </div>
+                <span className={cn(
+                  "text-[10px] font-bold uppercase px-2 py-0.5 rounded-full",
+                  profile?.twoFactorEnabled ? "bg-green-500/10 text-green-500" : "bg-yellow-500/10 text-yellow-500"
+                )}>
+                  {profile?.twoFactorEnabled ? "Enabled" : "Disabled"}
+                </span>
+              </div>
+              <Link 
+                to="/2fa/setup" 
+                className="w-full py-2 bg-[#C9A96E]/10 text-[#C9A96E] text-xs font-bold rounded-lg border border-[#C9A96E]/20 hover:bg-[#C9A96E]/20 transition-all flex items-center justify-center gap-2"
+              >
+                <ShieldAlert size={14} />
+                Manage 2FA
+              </Link>
             </div>
           </div>
         </div>

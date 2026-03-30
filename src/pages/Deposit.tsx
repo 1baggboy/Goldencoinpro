@@ -9,12 +9,14 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
+import { useNotifications } from "../NotificationContext";
 import { collection, addDoc, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { motion } from "motion/react";
 
 export const Deposit = () => {
   const { user, profile } = useAuth();
+  const { addNotification } = useNotifications();
   const [copied, setCopied] = useState(false);
   const [amount, setAmount] = useState("");
   const [txHash, setTxHash] = useState("");
@@ -28,11 +30,18 @@ export const Deposit = () => {
   const walletAddress = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
 
   useEffect(() => {
-    // Fetch BTC price
-    fetch("/api/market/btc-price")
-      .then(res => res.json())
-      .then(data => setBtcPrice(data.usd))
-      .catch(console.error);
+    const fetchBtcPrice = async () => {
+      try {
+        const res = await fetch("/api/market/btc-price");
+        const data = await res.json();
+        if (data.usd) setBtcPrice(data.usd);
+      } catch (err) {
+        console.error("Failed to fetch BTC price:", err);
+      }
+    };
+
+    fetchBtcPrice();
+    const interval = setInterval(fetchBtcPrice, 30000); // Update every 30s
 
     // Fetch today's deposits to calculate daily limit
     if (user) {
@@ -58,8 +67,12 @@ export const Deposit = () => {
         setDailyDeposited(total);
       });
 
-      return () => unsub();
+      return () => {
+        unsub();
+        clearInterval(interval);
+      };
     }
+    return () => clearInterval(interval);
   }, [user]);
 
   const handleCopy = () => {
@@ -99,6 +112,7 @@ export const Deposit = () => {
         txHash: txHash,
         timestamp: new Date().toISOString(),
       });
+      await addNotification(user.uid, "Deposit Submitted", `Your deposit of ${amountBtc} BTC (~$${amountUsd.toLocaleString()}) has been submitted and is pending verification.`, "info");
       setSuccess(true);
       setAmount("");
       setTxHash("");
@@ -192,11 +206,11 @@ export const Deposit = () => {
                     required
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
+                    className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 pl-4 pr-24 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono"
                     placeholder="0.0000"
                   />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-500">
-                    ≈ ${(parseFloat(amount || "0") * btcPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">
+                    ≈ ${ (parseFloat(amount || "0") * btcPrice).toLocaleString(undefined, { minimumFractionDigits: 2 }) }
                   </div>
                 </div>
                 <p className="text-[10px] text-gray-500 px-1">Daily used: ${(dailyDeposited * btcPrice).toLocaleString()} / $50,000</p>

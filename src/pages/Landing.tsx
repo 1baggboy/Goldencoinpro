@@ -26,6 +26,7 @@ export const Landing = () => {
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
           <a href="#features" className="hover:text-[#C9A96E] transition-colors">Features</a>
           <a href="#security" className="hover:text-[#C9A96E] transition-colors">Security</a>
+          <Link to="/faq" className="hover:text-[#C9A96E] transition-colors">FAQ</Link>
           <a href="#about" className="hover:text-[#C9A96E] transition-colors">About</a>
         </div>
         <div className="flex items-center gap-4">
@@ -137,6 +138,7 @@ export const Landing = () => {
               <li><Link to="/dashboard" className="hover:text-white transition-colors">Dashboard</Link></li>
               <li><Link to="/deposit" className="hover:text-white transition-colors">Deposit BTC</Link></li>
               <li><Link to="/kyc" className="hover:text-white transition-colors">KYC Verification</Link></li>
+              <li><Link to="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
             </ul>
           </div>
           <div>

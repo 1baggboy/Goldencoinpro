@@ -11,6 +11,7 @@ import {
   Timer
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
+import { useNotifications } from "../NotificationContext";
 import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, increment, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 import { motion, AnimatePresence } from "motion/react";
@@ -52,6 +53,7 @@ const INVESTMENT_PLANS = [
 
 export const Invest = () => {
   const { profile, user } = useAuth();
+  const { addNotification } = useNotifications();
   const [selectedPlan, setSelectedPlan] = useState(INVESTMENT_PLANS[0]);
   const [amount, setAmount] = useState<string>("");
   const [investing, setInvesting] = useState(false);
@@ -118,6 +120,7 @@ export const Invest = () => {
         status: "active"
       });
 
+      await addNotification(user.uid, "Investment Started", `Your investment of ${btcAmount} BTC in the ${selectedPlan.name} has started.`, "success");
       setMessage({ type: 'success', text: "Investment started successfully!" });
       setAmount("");
     } catch (error) {
@@ -141,6 +144,7 @@ export const Invest = () => {
         btcBalance: increment(inv.expectedReturnBtc)
       });
 
+      await addNotification(user.uid, "Investment Claimed", `You have successfully claimed your profit of ${inv.expectedReturnBtc.toFixed(6)} BTC from the ${inv.planName}.`, "success");
       setMessage({ type: 'success', text: `Claimed ${inv.expectedReturnBtc.toFixed(4)} BTC successfully!` });
     } catch (error) {
       console.error("Claim error:", error);

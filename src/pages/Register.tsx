@@ -3,8 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebase";
-import { Coins, Mail, Lock, User, ArrowRight, ShieldCheck } from "lucide-react";
-import { motion } from "motion/react";
+import { Coins, Mail, Lock, User, ArrowRight, ShieldCheck, Check, X, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { cn } from "../lib/utils";
 
 export const Register = () => {
   const [name, setName] = useState("");
@@ -13,6 +14,16 @@ export const Register = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const passwordCriteria = {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[^A-Za-z0-9]/.test(password),
+  };
+  const isPasswordStrong = Object.values(passwordCriteria).every(Boolean);
+  const canSubmit = name.length > 2 && isEmailValid && isPasswordStrong;
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,10 +110,18 @@ export const Register = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 pl-12 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
+                className={cn(
+                  "w-full bg-[#0B0B0B] border rounded-xl py-4 pl-12 pr-4 text-white outline-none transition-all",
+                  email && !isEmailValid ? "border-red-500/50 focus:border-red-500" : "border-[#C9A96E]/10 focus:border-[#C9A96E]/40"
+                )}
                 placeholder="name@example.com"
               />
             </div>
+            {email && !isEmailValid && (
+              <p className="text-[10px] text-red-500 ml-1 flex items-center gap-1">
+                <AlertCircle size={10} /> Please enter a valid email address
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -114,10 +133,22 @@ export const Register = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 pl-12 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
+                className={cn(
+                  "w-full bg-[#0B0B0B] border rounded-xl py-4 pl-12 pr-4 text-white outline-none transition-all",
+                  password && !isPasswordStrong ? "border-yellow-500/30 focus:border-yellow-500/50" : "border-[#C9A96E]/10 focus:border-[#C9A96E]/40"
+                )}
                 placeholder="••••••••"
               />
             </div>
+            
+            {password && (
+              <div className="grid grid-cols-2 gap-2 mt-2 ml-1">
+                <PasswordCriterion met={passwordCriteria.length} text="8+ characters" />
+                <PasswordCriterion met={passwordCriteria.uppercase} text="Uppercase" />
+                <PasswordCriterion met={passwordCriteria.number} text="Number" />
+                <PasswordCriterion met={passwordCriteria.special} text="Special char" />
+              </div>
+            )}
           </div>
 
           <div className="flex items-start gap-3 ml-1">
@@ -131,7 +162,7 @@ export const Register = () => {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !canSubmit}
             className="w-full py-4 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all flex items-center justify-center gap-2 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Creating Account..." : "Create Account"} <ArrowRight size={20} />
@@ -146,3 +177,13 @@ export const Register = () => {
     </div>
   );
 };
+
+const PasswordCriterion = ({ met, text }: { met: boolean; text: string }) => (
+  <div className={cn(
+    "flex items-center gap-1.5 text-[10px] font-medium transition-colors",
+    met ? "text-green-500" : "text-gray-600"
+  )}>
+    {met ? <Check size={10} /> : <X size={10} />}
+    {text}
+  </div>
+);
