@@ -11,6 +11,7 @@ interface UserProfile {
   btcBalance: number;
   totalDeposited: number;
   kycStatus: "not_submitted" | "pending" | "verified" | "rejected";
+  kycRejectionReason?: string;
   createdAt: string;
   status: "active" | "restricted";
   twoFactorEnabled?: boolean;

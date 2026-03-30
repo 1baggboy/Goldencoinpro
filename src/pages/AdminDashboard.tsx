@@ -190,7 +190,10 @@ export const AdminDashboard = () => {
         status: "rejected",
         rejectionReason: rejectReason 
       });
-      await updateDoc(doc(db, "users", rejectingKyc.userId), { kycStatus: "rejected" });
+      await updateDoc(doc(db, "users", rejectingKyc.userId), { 
+        kycStatus: "rejected",
+        kycRejectionReason: rejectReason 
+      });
       await addNotification(rejectingKyc.userId, "KYC Rejected", `Your KYC verification was rejected. Reason: ${rejectReason}`, "error");
       setShowRejectModal(false);
       setRejectReason("");

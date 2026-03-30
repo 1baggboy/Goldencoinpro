@@ -73,6 +73,9 @@ export const KYC = () => {
       await updateDoc(doc(db, "users", user.uid), {
         kycStatus: "pending"
       });
+      
+      // Notify Admin
+      await addNotification("admin", "New KYC Submission", `Member ${formData.fullName} has submitted documents for verification.`, "info");
 
       await addNotification(user.uid, "KYC Submitted", "Your identity verification documents have been submitted and are pending review.", "info");
 
@@ -119,6 +122,20 @@ export const KYC = () => {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
+      {profile?.kycStatus === 'rejected' && (
+        <div className="p-6 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-start gap-4">
+          <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center text-red-500 shrink-0">
+            <X size={20} />
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-white uppercase tracking-widest mb-1">Verification Rejected</h4>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              Your previous submission was rejected for the following reason: <span className="text-red-400 font-bold">{profile.kycRejectionReason || "No specific reason provided."}</span>. Please review your information and resubmit.
+            </p>
+          </div>
+        </div>
+      )}
+      
       <div className="flex items-center gap-4 mb-8">
         <div className="w-12 h-12 bg-[#C9A96E]/10 rounded-2xl flex items-center justify-center text-[#C9A96E]">
           <ShieldCheck size={28} />

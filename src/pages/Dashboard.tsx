@@ -180,7 +180,7 @@ export const Dashboard = () => {
           subValue={
             profile?.kycStatus === 'verified' ? "Full access granted" : 
             profile?.kycStatus === 'pending' ? "Pending verification" : 
-            profile?.kycStatus === 'rejected' ? "Verification rejected" :
+            profile?.kycStatus === 'rejected' ? `Rejected: ${profile.kycRejectionReason || "Please resubmit"}` :
             "Submit ID for verification"
           } 
           icon={profile?.kycStatus === 'verified' ? ShieldCheck : AlertCircle}

@@ -36,7 +36,7 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -47,9 +47,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       return;
     }
 
+    const userIdFilter = isAdmin ? [user.uid, "admin"] : [user.uid];
     const q = query(
       collection(db, "notifications"),
-      where("userId", "==", user.uid),
+      where("userId", "in", userIdFilter),
       orderBy("timestamp", "desc"),
       limit(20)
     );
@@ -65,7 +66,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }, (error) => handleFirestoreError(error, OperationType.LIST, "notifications"));
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, isAdmin]);
 
   const markAsRead = async (id: string) => {
     try {
