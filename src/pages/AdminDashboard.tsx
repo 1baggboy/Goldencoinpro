@@ -123,7 +123,8 @@ export const AdminDashboard = () => {
         totalDeposited: increment(amountBtc)
       });
 
-      // Handle Referral Bonus on first deposit
+      // Referral bonus is now handled at registration in Register.tsx
+      /*
       const userSnap = await getDoc(doc(db, "users", tx.userId));
       if (userSnap.exists()) {
         const userData = userSnap.data();
@@ -144,6 +145,7 @@ export const AdminDashboard = () => {
           await addNotification(userData.referredBy, "Referral Bonus Received", `You've earned ${REFERRAL_BONUS_BTC} BTC as a bonus for referring ${userData.displayName}.`, "success");
         }
       }
+      */
 
       await addNotification(tx.userId, "Deposit Approved", `Your deposit of ${amountBtc} BTC ($${amountUsd}) has been confirmed and added to your balance.`, "success");
     } catch (e: any) {

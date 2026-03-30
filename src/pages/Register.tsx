@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, setDoc, getDocs, query, collection, where, updateDoc, increment } from "firebase/firestore";
+import { doc, setDoc, getDocs, query, collection, where, updateDoc, increment, addDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { Mail, Lock, User, ArrowRight, ShieldCheck, Check, X, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -12,6 +12,10 @@ export const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [referralInput, setReferralInput] = useState("");
+  const [otp, setOtp] = useState("");
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -26,7 +30,47 @@ export const Register = () => {
     special: /[^A-Za-z0-9]/.test(password),
   };
   const isPasswordStrong = Object.values(passwordCriteria).every(Boolean);
-  const canSubmit = name.length > 2 && isEmailValid && isPasswordStrong;
+  const canSubmit = name.length > 2 && isEmailValid && isPasswordStrong && isOtpVerified;
+
+  const sendOtp = async () => {
+    if (!isEmailValid) return;
+    setOtpLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send OTP");
+      setIsOtpSent(true);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const verifyOtp = async () => {
+    if (!otp) return;
+    setOtpLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Invalid OTP");
+      setIsOtpVerified(true);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setOtpLoading(false);
+    }
+  };
 
   const generateReferralCode = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -39,6 +83,10 @@ export const Register = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isOtpVerified) {
+      setError("Please verify your email with the OTP first.");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -90,6 +138,16 @@ export const Register = () => {
       if (referredByUid) {
         await updateDoc(doc(db, "users", referredByUid), {
           referralBonusEarned: increment(10),
+        });
+        
+        // Add notification for referrer
+        await addDoc(collection(db, "notifications"), {
+          userId: referredByUid,
+          title: "Referral Bonus Received",
+          message: `You've earned a $10.00 cash bonus for referring ${name}!`,
+          type: "success",
+          read: false,
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -145,23 +203,67 @@ export const Register = () => {
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-400 ml-1">Email Address</label>
-            <div className="relative group">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#C9A96E] transition-colors" size={20} />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={cn(
-                  "w-full bg-[#0B0B0B] border rounded-xl py-4 pl-12 pr-4 text-white outline-none transition-all",
-                  email && !isEmailValid ? "border-red-500/50 focus:border-red-500" : "border-[#C9A96E]/10 focus:border-[#C9A96E]/40"
-                )}
-                placeholder="name@example.com"
-              />
+            <div className="flex gap-2">
+              <div className="relative group flex-1">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#C9A96E] transition-colors" size={20} />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  disabled={isOtpSent}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={cn(
+                    "w-full bg-[#0B0B0B] border rounded-xl py-4 pl-12 pr-4 text-white outline-none transition-all",
+                    email && !isEmailValid ? "border-red-500/50 focus:border-red-500" : "border-[#C9A96E]/10 focus:border-[#C9A96E]/40",
+                    isOtpSent && "opacity-50"
+                  )}
+                  placeholder="name@example.com"
+                />
+              </div>
+              {!isOtpSent && (
+                <button
+                  type="button"
+                  onClick={sendOtp}
+                  disabled={!isEmailValid || otpLoading}
+                  className="px-4 bg-[#C9A96E]/10 text-[#C9A96E] font-bold rounded-xl border border-[#C9A96E]/20 hover:bg-[#C9A96E]/20 transition-all disabled:opacity-50 text-xs"
+                >
+                  {otpLoading ? "..." : "Send OTP"}
+                </button>
+              )}
             </div>
             {email && !isEmailValid && (
               <p className="text-[10px] text-red-500 ml-1 flex items-center gap-1">
                 <AlertCircle size={10} /> Please enter a valid email address
+              </p>
+            )}
+            {isOtpSent && !isOtpVerified && (
+              <div className="mt-4 space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    className="flex-1 bg-[#0B0B0B] border border-[#C9A96E]/20 rounded-xl py-3 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all text-center tracking-[0.5em] font-bold"
+                    placeholder="000000"
+                    maxLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={verifyOtp}
+                    disabled={otp.length !== 6 || otpLoading}
+                    className="px-6 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all disabled:opacity-50 text-sm"
+                  >
+                    {otpLoading ? "..." : "Verify"}
+                  </button>
+                </div>
+                <p className="text-[10px] text-gray-500 ml-1">
+                  Enter the 6-digit code sent to your email.
+                </p>
+              </div>
+            )}
+            {isOtpVerified && (
+              <p className="text-[10px] text-green-500 ml-1 flex items-center gap-1">
+                <Check size={10} /> Email verified successfully
               </p>
             )}
           </div>

@@ -51,6 +51,37 @@ async function startServer() {
     }
   });
 
+  // OTP Storage (In-memory for demo)
+  const otpStore = new Map<string, { otp: string, expires: number }>();
+
+  app.post("/api/auth/send-otp", async (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email is required" });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    otpStore.set(email, { otp, expires: Date.now() + 10 * 60 * 1000 }); // 10 mins
+
+    console.log(`[OTP] OTP for ${email}: ${otp}`);
+
+    // In a real app, use nodemailer here. 
+    // Since we don't have SMTP credentials, we'll simulate success.
+    // But we'll log it so the developer can see it in the console.
+    
+    res.json({ message: "OTP sent successfully (Check server logs for the code)" });
+  });
+
+  app.post("/api/auth/verify-otp", async (req, res) => {
+    const { email, otp } = req.body;
+    const stored = otpStore.get(email);
+
+    if (!stored || stored.otp !== otp || stored.expires < Date.now()) {
+      return res.status(400).json({ error: "Invalid or expired OTP" });
+    }
+
+    otpStore.delete(email);
+    res.json({ message: "OTP verified successfully" });
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

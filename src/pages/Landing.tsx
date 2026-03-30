@@ -104,11 +104,11 @@ export const Landing = () => {
                   Limited Time Offer
                 </span>
                 <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-                  Refer & Earn <br />
-                  <span className="text-[#C9A96E]">0.0005 BTC</span> Bonus
+                  Refer and Earn <br />
+                  <span className="text-[#C9A96E]">$10 Cash</span> Bonus
                 </h2>
                 <p className="text-xl text-gray-400 mb-8 leading-relaxed">
-                  Invite your friends and family to join Goldencoin. When they sign up and make their first deposit, you'll receive a 0.0005 BTC bonus credited directly to your account.
+                  Invite your friends and family to join Goldencoin. When they sign up and make their first deposit, you'll receive a $10 cash bonus credited directly to your account.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Link to="/register" className="px-8 py-4 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all flex items-center justify-center gap-2 text-lg">
@@ -135,7 +135,7 @@ export const Landing = () => {
                 <div className="p-6 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-3xl">
                   <div className="text-3xl font-bold text-[#C9A96E] mb-2">04</div>
                   <h4 className="font-bold mb-2">Get Paid</h4>
-                  <p className="text-xs text-gray-500">0.0005 BTC is instantly credited to your balance.</p>
+                  <p className="text-xs text-gray-500">$10 is instantly credited to your balance.</p>
                 </div>
               </div>
             </div>

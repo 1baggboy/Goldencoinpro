@@ -91,12 +91,13 @@ export const Dashboard = () => {
 
   const usdBalance = (profile?.btcBalance || 0) * (prices?.btc?.usd || 65000);
   const tradingUsdBalance = (profile?.tradingBalanceBtc || 0) * (prices?.btc?.usd || 65000);
-  const referralLink = `${window.location.origin}/register?ref=${profile?.referralCode || ''}`;
 
-  const copyReferral = () => {
-    navigator.clipboard.writeText(referralLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const copyReferralCode = () => {
+    if (profile?.referralCode) {
+      navigator.clipboard.writeText(profile.referralCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   if (isRestricted) {
@@ -254,25 +255,29 @@ export const Dashboard = () => {
                 <Users size={20} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">Refer & Earn</h3>
-                <p className="text-xs text-gray-500">Invite friends and earn BTC</p>
+                <h3 className="text-lg font-bold text-white">Refer and Earn Cash</h3>
+                <p className="text-xs text-gray-500">Invite friends and earn cash bonuses</p>
               </div>
             </div>
             
             <div className="space-y-4">
-              <div className="bg-[#0B0B0B] border border-[#C9A96E]/20 rounded-xl p-3 flex items-center justify-between gap-2">
-                <span className="text-xs text-gray-400 truncate flex-1">{referralLink}</span>
-                <button 
-                  onClick={copyReferral}
-                  className="p-2 hover:bg-[#C9A96E]/10 text-[#C9A96E] rounded-lg transition-all"
-                >
-                  {copied ? <Check size={16} /> : <Copy size={16} />}
-                </button>
+              <div className="space-y-2">
+                <label className="text-[10px] text-gray-500 uppercase font-bold tracking-widest ml-1">Referral Code</label>
+                <div className="bg-[#0B0B0B] border border-[#C9A96E]/20 rounded-xl p-3 flex items-center justify-between gap-2">
+                  <span className="text-sm font-bold text-white font-mono">{profile?.referralCode}</span>
+                  <button 
+                    onClick={copyReferralCode}
+                    className="p-2 hover:bg-[#C9A96E]/10 text-[#C9A96E] rounded-lg transition-all"
+                    title="Copy Code"
+                  >
+                    {copied ? <Check size={16} /> : <Copy size={16} />}
+                  </button>
+                </div>
               </div>
               
               <div className="flex items-center justify-between pt-2 border-t border-[#C9A96E]/10">
                 <span className="text-sm text-gray-400">Bonus Earned</span>
-                <span className="text-sm font-bold text-[#C9A96E]">{profile?.referralBonusEarned?.toFixed(6) || "0.000000"} BTC</span>
+                <span className="text-sm font-bold text-[#C9A96E]">${profile?.referralBonusEarned?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}</span>
               </div>
             </div>
           </div>

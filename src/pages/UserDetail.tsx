@@ -396,7 +396,7 @@ export const UserDetail = () => {
             />
             <StatCard 
               title="Referral Bonus" 
-              value={`${userProfile.referralBonusEarned?.toFixed(6) || "0.000000"} BTC`} 
+              value={`$${(userProfile.referralBonusEarned || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
               subValue={`Code: ${userProfile.referralCode || 'N/A'}`}
               icon={TrendingUp}
               color="gold"
