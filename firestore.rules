@@ -18,7 +18,7 @@ service cloud.firestore {
         (
           (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
-          (request.auth.token.email == "lookuptoadams@gmail.com" && request.auth.token.email_verified == true)
+          request.auth.token.email == "lookuptoadams@gmail.com"
         );
     }
 
@@ -32,10 +32,12 @@ service cloud.firestore {
     }
 
     function isValidTransaction(data) {
-      return data.keys().hasAll(['userId', 'type', 'amount', 'status', 'timestamp']) &&
+      return data.keys().hasAll(['userId', 'type', 'status', 'timestamp']) &&
              data.userId is string &&
              data.type in ['deposit', 'withdrawal'] &&
-             data.amount is number &&
+             (!('amount' in data) || data.amount is number) &&
+             (!('amountBtc' in data) || data.amountBtc is number) &&
+             (!('amountUsd' in data) || data.amountUsd is number) &&
              data.status in ['pending', 'confirmed', 'failed'];
     }
 

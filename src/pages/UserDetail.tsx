@@ -437,7 +437,7 @@ export const UserDetail = () => {
                     </div>
                     <div className="text-right">
                       <p className={cn("text-xs font-bold", tx.type === 'deposit' ? "text-green-500" : "text-red-500")}>
-                        {tx.type === 'deposit' ? '+' : '-'}{tx.amount} BTC
+                        {tx.type === 'deposit' ? '+' : '-'}{tx.amountBtc || tx.amount || 0} BTC
                       </p>
                       <p className={cn(
                         "text-[8px] uppercase font-bold",

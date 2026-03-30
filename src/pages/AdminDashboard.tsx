@@ -107,8 +107,12 @@ export const AdminDashboard = () => {
 
   const approveDeposit = async (tx: any) => {
     try {
-      const amountBtc = tx.amountBtc || tx.amount;
-      const amountUsd = tx.amountUsd || 0;
+      const amountBtc = Number(tx.amountBtc || tx.amount || 0);
+      const amountUsd = Number(tx.amountUsd || 0);
+      
+      if (amountBtc <= 0) {
+        throw new Error("Invalid deposit amount.");
+      }
       
       await updateDoc(doc(db, "transactions", tx.id), { status: "confirmed" });
       
@@ -142,34 +146,53 @@ export const AdminDashboard = () => {
       }
 
       await addNotification(tx.userId, "Deposit Approved", `Your deposit of ${amountBtc} BTC ($${amountUsd}) has been confirmed and added to your balance.`, "success");
-    } catch (e) {
+    } catch (e: any) {
       console.error("Approve deposit error:", e);
+      alert("Failed to approve deposit: " + (e.message || "Unknown error"));
     }
   };
 
   const approveWithdrawal = async (tx: any) => {
     try {
-      const amountBtc = tx.amountBtc || tx.amount;
-      const amountUsd = tx.amountUsd || 0;
+      const amountBtc = Number(tx.amountBtc || tx.amount || 0);
+      const amountUsd = Number(tx.amountUsd || 0);
+
+      if (amountBtc <= 0) {
+        throw new Error("Invalid withdrawal amount.");
+      }
+
+      // Check user balance before approving
+      const userSnap = await getDoc(doc(db, "users", tx.userId));
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        if ((userData.btcBalance || 0) < amountBtc) {
+          throw new Error("User has insufficient balance for this withdrawal.");
+        }
+      } else {
+        throw new Error("User not found.");
+      }
 
       await updateDoc(doc(db, "transactions", tx.id), { status: "confirmed" });
       await updateDoc(doc(db, "users", tx.userId), {
-        btcBalance: increment(-amountBtc)
+        btcBalance: increment(-amountBtc),
+        tradingBalanceBtc: increment(-amountBtc)
       });
       await addNotification(tx.userId, "Withdrawal Approved", `Your withdrawal request for ${amountBtc} BTC ($${amountUsd}) has been approved and processed.`, "success");
-    } catch (e) {
+    } catch (e: any) {
       console.error("Approve withdrawal error:", e);
+      alert("Failed to approve withdrawal: " + (e.message || "Unknown error"));
     }
   };
 
   const handleRejectTransaction = async () => {
     if (!rejectingTx || !rejectReason.trim()) return;
     try {
+      const amountBtc = Number(rejectingTx.amountBtc || rejectingTx.amount || 0);
       await updateDoc(doc(db, "transactions", rejectingTx.id), { 
         status: "failed",
         rejectionReason: rejectReason
       });
-      await addNotification(rejectingTx.userId, `${rejectingTx.type.charAt(0).toUpperCase() + rejectingTx.type.slice(1)} Rejected`, `Your ${rejectingTx.type} request for ${rejectingTx.amount} BTC has been rejected. Reason: ${rejectReason}`, "error");
+      await addNotification(rejectingTx.userId, `${rejectingTx.type.charAt(0).toUpperCase() + rejectingTx.type.slice(1)} Rejected`, `Your ${rejectingTx.type} request for ${amountBtc} BTC has been rejected. Reason: ${rejectReason}`, "error");
       setShowTxRejectModal(false);
       setRejectReason("");
       setRejectingTx(null);
@@ -185,10 +208,18 @@ export const AdminDashboard = () => {
   };
 
   const approveKyc = async (kyc: any) => {
-    await updateDoc(doc(db, "kyc_submissions", kyc.id), { status: "approved" });
-    await updateDoc(doc(db, "users", kyc.userId), { kycStatus: "verified" });
-    await addNotification(kyc.userId, "KYC Verified", "Your KYC verification has been approved. You can now access all features, including withdrawals.", "success");
-    setSelectedKyc(null);
+    try {
+      if (!kyc.id || !kyc.userId) {
+        throw new Error("Invalid KYC submission data (missing id or userId).");
+      }
+      await updateDoc(doc(db, "kyc_submissions", kyc.id), { status: "approved" });
+      await updateDoc(doc(db, "users", kyc.userId), { kycStatus: "verified" });
+      await addNotification(kyc.userId, "KYC Verified", "Your KYC verification has been approved. You can now access all features, including withdrawals.", "success");
+      setSelectedKyc(null);
+    } catch (error: any) {
+      console.error("Error approving KYC:", error);
+      alert("Failed to approve KYC: " + (error.message || "Unknown error"));
+    }
   };
 
   const handleRejectKyc = async () => {
@@ -296,7 +327,7 @@ export const AdminDashboard = () => {
                 <div key={tx.id} className="p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl flex items-center justify-between group">
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-bold text-white">{tx.amount} BTC</p>
+                      <p className="text-sm font-bold text-white">{tx.amountBtc || tx.amount || 0} BTC</p>
                       <span className="text-[10px] text-gray-500">•</span>
                       <p className="text-[10px] text-gray-400 font-medium">
                         {users.find(u => u.id === tx.userId)?.displayName || "Unknown User"}
@@ -345,7 +376,7 @@ export const AdminDashboard = () => {
                 <div key={tx.id} className="p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl flex items-center justify-between group">
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-bold text-white">{tx.amount} BTC</p>
+                      <p className="text-sm font-bold text-white">{tx.amountBtc || tx.amount || 0} BTC</p>
                       <span className="text-[10px] text-gray-500">•</span>
                       <p className="text-[10px] text-gray-400 font-medium">
                         {users.find(u => u.id === tx.userId)?.displayName || "Unknown User"}
