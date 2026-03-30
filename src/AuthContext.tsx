@@ -9,6 +9,7 @@ interface UserProfile {
   displayName: string;
   role: "user" | "admin";
   btcBalance: number;
+  tradingBalanceBtc?: number;
   totalDeposited: number;
   kycStatus: "not_submitted" | "pending" | "verified" | "rejected";
   kycRejectionReason?: string;

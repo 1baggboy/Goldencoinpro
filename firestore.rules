@@ -40,13 +40,12 @@ service cloud.firestore {
     }
 
     function isValidKYC(data) {
-      return data.keys().hasAll(['userId', 'fullName', 'idType', 'status', 'submittedAt', 'idImage', 'selfieImage']) &&
+      return data.keys().hasAll(['userId', 'fullName', 'idType', 'status', 'submittedAt', 'idImage']) &&
              data.userId is string &&
              data.fullName is string &&
              data.idType in ['passport', 'national_id', 'drivers_license'] &&
              data.status in ['pending', 'approved', 'rejected'] &&
-             data.idImage is string &&
-             data.selfieImage is string;
+             data.idImage is string;
     }
 
     function isValidNotification(data) {
@@ -65,15 +64,17 @@ service cloud.firestore {
 
     // Users Collection
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
+      allow get: if isAdmin() || isOwner(userId);
+      allow list: if isAdmin();
       allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && request.resource.data.role == 'user' && request.resource.data.status == 'active';
-      allow update: if isAdmin() || (isOwner(userId) && request.resource.data.role == resource.data.role && request.resource.data.btcBalance == resource.data.btcBalance && request.resource.data.status == resource.data.status);
+      allow update: if isAdmin() || (isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['kycStatus']) && request.resource.data.kycStatus in ['pending', 'not_submitted']);
+      allow delete: if isOwner(userId);
     }
 
     // Transactions Collection
     match /transactions/{txId} {
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow list: if isAdmin() || (isAuthenticated() && request.query.limit <= 100); // Allow admins to list all, users to list their own (filtered by query)
+      allow get: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow list: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid && request.query.limit <= 100);
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidTransaction(request.resource.data) && request.resource.data.status == 'pending';
       allow update: if isAdmin();
       allow delete: if false;
@@ -81,8 +82,8 @@ service cloud.firestore {
 
     // KYC Submissions Collection
     match /kyc_submissions/{submissionId} {
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow list: if isAdmin();
+      allow get: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow list: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidKYC(request.resource.data) && request.resource.data.status == 'pending';
       allow update: if isAdmin();
       allow delete: if false;
@@ -90,8 +91,8 @@ service cloud.firestore {
 
     // Investments Collection
     match /investments/{investmentId} {
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow list: if isAdmin() || (isAuthenticated() && request.query.limit <= 100);
+      allow get: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow list: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid && request.query.limit <= 100);
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && request.resource.data.status == 'active';
       allow update: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid && request.resource.data.status == 'completed' && resource.data.status == 'active');
       allow delete: if false;
@@ -99,10 +100,20 @@ service cloud.firestore {
 
     // Notifications Collection
     match /notifications/{notificationId} {
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow get: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow list: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
       allow create: if isAuthenticated() && (request.resource.data.userId == request.auth.uid || isAdmin()) && isValidNotification(request.resource.data);
-      allow update: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin()) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow update: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
       allow delete: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+    }
+
+    // Support Chats Collection
+    match /support_chats/{chatId} {
+      allow get: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow list: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && (request.resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow delete: if isAdmin();
     }
   }
 }

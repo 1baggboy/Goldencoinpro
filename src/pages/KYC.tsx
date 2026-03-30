@@ -35,16 +35,35 @@ export const KYC = () => {
   const [idImage, setIdImage] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  const handleNext = () => setStep(step + 1);
-  const handleBack = () => setStep(step - 1);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleNext = () => {
+    setError(null);
+    if (step === 1) {
+      if (!formData.fullName.trim()) {
+        setError("Please enter your full legal name.");
+        return;
+      }
+      if (!formData.idNumber.trim()) {
+        setError("Please enter your ID number.");
+        return;
+      }
+    }
+    setStep(step + 1);
+  };
+  const handleBack = () => {
+    setError(null);
+    setStep(step - 1);
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null);
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (limit to 2MB for base64 handling)
-    if (file.size > 2 * 1024 * 1024) {
-      alert("File is too large. Please upload an image smaller than 2MB.");
+    // Check file size (limit to 700KB for base64 handling to stay under Firestore 1MB limit)
+    if (file.size > 700 * 1024) {
+      setError("File is too large. Please upload an image smaller than 700KB.");
       return;
     }
 
@@ -58,8 +77,9 @@ export const KYC = () => {
 
   const handleSubmit = async () => {
     if (!user) return;
+    setError(null);
     if (!idImage) {
-      alert("Please upload your ID image.");
+      setError("Please upload your ID image.");
       return;
     }
     setLoading(true);
@@ -78,14 +98,13 @@ export const KYC = () => {
         kycStatus: "pending"
       });
       
-      // Notify Admin
-      await addNotification("admin", "New KYC Submission", `Member ${formData.fullName} has submitted documents for verification.`, "info");
-
       await addNotification(user.uid, "KYC Submitted", "Your identity verification documents have been submitted and are pending review.", "info");
 
       setShowSuccessModal(true);
-    } catch (err) {
+      setSuccess(true);
+    } catch (err: any) {
       console.error("KYC error:", err);
+      setError("Failed to submit KYC: " + (err.message || "Unknown error"));
     } finally {
       setLoading(false);
     }
@@ -114,7 +133,46 @@ export const KYC = () => {
 
   if (profile?.kycStatus === 'pending' || success) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8 bg-[#121212] border border-[#C9A96E]/10 rounded-3xl">
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8 bg-[#121212] border border-[#C9A96E]/10 rounded-3xl relative">
+        {/* Success Modal */}
+        <AnimatePresence>
+          {showSuccessModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  setSuccess(true);
+                }}
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="relative w-full max-w-md bg-[#121212] border border-[#C9A96E]/20 rounded-3xl p-8 text-center shadow-2xl"
+              >
+                <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto text-green-500 mb-6">
+                  <Check size={40} />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2">Submission Successful</h3>
+                <p className="text-gray-400 mb-8">Your KYC verification documents have been successfully submitted. Our team will verify them within an hour.</p>
+                <button 
+                  onClick={() => {
+                    setShowSuccessModal(false);
+                    setSuccess(true);
+                  }}
+                  className="w-full py-4 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all"
+                >
+                  Got it, thanks!
+                </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
         <div className="w-24 h-24 bg-[#C9A96E]/10 rounded-full flex items-center justify-center text-[#C9A96E] mb-8 relative">
           <ShieldCheck size={48} />
           <motion.div 
@@ -154,45 +212,6 @@ export const KYC = () => {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
-      {/* Success Modal */}
-      <AnimatePresence>
-        {showSuccessModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-              onClick={() => {
-                setShowSuccessModal(false);
-                setSuccess(true);
-              }}
-            />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-md bg-[#121212] border border-[#C9A96E]/20 rounded-3xl p-8 text-center shadow-2xl"
-            >
-              <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto text-green-500 mb-6">
-                <Check size={40} />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Submission Successful</h3>
-              <p className="text-gray-400 mb-8">Your KYC verification documents have been successfully submitted. Our team will verify them within an hour.</p>
-              <button 
-                onClick={() => {
-                  setShowSuccessModal(false);
-                  setSuccess(true);
-                }}
-                className="w-full py-4 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all"
-              >
-                Got it, thanks!
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
       {profile?.kycStatus === 'rejected' && (
         <div className="p-6 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-start gap-4">
           <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center text-red-500 shrink-0">
@@ -225,6 +244,13 @@ export const KYC = () => {
       </div>
 
       <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-3xl p-8 md:p-12 shadow-2xl">
+        {error && (
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-500 text-sm font-medium">
+            <AlertCircle size={18} />
+            {error}
+          </div>
+        )}
+
         {step === 1 && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
             <h3 className="text-xl font-bold text-white mb-6">Personal Information</h3>

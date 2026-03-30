@@ -7,18 +7,25 @@ import {
   ArrowUpCircle,
   ExternalLink,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  X,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  Copy
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { cn } from "../lib/utils";
 import { format } from "date-fns";
+import { motion, AnimatePresence } from "motion/react";
 
 export const Transactions = () => {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedTx, setSelectedTx] = useState<any | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -140,7 +147,10 @@ export const Transactions = () => {
                       </span>
                     </td>
                     <td className="px-6 py-5 text-right">
-                      <button className="p-2 text-gray-500 hover:text-[#C9A96E] transition-colors">
+                      <button 
+                        onClick={() => setSelectedTx(tx)}
+                        className="p-2 text-gray-500 hover:text-[#C9A96E] transition-colors"
+                      >
                         <ExternalLink size={18} />
                       </button>
                     </td>
@@ -164,6 +174,129 @@ export const Transactions = () => {
           </div>
         </div>
       </div>
+
+      {/* Transaction Receipt Modal */}
+      <AnimatePresence>
+        {selectedTx && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              onClick={() => setSelectedTx(null)}
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-[#121212] border border-[#C9A96E]/20 rounded-3xl overflow-hidden shadow-2xl"
+            >
+              {/* Header */}
+              <div className="p-6 border-b border-[#C9A96E]/10 flex items-center justify-between bg-[#0B0B0B]/50">
+                <h3 className="text-xl font-bold text-white">Transaction Receipt</h3>
+                <button 
+                  onClick={() => setSelectedTx(null)}
+                  className="p-2 text-gray-500 hover:text-white transition-colors rounded-full hover:bg-white/5"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Status Icon & Amount */}
+              <div className="p-8 text-center border-b border-[#C9A96E]/10">
+                <div className={cn(
+                  "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4",
+                  selectedTx.status === 'confirmed' ? "bg-green-500/10 text-green-500" : 
+                  selectedTx.status === 'pending' ? "bg-yellow-500/10 text-yellow-500" : 
+                  "bg-red-500/10 text-red-500"
+                )}>
+                  {selectedTx.status === 'confirmed' ? <CheckCircle size={32} /> : 
+                   selectedTx.status === 'pending' ? <Clock size={32} /> : 
+                   <AlertCircle size={32} />}
+                </div>
+                <h4 className="text-3xl font-bold text-white mb-1">
+                  {selectedTx.type === 'deposit' ? '+' : '-'}{(selectedTx.amountBtc || selectedTx.amount).toFixed(4)} BTC
+                </h4>
+                {selectedTx.amountUsd && (
+                  <p className="text-gray-500">≈ ${selectedTx.amountUsd.toLocaleString()}</p>
+                )}
+                
+                <div className={cn(
+                  "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mt-4",
+                  selectedTx.status === 'confirmed' ? "bg-green-500/10 text-green-500 border border-green-500/20" : 
+                  selectedTx.status === 'pending' ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20" : 
+                  "bg-red-500/10 text-red-500 border border-red-500/20"
+                )}>
+                  {selectedTx.status}
+                </div>
+              </div>
+
+              {/* Details */}
+              <div className="p-6 space-y-4 bg-[#0B0B0B]/20">
+                <div className="flex justify-between items-center py-2 border-b border-white/5">
+                  <span className="text-sm text-gray-500">Type</span>
+                  <span className="text-sm font-semibold text-white capitalize">{selectedTx.type}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-white/5">
+                  <span className="text-sm text-gray-500">Date</span>
+                  <span className="text-sm font-semibold text-white">{format(new Date(selectedTx.timestamp), "MMM dd, yyyy HH:mm")}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-white/5">
+                  <span className="text-sm text-gray-500">Transaction ID</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-mono text-gray-300">
+                      {selectedTx.txHash ? `${selectedTx.txHash.substring(0, 12)}...` : "N/A"}
+                    </span>
+                    {selectedTx.txHash && (
+                      <button 
+                        onClick={() => navigator.clipboard.writeText(selectedTx.txHash)}
+                        className="text-gray-500 hover:text-[#C9A96E] transition-colors"
+                        title="Copy TXID"
+                      >
+                        <Copy size={14} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                {selectedTx.status === 'failed' && selectedTx.rejectionReason && (
+                  <div className="flex justify-between items-start py-2 border-b border-white/5">
+                    <span className="text-sm text-gray-500">Reason</span>
+                    <span className="text-sm font-semibold text-red-400 text-right max-w-[200px]">{selectedTx.rejectionReason}</span>
+                  </div>
+                )}
+                {selectedTx.walletAddress && (
+                  <div className="flex justify-between items-center py-2 border-b border-white/5">
+                    <span className="text-sm text-gray-500">Wallet Address</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-mono text-gray-300">
+                        {`${selectedTx.walletAddress.substring(0, 8)}...${selectedTx.walletAddress.substring(selectedTx.walletAddress.length - 8)}`}
+                      </span>
+                      <button 
+                        onClick={() => navigator.clipboard.writeText(selectedTx.walletAddress)}
+                        className="text-gray-500 hover:text-[#C9A96E] transition-colors"
+                        title="Copy Address"
+                      >
+                        <Copy size={14} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Footer */}
+              <div className="p-6 bg-[#0B0B0B]/50">
+                <button 
+                  onClick={() => setSelectedTx(null)}
+                  className="w-full py-3 bg-[#121212] border border-[#C9A96E]/20 text-white font-bold rounded-xl hover:bg-[#C9A96E]/10 transition-all"
+                >
+                  Close Receipt
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { User, Mail, ShieldCheck, Save, Camera, AlertCircle, Phone, Users, Lock, ShieldAlert } from "lucide-react";
+import { User, Mail, ShieldCheck, Save, Camera, AlertCircle, Phone, Users, Lock, ShieldAlert, Trash2 } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { useNotifications } from "../NotificationContext";
-import { doc, updateDoc } from "firebase/firestore";
-import { db } from "../firebase";
+import { doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { db, auth } from "../firebase";
+import { deleteUser } from "firebase/auth";
 import { motion } from "motion/react";
 import { cn } from "../lib/utils";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export const Profile = () => {
   const { profile, user } = useAuth();
   const { addNotification } = useNotifications();
+  const navigate = useNavigate();
   const [displayName, setDisplayName] = useState(profile?.displayName || "");
   const [phoneNumber, setPhoneNumber] = useState(profile?.phoneNumber || "");
   const [gender, setGender] = useState(profile?.gender || "");
@@ -18,6 +20,8 @@ export const Profile = () => {
   const [updating, setUpdating] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Update local state when profile loads
   useEffect(() => {
@@ -81,6 +85,39 @@ export const Profile = () => {
       setMessage({ type: 'error', text: "Failed to update profile. Please try again." });
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user || !profile) return;
+    
+    // Check if user has balance
+    if (profile.btcBalance > 0 || (profile.tradingBalanceBtc && profile.tradingBalanceBtc > 0)) {
+      setMessage({ type: 'error', text: "You must withdraw your entire balance before deleting your account." });
+      setShowDeleteModal(false);
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      // Delete user document from Firestore
+      await deleteDoc(doc(db, "users", user.uid));
+      
+      // Delete user from Firebase Auth
+      await deleteUser(user);
+      
+      // Redirect to home
+      navigate("/");
+    } catch (error: any) {
+      console.error("Delete account error:", error);
+      if (error.code === 'auth/requires-recent-login') {
+        setMessage({ type: 'error', text: "Please sign out and sign in again before deleting your account." });
+      } else {
+        setMessage({ type: 'error', text: "Failed to delete account. Please contact support." });
+      }
+      setShowDeleteModal(false);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -278,6 +315,67 @@ export const Profile = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Account Section */}
+      <div className="bg-red-500/5 border border-red-500/20 rounded-3xl p-8 md:p-12">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-500 shrink-0">
+            <Trash2 size={24} />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-xl font-bold text-white mb-2">Delete Account</h3>
+            <p className="text-gray-400 mb-6 max-w-2xl">
+              Once you delete your account, there is no going back. Please be certain. For transparency and security reasons, you must withdraw your entire balance before you can delete your account.
+            </p>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="px-6 py-3 bg-red-500/10 text-red-500 font-bold rounded-xl hover:bg-red-500/20 transition-all border border-red-500/20"
+            >
+              Delete My Account
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={() => !deleting && setShowDeleteModal(false)}
+          />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="relative w-full max-w-md bg-[#121212] border border-red-500/20 rounded-3xl p-8 shadow-2xl"
+          >
+            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center text-red-500 mb-6 mx-auto">
+              <AlertCircle size={32} />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-2 text-center">Are you absolutely sure?</h3>
+            <p className="text-gray-400 mb-8 text-center">
+              This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+            </p>
+            
+            <div className="flex gap-4">
+              <button 
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+                className="flex-1 py-4 bg-[#1A1A1A] text-white font-bold rounded-xl border border-white/10 hover:bg-[#222] transition-all disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+                className="flex-1 py-4 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {deleting ? "Deleting..." : "Yes, delete account"}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

@@ -73,6 +73,7 @@ export const Register = () => {
         referralBonusEarned: 0,
         hasTraded: false,
         kycStatus: "not_submitted",
+        status: "active",
         createdAt: new Date().toISOString(),
       });
 
