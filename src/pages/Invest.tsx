@@ -25,7 +25,7 @@ const INVESTMENT_PLANS = [
     return: 1.2, // 20% gain
     duration: 60, // 60 minutes
     minAmount: 0.001,
-    description: "Perfect for beginners. Fast returns in just 1 hour.",
+    description: "Perfect for beginners. Exact +20% profit in just 1 hour.",
     icon: Zap,
     color: "blue"
   },

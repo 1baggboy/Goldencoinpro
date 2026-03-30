@@ -112,7 +112,7 @@ export const KYC = () => {
           <AlertCircle size={48} />
         </div>
         <h1 className="text-3xl font-bold text-white tracking-tight">Verification Pending</h1>
-        <p className="text-gray-400">We've received your documents and are currently reviewing them. This process typically takes 24-48 hours. We'll notify you once it's complete.</p>
+        <p className="text-gray-400">We've received your documents and are currently reviewing them. This process typically takes within an hour. We'll notify you once it's complete.</p>
       </div>
     );
   }

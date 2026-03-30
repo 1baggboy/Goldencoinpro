@@ -16,7 +16,8 @@ import {
   Shield,
   ArrowUpDown,
   Filter,
-  Camera
+  Camera,
+  MessageSquare
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { useNotifications } from "../NotificationContext";
@@ -47,7 +48,8 @@ export const AdminDashboard = () => {
     totalUsers: 0,
     totalDeposits: 0,
     activeKyc: 0,
-    activeInvestments: 0
+    activeInvestments: 0,
+    activeChats: 0
   });
 
   useEffect(() => {
@@ -85,14 +87,32 @@ export const AdminDashboard = () => {
       setPendingKyc(k);
     }, (error) => handleFirestoreError(error, OperationType.LIST, "kyc_submissions"));
 
+    // Fetch active chats count
+    const unsubChats = onSnapshot(collection(db, "support_chats"), (snap) => {
+      const uniqueUsers = new Set(snap.docs.map(d => d.data().userId));
+      setStats(prev => ({ ...prev, activeChats: uniqueUsers.size }));
+    });
+
     return () => {
       unsubUsers();
       unsubI();
       unsubD();
       unsubW();
       unsubK();
+      unsubChats();
     };
   }, []);
+
+  useEffect(() => {
+    if (pendingKyc.length > 0) {
+      const latestKyc = pendingKyc[0];
+      // Only notify if it's relatively new (within last minute)
+      const submittedAt = new Date(latestKyc.submittedAt).getTime();
+      if (Date.now() - submittedAt < 60000) {
+        addNotification("admin", "New KYC Submission", `Member ${latestKyc.fullName} has submitted documents for verification.`, "info");
+      }
+    }
+  }, [pendingKyc.length]);
 
   const approveDeposit = async (tx: any) => {
     try {
@@ -241,12 +261,13 @@ export const AdminDashboard = () => {
       </div>
 
       {/* Admin Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
         <AdminStatCard title="Total Users" value={stats.totalUsers} icon={Users} />
         <AdminStatCard title="Active Plans" value={stats.activeInvestments} icon={TrendingUp} color="green" />
         <AdminStatCard title="Pending Deposits" value={pendingDeposits.length} icon={ArrowDownCircle} color="yellow" />
         <AdminStatCard title="Pending Withdraws" value={pendingWithdrawals.length} icon={ArrowUpCircle} color="red" />
         <AdminStatCard title="Pending KYC" value={pendingKyc.length} icon={ShieldCheck} color="blue" />
+        <AdminStatCard title="Support Chats" value={stats.activeChats} icon={MessageSquare} color="gold" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

@@ -11,6 +11,7 @@ import { Deposit } from "./pages/Deposit";
 import { KYC } from "./pages/KYC";
 import { Withdraw } from "./pages/Withdraw";
 import { AdminDashboard } from "./pages/AdminDashboard";
+import { AdminSupport } from "./pages/AdminSupport";
 import { UserDetail } from "./pages/UserDetail";
 import { Profile } from "./pages/Profile";
 import { Invest } from "./pages/Invest";
@@ -131,6 +132,14 @@ export default function App() {
               <ProtectedRoute adminOnly>
                 <Layout>
                   <AdminDashboard />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/admin/support" element={
+              <ProtectedRoute adminOnly>
+                <Layout>
+                  <AdminSupport />
                 </Layout>
               </ProtectedRoute>
             } />

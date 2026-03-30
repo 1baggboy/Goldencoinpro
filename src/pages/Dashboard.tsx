@@ -176,10 +176,15 @@ export const Dashboard = () => {
         />
         <StatCard 
           title="KYC Status" 
-          value={profile?.kycStatus?.replace('_', ' ').toUpperCase() || "NOT SUBMITTED"} 
-          subValue={profile?.kycStatus === 'verified' ? "Full access granted" : "Pending verification"}
+          value={profile?.kycStatus === 'not_submitted' ? "NOT SUBMITTED" : profile?.kycStatus?.replace('_', ' ').toUpperCase() || "NOT SUBMITTED"} 
+          subValue={
+            profile?.kycStatus === 'verified' ? "Full access granted" : 
+            profile?.kycStatus === 'pending' ? "Pending verification" : 
+            profile?.kycStatus === 'rejected' ? "Verification rejected" :
+            "Submit ID for verification"
+          } 
           icon={profile?.kycStatus === 'verified' ? ShieldCheck : AlertCircle}
-          color={profile?.kycStatus === 'verified' ? "green" : "yellow"}
+          color={profile?.kycStatus === 'verified' ? "green" : profile?.kycStatus === 'pending' ? "yellow" : "red"}
         />
         <StatCard 
           title="Live BTC Price" 
