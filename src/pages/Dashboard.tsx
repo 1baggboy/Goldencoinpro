@@ -74,7 +74,7 @@ export const Dashboard = () => {
       const txQ = query(
         collection(db, "transactions"), 
         where("userId", "==", user.uid),
-        orderBy("createdAt", "desc"),
+        orderBy("timestamp", "desc"),
         limit(5)
       );
       unsubTransactions = onSnapshot(txQ, (snap) => {
@@ -156,14 +156,14 @@ export const Dashboard = () => {
         />
         <StatCard 
           title="Trading Balance" 
-          value={`$${tradingUsdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
-          subValue={`${profile?.tradingBalanceBtc?.toFixed(4) || "0.0000"} BTC`}
+          value={`${profile?.tradingBalanceBtc?.toFixed(4) || "0.0000"} BTC`}
+          subValue={`$${tradingUsdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon={Zap}
           color="gold"
         />
         <StatCard 
           title="Total Deposited" 
-          value={`$${((profile?.totalDeposited || 0) * (prices?.btc?.usd || 65000)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
+          value={`$${(profile?.totalDepositedUsd || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
           subValue={`${profile?.totalDeposited?.toFixed(4) || "0.0000"} BTC`}
           icon={TrendingUp}
           color="green"

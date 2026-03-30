@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, setDoc, getDocs, query, collection, where } from "firebase/firestore";
+import { doc, setDoc, getDocs, query, collection, where, updateDoc, increment } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { Mail, Lock, User, ArrowRight, ShieldCheck, Check, X, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -46,10 +46,20 @@ export const Register = () => {
       let referredByUid = "";
       const finalReferralCode = referralCode || referralInput;
       if (finalReferralCode) {
+        // Validate alphanumeric
+        if (!/^[a-zA-Z0-9]+$/.test(finalReferralCode)) {
+          setError("Referral code must be alphanumeric.");
+          setLoading(false);
+          return;
+        }
         const q = query(collection(db, "users"), where("referralCode", "==", finalReferralCode));
         const snap = await getDocs(q);
         if (!snap.empty) {
           referredByUid = snap.docs[0].id;
+        } else {
+          setError("Invalid referral code.");
+          setLoading(false);
+          return;
         }
       }
 
@@ -76,6 +86,12 @@ export const Register = () => {
         status: "active",
         createdAt: new Date().toISOString(),
       });
+
+      if (referredByUid) {
+        await updateDoc(doc(db, "users", referredByUid), {
+          referralBonusEarned: increment(10),
+        });
+      }
 
       navigate("/dashboard");
     } catch (err: any) {

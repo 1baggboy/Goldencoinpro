@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { useNotifications } from "../NotificationContext";
-import { collection, addDoc, query, where, getDocs, onSnapshot } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs, onSnapshot, doc, updateDoc, increment } from "firebase/firestore";
 import { db } from "../firebase";
 import { motion } from "motion/react";
 import { cn } from "../lib/utils";
@@ -107,16 +107,25 @@ export const Withdraw = () => {
 
     setLoading(true);
     try {
+      const txId = 'TX-' + Math.random().toString(36).substr(2, 9).toUpperCase();
       await addDoc(collection(db, "transactions"), {
         userId: user.uid,
         type: "withdrawal",
+        txId: txId,
         amountUsd: valUsd,
         amountBtc: amountBtc,
-        status: "pending",
+        status: "confirmed",
         walletAddress: walletAddress,
         timestamp: new Date().toISOString(),
       });
-      await addNotification(user.uid, "Withdrawal Requested", `Your withdrawal request for $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC) has been submitted and is pending approval.`, "info");
+      
+      // Update user balance
+      await updateDoc(doc(db, "users", user.uid), {
+        btcBalance: increment(-amountBtc),
+        tradingBalanceBtc: increment(-amountBtc)
+      });
+
+      await addNotification(user.uid, "Withdrawal Approved", `Your withdrawal request for $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC) has been automatically approved and processed.`, "success");
       setSuccess(true);
       setAmountUsd("");
       setWalletAddress("");

@@ -47,13 +47,14 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       return;
     }
 
-    const userIdFilter = isAdmin ? [user.uid, "admin"] : [user.uid];
-    const q = query(
-      collection(db, "notifications"),
-      where("userId", "in", userIdFilter),
-      orderBy("timestamp", "desc"),
-      limit(20)
-    );
+    const q = isAdmin 
+      ? query(collection(db, "notifications"), orderBy("timestamp", "desc"), limit(20))
+      : query(
+          collection(db, "notifications"),
+          where("userId", "==", user.uid),
+          orderBy("timestamp", "desc"),
+          limit(20)
+        );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedNotifications = snapshot.docs.map((doc) => ({

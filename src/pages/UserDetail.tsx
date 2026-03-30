@@ -58,6 +58,7 @@ export const UserDetail = () => {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [investments, setInvestments] = useState<any[]>([]);
   const [kycSubmission, setKycSubmission] = useState<any>(null);
+  const [activities, setActivities] = useState<any[]>([]);
   const [btcPrice, setBtcPrice] = useState<number>(65000);
   const [loading, setLoading] = useState(true);
   
@@ -91,14 +92,17 @@ export const UserDetail = () => {
     // Fetch user transactions
     const qTx = query(collection(db, "transactions"), where("userId", "==", userId));
     const unsubTx = onSnapshot(qTx, (snap) => {
-      const txs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const txs = snap.docs.map(d => {
+        const data = d.data();
+        return { id: d.id, ...data, txType: data.type, type: 'transaction' };
+      });
       setTransactions(txs.sort((a: any, b: any) => (b.timestamp || 0) - (a.timestamp || 0)));
     });
 
     // Fetch user investments
     const qInv = query(collection(db, "investments"), where("userId", "==", userId));
     const unsubInv = onSnapshot(qInv, (snap) => {
-      const invs = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+      const invs = snap.docs.map(d => ({ id: d.id, ...d.data(), type: 'investment' }));
       setInvestments(invs.sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0)));
     });
 
@@ -107,7 +111,7 @@ export const UserDetail = () => {
     const unsubKyc = onSnapshot(qKyc, (snap) => {
       if (!snap.empty) {
         // Get the most recent submission
-        const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const docs = snap.docs.map(d => ({ id: d.id, ...d.data(), type: 'kyc' }));
         setKycSubmission(docs.sort((a: any, b: any) => (b.submittedAt || 0) - (a.submittedAt || 0))[0]);
       } else {
         setKycSubmission(null);
@@ -127,6 +131,16 @@ export const UserDetail = () => {
       unsubKyc();
     };
   }, [userId]);
+
+  useEffect(() => {
+    // Combine and sort all activities
+    const allActivities = [
+      ...transactions.map(t => ({ ...t, timestamp: t.timestamp })),
+      ...investments.map(i => ({ ...i, timestamp: i.createdAt })),
+      ...(kycSubmission ? [{ ...kycSubmission, timestamp: kycSubmission.submittedAt }] : [])
+    ].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    setActivities(allActivities);
+  }, [transactions, investments, kycSubmission]);
 
   const handleSaveAdminEdits = async () => {
     if (!userId) return;
@@ -414,36 +428,50 @@ export const UserDetail = () => {
             </div>
           </div>
 
-          {/* Transaction History */}
+          {/* Recent Activity */}
           <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
-            <h3 className="text-xl font-bold text-white mb-6">User Transactions</h3>
+            <h3 className="text-xl font-bold text-white mb-6">Recent Activity</h3>
             <div className="space-y-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-              {transactions.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-10">No transactions found.</p>
+              {activities.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-10">No recent activity found.</p>
               ) : (
-                transactions.map(tx => (
-                  <div key={tx.id} className="flex items-center justify-between">
+                activities.map(act => (
+                  <div key={act.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className={cn(
                         "w-8 h-8 rounded-full flex items-center justify-center",
-                        tx.type === 'deposit' ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
+                        act.type === 'transaction' ? (act.txType === 'deposit' ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500") :
+                        act.type === 'investment' ? "bg-blue-500/10 text-blue-500" :
+                        "bg-yellow-500/10 text-yellow-500"
                       )}>
-                        {tx.type === 'deposit' ? <ArrowDownCircle size={14} /> : <ArrowUpCircle size={14} />}
+                        {act.type === 'transaction' ? (act.txType === 'deposit' ? <ArrowDownCircle size={14} /> : <ArrowUpCircle size={14} />) :
+                         act.type === 'investment' ? <TrendingUp size={14} /> :
+                         <ShieldCheck size={14} />}
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-white capitalize">{tx.type}</p>
-                        <p className="text-[10px] text-gray-500">{tx.timestamp ? format(new Date(tx.timestamp), "MMM dd, HH:mm") : "---"}</p>
+                        <p className="text-xs font-bold text-white capitalize">
+                          {act.type === 'transaction' ? act.txType : act.type}
+                        </p>
+                        <p className="text-[10px] text-gray-500">{act.timestamp ? format(new Date(act.timestamp), "MMM dd, HH:mm") : "---"}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={cn("text-xs font-bold", tx.type === 'deposit' ? "text-green-500" : "text-red-500")}>
-                        {tx.type === 'deposit' ? '+' : '-'}{tx.amountBtc || tx.amount || 0} BTC
-                      </p>
+                      {act.type === 'transaction' && (
+                        <p className={cn("text-xs font-bold", act.txType === 'deposit' ? "text-green-500" : "text-red-500")}>
+                          {act.txType === 'deposit' ? '+' : '-'}{act.amountBtc || act.amount || 0} BTC
+                        </p>
+                      )}
+                      {act.type === 'investment' && (
+                        <p className="text-xs font-bold text-[#C9A96E]">
+                          {act.amountBtc} BTC
+                        </p>
+                      )}
                       <p className={cn(
                         "text-[8px] uppercase font-bold",
-                        tx.status === 'confirmed' ? "text-green-500" : tx.status === 'pending' ? "text-yellow-500" : "text-red-500"
+                        act.status === 'confirmed' || act.status === 'approved' || act.status === 'active' ? "text-green-500" : 
+                        act.status === 'pending' ? "text-yellow-500" : "text-red-500"
                       )}>
-                        {tx.status}
+                        {act.status}
                       </p>
                     </div>
                   </div>

@@ -90,6 +90,12 @@ export const Deposit = () => {
     const amountBtc = valUsd / btcPrice;
     const dailyDepositedUsd = dailyDeposited * btcPrice;
 
+    // 0. Check KYC
+    if (profile?.kycStatus !== 'verified') {
+      setError("Your account must be KYC verified to deposit funds.");
+      return;
+    }
+
     // 1. Check Minimum ($50)
     if (valUsd < 50) {
       setError("Minimum deposit amount is $50.");
@@ -118,7 +124,8 @@ export const Deposit = () => {
       await updateDoc(doc(db, "users", user.uid), {
         btcBalance: increment(amountBtc),
         tradingBalanceBtc: increment(amountBtc),
-        totalDeposited: increment(amountBtc)
+        totalDeposited: increment(amountBtc),
+        totalDepositedUsd: increment(valUsd)
       });
 
       await addNotification(user.uid, "Deposit Confirmed", `Your deposit of $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC) has been confirmed and added to your balance.`, "success");

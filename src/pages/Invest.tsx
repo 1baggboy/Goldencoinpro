@@ -22,10 +22,10 @@ const INVESTMENT_PLANS = [
   {
     id: "basic",
     name: "Starter Plan",
-    return: 1.2, // 20% gain
+    return: 1.25, // 25% gain
     duration: 60, // 60 minutes
-    minAmount: 0.001,
-    description: "Perfect for beginners. Exact +20% profit in just 1 hour.",
+    minAmount: 100, // USD
+    description: "Perfect for beginners. Exact +25% profit in just 1 hour. Minimum investment $100.",
     icon: Zap,
     color: "blue"
   },
@@ -34,8 +34,8 @@ const INVESTMENT_PLANS = [
     name: "Professional Plan",
     return: 1.5, // 50% gain
     duration: 360, // 6 hours
-    minAmount: 0.01,
-    description: "Higher returns for serious investors. 6-hour cycle.",
+    minAmount: 200, // USD
+    description: "Higher returns for serious investors. 6-hour cycle. Exact +50% profit. Minimum investment $200.",
     icon: TrendingUp,
     color: "gold"
   },
@@ -44,8 +44,8 @@ const INVESTMENT_PLANS = [
     name: "Elite Plan",
     return: 2.0, // 100% gain
     duration: 1440, // 24 hours
-    minAmount: 0.1,
-    description: "Maximize your wealth. Double your investment in 24 hours.",
+    minAmount: 500, // USD
+    description: "Maximize your wealth. Double your investment in 24 hours. Exact +100% profit. Minimum investment $500.",
     icon: ShieldCheck,
     color: "green"
   }
@@ -87,8 +87,8 @@ export const Invest = () => {
     const usdAmount = parseFloat(amount);
     const btcAmount = usdAmount / btcPrice;
     
-    if (isNaN(usdAmount) || btcAmount < selectedPlan.minAmount) {
-      setMessage({ type: 'error', text: `Minimum investment for this plan is ${selectedPlan.minAmount} BTC (≈ $${(selectedPlan.minAmount * btcPrice).toLocaleString()}).` });
+    if (isNaN(usdAmount) || usdAmount < selectedPlan.minAmount) {
+      setMessage({ type: 'error', text: `Minimum investment for this plan is $${selectedPlan.minAmount.toLocaleString()}.` });
       return;
     }
 
@@ -103,7 +103,8 @@ export const Invest = () => {
     try {
       const startTime = Date.now();
       const endTime = startTime + (selectedPlan.duration * 60 * 1000);
-      const expectedReturn = btcAmount * selectedPlan.return;
+      const expectedReturnUsd = usdAmount * selectedPlan.return;
+      const expectedReturnBtc = expectedReturnUsd / btcPrice;
 
       // 1. Deduct balance
       await updateDoc(doc(db, "users", user.uid), {
@@ -117,7 +118,9 @@ export const Invest = () => {
         planId: selectedPlan.id,
         planName: selectedPlan.name,
         amountBtc: btcAmount,
-        expectedReturnBtc: expectedReturn,
+        amountUsd: usdAmount,
+        expectedReturnUsd: expectedReturnUsd,
+        expectedReturnBtc: expectedReturnBtc,
         startTime,
         endTime,
         status: "active"
@@ -243,7 +246,7 @@ export const Invest = () => {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 pl-10 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono"
-                    placeholder={`Min $${(selectedPlan.minAmount * btcPrice).toLocaleString()}`}
+                    placeholder={`Min $${selectedPlan.minAmount.toLocaleString()}`}
                     required
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-500">
@@ -264,7 +267,7 @@ export const Invest = () => {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Expected Return</span>
                   <span className="text-green-500 font-bold">
-                    {(parseFloat(amount || "0") * selectedPlan.return).toFixed(6)} BTC
+                    ${(parseFloat(amount || "0") * selectedPlan.return).toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -318,7 +321,9 @@ export const Invest = () => {
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] text-gray-500 uppercase font-bold">Return</p>
-                        <p className="text-sm font-bold text-green-500">{inv.expectedReturnBtc.toFixed(4)} BTC</p>
+                        <p className="text-sm font-bold text-green-500">
+                          ${inv.expectedReturnUsd ? inv.expectedReturnUsd.toLocaleString() : (inv.expectedReturnBtc * btcPrice).toLocaleString()}
+                        </p>
                       </div>
                     </div>
 

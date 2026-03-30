@@ -20,6 +20,9 @@ interface UserProfile {
   phoneNumber?: string;
   gender?: string;
   btcWalletAddress?: string;
+  referralCode: string;
+  referredBy?: string;
+  referralBonusEarned: number;
 }
 
 interface AuthContextType {

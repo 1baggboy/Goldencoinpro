@@ -41,6 +41,16 @@ async function startServer() {
     }
   });
 
+  app.get("/api/market/btc-price", async (req, res) => {
+    try {
+      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+      const data = await response.json();
+      res.json({ usd: data.bitcoin.usd });
+    } catch (error) {
+      res.json({ usd: 65000 });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

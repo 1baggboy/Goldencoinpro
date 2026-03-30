@@ -306,111 +306,11 @@ export const AdminDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
         <AdminStatCard title="Total Users" value={stats.totalUsers} icon={Users} />
         <AdminStatCard title="Active Plans" value={stats.activeInvestments} icon={TrendingUp} color="green" />
-        <AdminStatCard title="Pending Deposits" value={pendingDeposits.length} icon={ArrowDownCircle} color="yellow" />
-        <AdminStatCard title="Pending Withdraws" value={pendingWithdrawals.length} icon={ArrowUpCircle} color="red" />
         <AdminStatCard title="Pending KYC" value={pendingKyc.length} icon={ShieldCheck} color="blue" />
         <AdminStatCard title="Support Chats" value={stats.activeChats} icon={MessageSquare} color="gold" link="/admin/support" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Pending Deposits */}
-        <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <ArrowDownCircle size={20} className="text-yellow-500" />
-            Pending Deposits
-          </h3>
-          <div className="space-y-4">
-            {pendingDeposits.length === 0 ? (
-              <p className="text-sm text-gray-500 py-10 text-center">No pending deposits.</p>
-            ) : (
-              pendingDeposits.map(tx => (
-                <div key={tx.id} className="p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl flex items-center justify-between group">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-bold text-white">{tx.amountBtc || tx.amount || 0} BTC</p>
-                      <span className="text-[10px] text-gray-500">•</span>
-                      <p className="text-[10px] text-gray-400 font-medium">
-                        {users.find(u => u.id === tx.userId)?.displayName || "Unknown User"}
-                      </p>
-                    </div>
-                    <p className="text-[10px] text-gray-500 font-mono mt-1">{tx.txHash?.substring(0, 16)}...</p>
-                  </div>
-                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button 
-                      onClick={() => setSelectedTx(tx)}
-                      className="p-2 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500/20 transition-colors"
-                      title="View Details"
-                    >
-                      <Eye size={18} />
-                    </button>
-                    <button 
-                      onClick={() => approveDeposit(tx)}
-                      className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500/20 transition-colors"
-                    >
-                      <Check size={18} />
-                    </button>
-                    <button 
-                      onClick={() => initiateRejectTx(tx)}
-                      className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
-                    >
-                      <X size={18} />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Pending Withdrawals */}
-        <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <ArrowUpCircle size={20} className="text-red-500" />
-            Pending Withdraws
-          </h3>
-          <div className="space-y-4">
-            {pendingWithdrawals.length === 0 ? (
-              <p className="text-sm text-gray-500 py-10 text-center">No pending withdrawals.</p>
-            ) : (
-              pendingWithdrawals.map(tx => (
-                <div key={tx.id} className="p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl flex items-center justify-between group">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-bold text-white">{tx.amountBtc || tx.amount || 0} BTC</p>
-                      <span className="text-[10px] text-gray-500">•</span>
-                      <p className="text-[10px] text-gray-400 font-medium">
-                        {users.find(u => u.id === tx.userId)?.displayName || "Unknown User"}
-                      </p>
-                    </div>
-                    <p className="text-[10px] text-gray-500 font-mono mt-1">{tx.walletAddress?.substring(0, 16)}...</p>
-                  </div>
-                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button 
-                      onClick={() => setSelectedTx(tx)}
-                      className="p-2 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500/20 transition-colors"
-                      title="View Details"
-                    >
-                      <Eye size={18} />
-                    </button>
-                    <button 
-                      onClick={() => approveWithdrawal(tx)}
-                      className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500/20 transition-colors"
-                    >
-                      <Check size={18} />
-                    </button>
-                    <button 
-                      onClick={() => initiateRejectTx(tx)}
-                      className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
-                    >
-                      <X size={18} />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
         {/* Pending KYC */}
         <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
           <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">

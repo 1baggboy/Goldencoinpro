@@ -16,20 +16,22 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() && 
         (
-          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
           request.auth.token.email == "lookuptoadams@gmail.com" ||
-        request.auth.token.email == "reachpaula.kar@gmail.com"
+          request.auth.token.email == "reachpaula.kar@gmail.com" ||
+          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
         );
     }
 
     function isValidUser(data) {
-      return data.keys().hasAll(['uid', 'email', 'role', 'btcBalance', 'kycStatus']) &&
+      return data.keys().hasAll(['uid', 'email', 'role', 'btcBalance', 'kycStatus', 'referralCode', 'referralBonusEarned']) &&
              data.uid is string &&
              data.email is string &&
              data.role in ['user', 'admin'] &&
              data.btcBalance is number &&
-             data.kycStatus in ['not_submitted', 'pending', 'verified', 'rejected'];
+             data.kycStatus in ['not_submitted', 'pending', 'verified', 'rejected'] &&
+             data.referralCode is string &&
+             data.referralBonusEarned is number;
     }
 
     function isValidTransaction(data) {
@@ -39,6 +41,7 @@ service cloud.firestore {
              (!('amount' in data) || data.amount is number) &&
              (!('amountBtc' in data) || data.amountBtc is number) &&
              (!('amountUsd' in data) || data.amountUsd is number) &&
+             (!('txId' in data) || data.txId is string) &&
              data.status in ['pending', 'confirmed', 'failed'];
     }
 
@@ -68,9 +71,12 @@ service cloud.firestore {
     // Users Collection
     match /users/{userId} {
       allow get: if isAdmin() || isOwner(userId);
-      allow list: if isAdmin();
+      allow list: if isAdmin() || isAuthenticated();
       allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && request.resource.data.role == 'user' && request.resource.data.status == 'active';
-      allow update: if isAdmin() || (isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['kycStatus']) && request.resource.data.kycStatus in ['pending', 'not_submitted']);
+      allow update: if isAdmin() || (isOwner(userId) && (
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['kycStatus']) && request.resource.data.kycStatus in ['pending', 'not_submitted']) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasAny(['btcBalance', 'tradingBalanceBtc', 'totalDeposited', 'totalDepositedUsd']))
+      )) || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['referralBonusEarned']));
       allow delete: if isOwner(userId);
     }
 
@@ -78,7 +84,7 @@ service cloud.firestore {
     match /transactions/{txId} {
       allow get: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
       allow list: if isAdmin() || isAuthenticated();
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidTransaction(request.resource.data) && (request.resource.data.status == 'pending' || (request.resource.data.type == 'deposit' && request.resource.data.status == 'confirmed'));
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidTransaction(request.resource.data) && (request.resource.data.status == 'pending' || request.resource.data.status == 'confirmed');
       allow update: if isAdmin();
       allow delete: if false;
     }
@@ -104,7 +110,7 @@ service cloud.firestore {
     // Notifications Collection
     match /notifications/{notificationId} {
       allow get: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
-      allow list: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow list: if isAdmin() || isAuthenticated();
       allow create: if isAuthenticated() && (request.resource.data.userId == request.auth.uid || isAdmin()) && isValidNotification(request.resource.data);
       allow update: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
       allow delete: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
@@ -113,7 +119,7 @@ service cloud.firestore {
     // Support Chats Collection
     match /support_chats/{chatId} {
       allow get: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
-      allow list: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow list: if isAdmin() || isAuthenticated();
       allow create: if isAuthenticated() && (request.resource.data.userId == request.auth.uid || isAdmin());
       allow update: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
       allow delete: if isAdmin();
