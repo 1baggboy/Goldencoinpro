@@ -36,7 +36,7 @@ export const Sidebar = () => {
   return (
     <aside className="w-64 bg-[#121212] border-r border-[#C9A96E]/20 flex flex-col hidden md:flex">
       <div className="p-6 flex items-center gap-3">
-        <img src="/logo.png" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
+        <img src="/logo.svg" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
       </div>
 
       <nav className="flex-1 px-4 py-6 space-y-2">

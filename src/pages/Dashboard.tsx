@@ -155,15 +155,15 @@ export const Dashboard = () => {
         />
         <StatCard 
           title="Trading Balance" 
-          value={`${profile?.tradingBalanceBtc?.toFixed(4) || "0.0000"} BTC`} 
-          subValue={`≈ $${tradingUsdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          value={`$${tradingUsdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
+          subValue={`${profile?.tradingBalanceBtc?.toFixed(4) || "0.0000"} BTC`}
           icon={Zap}
           color="gold"
         />
         <StatCard 
           title="Total Deposited" 
-          value={`${profile?.totalDeposited?.toFixed(4) || "0.0000"} BTC`} 
-          subValue="Lifetime deposits"
+          value={`$${((profile?.totalDeposited || 0) * (prices?.btc?.usd || 65000)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
+          subValue={`${profile?.totalDeposited?.toFixed(4) || "0.0000"} BTC`}
           icon={TrendingUp}
           color="green"
         />

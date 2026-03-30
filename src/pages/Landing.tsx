@@ -16,9 +16,9 @@ export const Landing = () => {
     <div className="bg-[#0B0B0B] text-white min-h-screen font-sans">
       {/* Navigation */}
       <nav className="h-20 border-b border-[#C9A96E]/10 px-6 md:px-12 flex items-center justify-between sticky top-0 bg-[#0B0B0B]/80 backdrop-blur-md z-50">
-        <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
-        </div>
+        <Link to="/" className="flex items-center gap-3">
+          <img src="/logo.svg" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
+        </Link>
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
           <a href="#features" className="hover:text-[#C9A96E] transition-colors">Features</a>
           <a href="#security" className="hover:text-[#C9A96E] transition-colors">Security</a>
@@ -154,7 +154,7 @@ export const Landing = () => {
             </Link>
           </div>
           <div className="absolute top-0 right-0 p-8 opacity-10">
-            <img src="/logo.png" alt="" className="w-64 h-auto" referrerPolicy="no-referrer" />
+            <img src="/logo.svg" alt="" className="w-64 h-auto" referrerPolicy="no-referrer" />
           </div>
         </div>
       </section>
@@ -163,9 +163,9 @@ export const Landing = () => {
       <footer className="py-20 px-6 border-t border-[#C9A96E]/10">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center gap-3 mb-6">
-              <img src="/logo.png" alt="GOLDENCOIN" className="h-8 w-auto" referrerPolicy="no-referrer" />
-            </div>
+            <Link to="/" className="flex items-center gap-3 mb-6">
+              <img src="/logo.svg" alt="GOLDENCOIN" className="h-8 w-auto" referrerPolicy="no-referrer" />
+            </Link>
             <p className="text-gray-500 max-w-sm mb-8">
               Goldencoin Limited is a leading digital asset management platform providing secure and transparent Bitcoin solutions.
             </p>
@@ -187,9 +187,9 @@ export const Landing = () => {
           <div>
             <h4 className="font-bold mb-6 text-[#C9A96E]">Legal</h4>
             <ul className="space-y-4 text-sm text-gray-500">
-              <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Risk Disclaimer</a></li>
+              <li><Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/terms-of-service" className="hover:text-white transition-colors">Terms of Service</Link></li>
+              <li><Link to="/risk-disclaimer" className="hover:text-white transition-colors">Risk Disclaimer</Link></li>
             </ul>
           </div>
         </div>

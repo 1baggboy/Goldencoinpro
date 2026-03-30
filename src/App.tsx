@@ -19,6 +19,8 @@ import { Restricted } from "./pages/Restricted";
 import { FAQ } from "./pages/FAQ";
 import { TwoFactorSetup } from "./pages/TwoFactorSetup";
 import { ForgotPassword } from "./pages/ForgotPassword";
+import { PrivacyPolicy, TermsOfService, RiskDisclaimer } from "./pages/Legal";
+import { SupportWidget } from "./components/SupportWidget";
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode, adminOnly?: boolean }> = ({ children, adminOnly }) => {
   const { user, profile, loading, isAdmin, isRestricted } = useAuth();
@@ -55,6 +57,9 @@ export default function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/faq" element={<FAQ />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/risk-disclaimer" element={<RiskDisclaimer />} />
             <Route path="/2fa/setup" element={
               <ProtectedRoute>
                 <TwoFactorSetup />
@@ -138,6 +143,7 @@ export default function App() {
               </ProtectedRoute>
             } />
           </Routes>
+          <SupportWidget />
         </Router>
       </NotificationProvider>
     </AuthProvider>

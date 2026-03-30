@@ -92,7 +92,7 @@ export const Register = () => {
       >
         <div className="text-center mb-10">
           <Link to="/" className="inline-flex items-center gap-3 mb-6">
-            <img src="/logo.png" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
+            <img src="/logo.svg" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
           </Link>
           <h2 className="text-3xl font-bold text-white tracking-tight">Create Account</h2>
           <p className="text-gray-500 mt-2">Join Goldencoin and start managing your assets.</p>

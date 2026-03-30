@@ -12,10 +12,10 @@ export const Navbar = () => {
 
   return (
     <header className="h-20 bg-[#0B0B0B]/80 backdrop-blur-md border-b border-[#C9A96E]/10 px-4 md:px-8 flex items-center justify-between sticky top-0 z-50">
-      <div className="flex items-center gap-4 md:hidden">
+      <Link to="/" className="flex items-center gap-4 md:hidden">
         <Menu className="text-[#C9A96E]" size={24} />
-        <img src="/logo.png" alt="GOLDENCOIN" className="h-8 w-auto" referrerPolicy="no-referrer" />
-      </div>
+        <img src="/logo.svg" alt="GOLDENCOIN" className="h-8 w-auto" referrerPolicy="no-referrer" />
+      </Link>
 
       <div className="hidden md:flex items-center gap-4 bg-[#121212] px-4 py-2 rounded-xl border border-[#C9A96E]/10 w-96">
         <Search className="text-gray-500" size={18} />

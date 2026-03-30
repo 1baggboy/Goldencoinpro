@@ -439,19 +439,6 @@ export const AdminDashboard = () => {
                       )}
                     </div>
                   </div>
-                  <div className="p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl">
-                    <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-3">Selfie Verification</p>
-                    <div className="aspect-square max-w-[200px] mx-auto bg-[#1A1A1A] rounded-full overflow-hidden border border-[#C9A96E]/5">
-                      {selectedKyc.selfieImage ? (
-                        <img src={selectedKyc.selfieImage} alt="Selfie" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-600">
-                          <Camera size={32} className="mb-2 opacity-20" />
-                          <p className="text-[10px]">No selfie provided</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>

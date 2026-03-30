@@ -178,7 +178,7 @@ export const Withdraw = () => {
               </div>
               <div>
                 <p className="text-lg font-bold text-white">{profile?.btcBalance?.toFixed(6)} BTC</p>
-                <p className="text-xs text-gray-500">≈ ${(profile?.btcBalance || 0 * btcPrice).toLocaleString()}</p>
+                <p className="text-xs text-gray-500">≈ ${((profile?.btcBalance || 0) * btcPrice).toLocaleString()}</p>
               </div>
             </div>
           </div>

@@ -84,9 +84,11 @@ export const Invest = () => {
     e.preventDefault();
     if (!user || !profile) return;
 
-    const btcAmount = parseFloat(amount);
-    if (isNaN(btcAmount) || btcAmount < selectedPlan.minAmount) {
-      setMessage({ type: 'error', text: `Minimum investment for this plan is ${selectedPlan.minAmount} BTC.` });
+    const usdAmount = parseFloat(amount);
+    const btcAmount = usdAmount / btcPrice;
+    
+    if (isNaN(usdAmount) || btcAmount < selectedPlan.minAmount) {
+      setMessage({ type: 'error', text: `Minimum investment for this plan is ${selectedPlan.minAmount} BTC (≈ $${(selectedPlan.minAmount * btcPrice).toLocaleString()}).` });
       return;
     }
 
@@ -225,26 +227,27 @@ export const Invest = () => {
               <h3 className="text-xl font-bold text-white">Start Investment</h3>
               <div className="text-right">
                 <p className="text-xs text-gray-500 uppercase font-bold tracking-widest">Available Balance</p>
-                <p className="text-sm font-bold text-[#C9A96E]">{profile?.btcBalance?.toFixed(6)} BTC</p>
+                <p className="text-sm font-bold text-[#C9A96E]">${(profile?.btcBalance * btcPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                <p className="text-[10px] text-gray-500">{profile?.btcBalance?.toFixed(6)} BTC</p>
               </div>
             </div>
 
             <form onSubmit={handleInvest} className="space-y-6">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-400">Amount to Invest (BTC)</label>
+                <label className="text-sm font-bold text-gray-400">Amount to Invest (USD)</label>
                 <div className="relative">
-                  <Wallet className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span>
                   <input
                     type="number"
-                    step="0.0001"
+                    step="1"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 pl-12 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono"
-                    placeholder={`Min ${selectedPlan.minAmount} BTC`}
+                    className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 pl-10 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono"
+                    placeholder={`Min $${(selectedPlan.minAmount * btcPrice).toLocaleString()}`}
                     required
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-500">
-                    ≈ ${(parseFloat(amount || "0") * btcPrice).toLocaleString()}
+                    ≈ {(parseFloat(amount || "0") / btcPrice).toFixed(6)} BTC
                   </div>
                 </div>
               </div>
