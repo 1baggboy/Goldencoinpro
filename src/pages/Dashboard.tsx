@@ -25,6 +25,7 @@ import { Link } from "react-router-dom";
 import { cn } from "../lib/utils";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
+import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 
 const data = [
   { name: "Mon", value: 4000 },
@@ -60,7 +61,7 @@ export const Dashboard = () => {
       const q = query(collection(db, "investments"), where("userId", "==", user.uid), where("status", "==", "active"));
       unsubInvestments = onSnapshot(q, (snap) => {
         setActiveInvestmentsCount(snap.docs.length);
-      });
+      }, (error) => handleFirestoreError(error, OperationType.LIST, "investments"));
     }
 
     return () => {

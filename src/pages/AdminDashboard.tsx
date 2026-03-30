@@ -14,12 +14,14 @@ import {
   ShieldAlert,
   Shield,
   ArrowUpDown,
-  Filter
+  Filter,
+  Camera
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { useNotifications } from "../NotificationContext";
 import { collection, query, onSnapshot, doc, updateDoc, increment, getDocs, where } from "firebase/firestore";
 import { db } from "../firebase";
+import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 import { cn } from "../lib/utils";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
@@ -50,34 +52,34 @@ export const AdminDashboard = () => {
       const u = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setUsers(u);
       setStats(prev => ({ ...prev, totalUsers: u.length }));
-    });
+    }, (error) => handleFirestoreError(error, OperationType.LIST, "users"));
 
     // Fetch active investments count
     const qI = query(collection(db, "investments"), where("status", "==", "active"));
     const unsubI = onSnapshot(qI, (snap) => {
       setStats(prev => ({ ...prev, activeInvestments: snap.docs.length }));
-    });
+    }, (error) => handleFirestoreError(error, OperationType.LIST, "investments"));
 
     // Fetch pending deposits
     const qD = query(collection(db, "transactions"), where("status", "==", "pending"), where("type", "==", "deposit"));
     const unsubD = onSnapshot(qD, (snap) => {
       const t = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setPendingDeposits(t);
-    });
+    }, (error) => handleFirestoreError(error, OperationType.LIST, "transactions"));
 
     // Fetch pending withdrawals
     const qW = query(collection(db, "transactions"), where("status", "==", "pending"), where("type", "==", "withdrawal"));
     const unsubW = onSnapshot(qW, (snap) => {
       const t = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setPendingWithdrawals(t);
-    });
+    }, (error) => handleFirestoreError(error, OperationType.LIST, "transactions"));
 
     // Fetch pending KYC
     const qK = query(collection(db, "kyc_submissions"), where("status", "==", "pending"));
     const unsubK = onSnapshot(qK, (snap) => {
       const k = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setPendingKyc(k);
-    });
+    }, (error) => handleFirestoreError(error, OperationType.LIST, "kyc_submissions"));
 
     return () => {
       unsubUsers();
@@ -369,12 +371,31 @@ export const AdminDashboard = () => {
                     <p className="text-white">{format(new Date(selectedKyc.submittedAt), "MMM dd, yyyy HH:mm")}</p>
                   </div>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div className="p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl">
-                    <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-3">Document Preview</p>
-                    <div className="aspect-video bg-[#1A1A1A] rounded-lg flex items-center justify-center border border-[#C9A96E]/5">
-                      <ShieldCheck size={48} className="text-[#C9A96E]/20" />
-                      <p className="absolute text-[10px] text-gray-600 mt-20">Document images would appear here</p>
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-3">ID Document</p>
+                    <div className="aspect-video bg-[#1A1A1A] rounded-lg overflow-hidden border border-[#C9A96E]/5">
+                      {selectedKyc.idImage ? (
+                        <img src={selectedKyc.idImage} alt="ID Document" className="w-full h-full object-contain" />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-600">
+                          <ShieldCheck size={32} className="mb-2 opacity-20" />
+                          <p className="text-[10px]">No ID image provided</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl">
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-3">Selfie Verification</p>
+                    <div className="aspect-square max-w-[200px] mx-auto bg-[#1A1A1A] rounded-full overflow-hidden border border-[#C9A96E]/5">
+                      {selectedKyc.selfieImage ? (
+                        <img src={selectedKyc.selfieImage} alt="Selfie" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-600">
+                          <Camera size={32} className="mb-2 opacity-20" />
+                          <p className="text-[10px]">No selfie provided</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -13,6 +13,7 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { useAuth } from "./AuthContext";
+import { handleFirestoreError, OperationType } from "./lib/firestoreErrorHandler";
 
 export interface Notification {
   id: string;
@@ -61,7 +62,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       
       setNotifications(fetchedNotifications);
       setUnreadCount(fetchedNotifications.filter((n) => !n.read).length);
-    });
+    }, (error) => handleFirestoreError(error, OperationType.LIST, "notifications"));
 
     return () => unsubscribe();
   }, [user]);

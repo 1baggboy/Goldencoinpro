@@ -7,7 +7,8 @@ import {
   Check, 
   AlertCircle,
   Upload,
-  Info
+  Info,
+  X
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { useNotifications } from "../NotificationContext";
@@ -28,18 +29,45 @@ export const KYC = () => {
     idType: "passport",
     idNumber: "",
   });
+  const [idImage, setIdImage] = useState<string | null>(null);
+  const [selfieImage, setSelfieImage] = useState<string | null>(null);
 
   const handleNext = () => setStep(step + 1);
   const handleBack = () => setStep(step - 1);
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'id' | 'selfie') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (limit to 2MB for base64 handling)
+    if (file.size > 2 * 1024 * 1024) {
+      alert("File is too large. Please upload an image smaller than 2MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      if (type === 'id') setIdImage(base64String);
+      else setSelfieImage(base64String);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = async () => {
     if (!user) return;
+    if (!idImage || !selfieImage) {
+      alert("Please upload both ID and selfie images.");
+      return;
+    }
     setLoading(true);
     try {
       // Create KYC submission
       await addDoc(collection(db, "kyc_submissions"), {
         userId: user.uid,
         ...formData,
+        idImage,
+        selfieImage,
         status: "pending",
         submittedAt: new Date().toISOString(),
       });
@@ -160,20 +188,50 @@ export const KYC = () => {
         {step === 2 && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
             <h3 className="text-xl font-bold text-white mb-6">Upload ID Document</h3>
-            <div className="p-12 border-2 border-dashed border-[#C9A96E]/20 rounded-3xl text-center space-y-4 hover:border-[#C9A96E]/40 transition-all cursor-pointer">
-              <div className="w-16 h-16 bg-[#C9A96E]/10 rounded-full flex items-center justify-center mx-auto text-[#C9A96E]">
-                <Upload size={32} />
+            
+            {!idImage ? (
+              <label className="block p-12 border-2 border-dashed border-[#C9A96E]/20 rounded-3xl text-center space-y-4 hover:border-[#C9A96E]/40 transition-all cursor-pointer group">
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={(e) => handleImageUpload(e, 'id')}
+                />
+                <div className="w-16 h-16 bg-[#C9A96E]/10 rounded-full flex items-center justify-center mx-auto text-[#C9A96E] group-hover:scale-110 transition-transform">
+                  <Upload size={32} />
+                </div>
+                <div>
+                  <p className="text-white font-bold">Click to upload ID Front</p>
+                  <p className="text-xs text-gray-500 mt-1">PNG, JPG or PDF (max. 2MB)</p>
+                </div>
+              </label>
+            ) : (
+              <div className="space-y-4">
+                <div className="relative aspect-video bg-[#0B0B0B] rounded-2xl overflow-hidden border border-[#C9A96E]/20">
+                  <img src={idImage} alt="ID Preview" className="w-full h-full object-contain" />
+                  <button 
+                    onClick={() => setIdImage(null)}
+                    className="absolute top-4 right-4 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 text-green-500 text-sm justify-center">
+                  <Check size={16} />
+                  ID Image uploaded successfully
+                </div>
               </div>
-              <div>
-                <p className="text-white font-bold">Click to upload ID Front</p>
-                <p className="text-xs text-gray-500 mt-1">PNG, JPG or PDF (max. 5MB)</p>
-              </div>
-            </div>
+            )}
+
             <div className="flex gap-4 mt-8">
               <button onClick={handleBack} className="flex-1 py-4 bg-[#1A1A1A] text-white font-bold rounded-xl border border-[#C9A96E]/10 hover:bg-[#222] transition-all">
                 Back
               </button>
-              <button onClick={handleNext} className="flex-1 py-4 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all">
+              <button 
+                onClick={handleNext} 
+                disabled={!idImage}
+                className="flex-1 py-4 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all disabled:opacity-50"
+              >
                 Continue
               </button>
             </div>
@@ -183,15 +241,45 @@ export const KYC = () => {
         {step === 3 && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
             <h3 className="text-xl font-bold text-white mb-6">Selfie Verification</h3>
-            <div className="p-12 border-2 border-dashed border-[#C9A96E]/20 rounded-3xl text-center space-y-4 hover:border-[#C9A96E]/40 transition-all cursor-pointer">
-              <div className="w-16 h-16 bg-[#C9A96E]/10 rounded-full flex items-center justify-center mx-auto text-[#C9A96E]">
-                <Camera size={32} />
+            
+            {!selfieImage ? (
+              <label className="block p-12 border-2 border-dashed border-[#C9A96E]/20 rounded-3xl text-center space-y-4 hover:border-[#C9A96E]/40 transition-all cursor-pointer group">
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  capture="user"
+                  className="hidden" 
+                  onChange={(e) => handleImageUpload(e, 'selfie')}
+                />
+                <div className="w-16 h-16 bg-[#C9A96E]/10 rounded-full flex items-center justify-center mx-auto text-[#C9A96E] group-hover:scale-110 transition-transform">
+                  <Camera size={32} />
+                </div>
+                <div>
+                  <p className="text-white font-bold">Take a Selfie</p>
+                  <p className="text-xs text-gray-500 mt-1">Ensure your face is clearly visible</p>
+                </div>
+              </label>
+            ) : (
+              <div className="space-y-4">
+                <div className="relative aspect-square max-w-[300px] mx-auto bg-[#0B0B0B] rounded-full overflow-hidden border-4 border-[#C9A96E]/20 shadow-2xl">
+                  <img src={selfieImage} alt="Selfie Preview" className="w-full h-full object-cover" />
+                  <button 
+                    onClick={() => setSelfieImage(null)}
+                    className="absolute top-4 right-4 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                <div className="text-center space-y-2">
+                  <div className="flex items-center gap-2 text-green-500 text-sm justify-center">
+                    <Check size={16} />
+                    Selfie taken successfully
+                  </div>
+                  <p className="text-xs text-gray-500">Make sure your face is centered and well-lit.</p>
+                </div>
               </div>
-              <div>
-                <p className="text-white font-bold">Take a Selfie</p>
-                <p className="text-xs text-gray-500 mt-1">Ensure your face is clearly visible</p>
-              </div>
-            </div>
+            )}
+
             <div className="p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl flex gap-4 mt-6">
               <Info className="text-blue-500 shrink-0" size={20} />
               <p className="text-xs text-blue-200 leading-relaxed">
@@ -204,7 +292,7 @@ export const KYC = () => {
               </button>
               <button 
                 onClick={handleSubmit} 
-                disabled={loading}
+                disabled={loading || !selfieImage}
                 className="flex-1 py-4 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all disabled:opacity-50"
               >
                 {loading ? "Submitting..." : "Submit Verification"}
