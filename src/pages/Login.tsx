@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
-import * as otplib from "otplib";
+import { verify } from "otplib";
 import { Coins, Mail, Lock, ArrowRight, Chrome, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -56,12 +56,12 @@ export const Login = () => {
     setError("");
 
     try {
-      const isValid = otplib.authenticator.verify({
+      const result = await verify({
         token: twoFactorCode,
         secret: tempUser.secret
       });
 
-      if (isValid) {
+      if (result.valid) {
         // Re-authenticate
         await signInWithEmailAndPassword(auth, email, password);
         navigate(from, { replace: true });

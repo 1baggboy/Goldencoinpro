@@ -35,6 +35,8 @@ export const AdminDashboard = () => {
   const [pendingDeposits, setPendingDeposits] = useState<any[]>([]);
   const [pendingWithdrawals, setPendingWithdrawals] = useState<any[]>([]);
   const [pendingKyc, setPendingKyc] = useState<any[]>([]);
+  const [selectedKyc, setSelectedKyc] = useState<any>(null);
+  const [selectedTx, setSelectedTx] = useState<any>(null);
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalDeposits: 0,
@@ -205,10 +207,23 @@ export const AdminDashboard = () => {
               pendingDeposits.map(tx => (
                 <div key={tx.id} className="p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl flex items-center justify-between group">
                   <div>
-                    <p className="text-sm font-bold text-white">{tx.amount} BTC</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-bold text-white">{tx.amount} BTC</p>
+                      <span className="text-[10px] text-gray-500">•</span>
+                      <p className="text-[10px] text-gray-400 font-medium">
+                        {users.find(u => u.id === tx.userId)?.displayName || "Unknown User"}
+                      </p>
+                    </div>
                     <p className="text-[10px] text-gray-500 font-mono mt-1">{tx.txHash?.substring(0, 16)}...</p>
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                      onClick={() => setSelectedTx(tx)}
+                      className="p-2 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500/20 transition-colors"
+                      title="View Details"
+                    >
+                      <Eye size={18} />
+                    </button>
                     <button 
                       onClick={() => approveDeposit(tx)}
                       className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500/20 transition-colors"
@@ -241,10 +256,23 @@ export const AdminDashboard = () => {
               pendingWithdrawals.map(tx => (
                 <div key={tx.id} className="p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl flex items-center justify-between group">
                   <div>
-                    <p className="text-sm font-bold text-white">{tx.amount} BTC</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-bold text-white">{tx.amount} BTC</p>
+                      <span className="text-[10px] text-gray-500">•</span>
+                      <p className="text-[10px] text-gray-400 font-medium">
+                        {users.find(u => u.id === tx.userId)?.displayName || "Unknown User"}
+                      </p>
+                    </div>
                     <p className="text-[10px] text-gray-500 font-mono mt-1">{tx.walletAddress?.substring(0, 16)}...</p>
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                      onClick={() => setSelectedTx(tx)}
+                      className="p-2 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500/20 transition-colors"
+                      title="View Details"
+                    >
+                      <Eye size={18} />
+                    </button>
                     <button 
                       onClick={() => approveWithdrawal(tx)}
                       className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500/20 transition-colors"
@@ -282,6 +310,13 @@ export const AdminDashboard = () => {
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button 
+                      onClick={() => setSelectedKyc(kyc)}
+                      className="p-2 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500/20 transition-colors"
+                      title="View Details"
+                    >
+                      <Eye size={18} />
+                    </button>
+                    <button 
                       onClick={() => approveKyc(kyc)}
                       className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500/20 transition-colors"
                     >
@@ -300,6 +335,143 @@ export const AdminDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* KYC Details Modal */}
+      {selectedKyc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#121212] border border-[#C9A96E]/20 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl">
+            <div className="p-6 border-b border-[#C9A96E]/10 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <ShieldCheck className="text-blue-500" />
+                KYC Verification Details
+              </h3>
+              <button onClick={() => setSelectedKyc(null)} className="text-gray-500 hover:text-white">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Full Name</p>
+                    <p className="text-lg font-bold text-white">{selectedKyc.fullName}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">ID Type</p>
+                    <p className="text-white capitalize">{selectedKyc.idType?.replace('_', ' ')}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">ID Number</p>
+                    <p className="text-white font-mono">{selectedKyc.idNumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Submitted At</p>
+                    <p className="text-white">{format(new Date(selectedKyc.submittedAt), "MMM dd, yyyy HH:mm")}</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl">
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-3">Document Preview</p>
+                    <div className="aspect-video bg-[#1A1A1A] rounded-lg flex items-center justify-center border border-[#C9A96E]/5">
+                      <ShieldCheck size={48} className="text-[#C9A96E]/20" />
+                      <p className="absolute text-[10px] text-gray-600 mt-20">Document images would appear here</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 bg-[#0B0B0B] border-t border-[#C9A96E]/10 flex gap-4">
+              <button 
+                onClick={() => { approveKyc(selectedKyc); setSelectedKyc(null); }}
+                className="flex-1 py-4 bg-green-500 text-[#0B0B0B] font-bold rounded-xl hover:bg-green-600 transition-all flex items-center justify-center gap-2"
+              >
+                <Check size={20} />
+                Approve KYC
+              </button>
+              <button 
+                onClick={() => { rejectKyc(selectedKyc.id, selectedKyc.userId); setSelectedKyc(null); }}
+                className="flex-1 py-4 bg-red-500/10 text-red-500 border border-red-500/20 font-bold rounded-xl hover:bg-red-500/20 transition-all flex items-center justify-center gap-2"
+              >
+                <X size={20} />
+                Reject KYC
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Transaction Details Modal */}
+      {selectedTx && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#121212] border border-[#C9A96E]/20 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl">
+            <div className="p-6 border-b border-[#C9A96E]/10 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                {selectedTx.type === 'deposit' ? <ArrowDownCircle className="text-yellow-500" /> : <ArrowUpCircle className="text-red-500" />}
+                {selectedTx.type === 'deposit' ? 'Deposit' : 'Withdrawal'} Details
+              </h3>
+              <button onClick={() => setSelectedTx(null)} className="text-gray-500 hover:text-white">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="p-8 space-y-6">
+              <div className="flex justify-between items-center p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-2xl">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Amount</p>
+                  <p className="text-2xl font-bold text-[#C9A96E]">{selectedTx.amount} BTC</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Status</p>
+                  <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-500 text-[10px] font-bold rounded-full uppercase tracking-widest border border-yellow-500/20">
+                    {selectedTx.status}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {selectedTx.type === 'deposit' ? (
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Transaction Hash (TXID)</p>
+                    <p className="text-sm text-white font-mono break-all bg-[#0B0B0B] p-3 rounded-lg border border-[#C9A96E]/5">{selectedTx.txHash}</p>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Destination Wallet</p>
+                    <p className="text-sm text-white font-mono break-all bg-[#0B0B0B] p-3 rounded-lg border border-[#C9A96E]/5">{selectedTx.walletAddress}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Timestamp</p>
+                  <p className="text-sm text-white">{format(new Date(selectedTx.timestamp), "MMM dd, yyyy HH:mm:ss")}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">User ID</p>
+                  <p className="text-[10px] text-gray-500 font-mono">{selectedTx.userId}</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 bg-[#0B0B0B] border-t border-[#C9A96E]/10 flex gap-4">
+              <button 
+                onClick={() => { 
+                  if (selectedTx.type === 'deposit') approveDeposit(selectedTx);
+                  else approveWithdrawal(selectedTx);
+                  setSelectedTx(null); 
+                }}
+                className="flex-1 py-4 bg-green-500 text-[#0B0B0B] font-bold rounded-xl hover:bg-green-600 transition-all flex items-center justify-center gap-2"
+              >
+                <Check size={20} />
+                Approve
+              </button>
+              <button 
+                onClick={() => { rejectTransaction(selectedTx.id, selectedTx.userId, selectedTx.type, selectedTx.amount); setSelectedTx(null); }}
+                className="flex-1 py-4 bg-red-500/10 text-red-500 border border-red-500/20 font-bold rounded-xl hover:bg-red-500/20 transition-all flex items-center justify-center gap-2"
+              >
+                <X size={20} />
+                Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* User Management Table */}
       <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl overflow-hidden">

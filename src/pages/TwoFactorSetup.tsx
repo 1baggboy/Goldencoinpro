@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import * as otplib from "otplib";
+import { generateSecret, generateURI, verify } from "otplib";
 import QRCode from "qrcode";
 import { 
   ShieldCheck, 
@@ -27,16 +27,16 @@ export const TwoFactorSetup = () => {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const generateSecret = async () => {
+  const handleGenerateSecret = async () => {
     if (!user) return;
-    const newSecret = otplib.authenticator.generateSecret();
+    const newSecret = generateSecret();
     setSecret(newSecret);
     
-    const otpauth = otplib.authenticator.keyuri(
-      user.email || "user",
-      "GoldenCoin Limited",
-      newSecret
-    );
+    const otpauth = generateURI({
+      label: user.email || "user",
+      issuer: "GoldenCoin Limited",
+      secret: newSecret
+    });
     
     try {
       const url = await QRCode.toDataURL(otpauth);
@@ -48,7 +48,7 @@ export const TwoFactorSetup = () => {
 
   useEffect(() => {
     if (step === 2 && !secret) {
-      generateSecret();
+      handleGenerateSecret();
     }
   }, [step]);
 
@@ -58,12 +58,12 @@ export const TwoFactorSetup = () => {
     setError("");
 
     try {
-      const isValid = otplib.authenticator.verify({
+      const result = await verify({
         token: verificationCode,
         secret: secret
       });
 
-      if (isValid) {
+      if (result.valid) {
         await updateDoc(doc(db, "users", user.uid), {
           twoFactorEnabled: true,
           twoFactorSecret: secret // In a real app, encrypt this or store it more securely
