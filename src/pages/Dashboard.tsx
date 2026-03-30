@@ -24,7 +24,7 @@ import {
 } from "recharts";
 import { useAuth } from "../AuthContext";
 import { motion } from "motion/react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "../lib/utils";
 import { collection, query, where, onSnapshot, orderBy, limit } from "firebase/firestore";
 import { db } from "../firebase";
@@ -41,6 +41,7 @@ const data = [
 ];
 
 export const Dashboard = () => {
+  const navigate = useNavigate();
   const { profile, user, isRestricted } = useAuth();
   const [prices, setPrices] = useState<any>(null);
   const [activeInvestmentsCount, setActiveInvestmentsCount] = useState(0);
@@ -185,6 +186,7 @@ export const Dashboard = () => {
           } 
           icon={profile?.kycStatus === 'verified' ? ShieldCheck : AlertCircle}
           color={profile?.kycStatus === 'verified' ? "green" : profile?.kycStatus === 'pending' ? "yellow" : "red"}
+          onClick={() => navigate('/kyc')}
         />
         <StatCard 
           title="Live BTC Price" 
@@ -305,10 +307,14 @@ export const Dashboard = () => {
   );
 };
 
-const StatCard = ({ title, value, subValue, icon: Icon, color }: any) => (
+const StatCard = ({ title, value, subValue, icon: Icon, color, onClick }: any) => (
   <motion.div 
     whileHover={{ y: -5 }}
-    className="bg-[#121212] border border-[#C9A96E]/10 p-6 rounded-2xl relative overflow-hidden group"
+    onClick={onClick}
+    className={cn(
+      "bg-[#121212] border border-[#C9A96E]/10 p-6 rounded-2xl relative overflow-hidden group",
+      onClick && "cursor-pointer hover:border-[#C9A96E]/30"
+    )}
   >
     <div className="flex items-center justify-between relative z-10">
       <div>

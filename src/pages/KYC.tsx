@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { 
   ShieldCheck, 
   User, 
@@ -8,7 +9,8 @@ import {
   AlertCircle,
   Upload,
   Info,
-  X
+  X,
+  ArrowRight
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { useNotifications } from "../NotificationContext";
@@ -18,6 +20,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { cn } from "../lib/utils";
 
 export const KYC = () => {
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { addNotification } = useNotifications();
   const [step, setStep] = useState(1);
@@ -111,17 +114,39 @@ export const KYC = () => {
 
   if (profile?.kycStatus === 'pending' || success) {
     return (
-      <div className="max-w-2xl mx-auto text-center py-20 space-y-6">
-        <div className="w-20 h-20 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto text-yellow-500">
-          <AlertCircle size={48} />
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8 bg-[#121212] border border-[#C9A96E]/10 rounded-3xl">
+        <div className="w-24 h-24 bg-[#C9A96E]/10 rounded-full flex items-center justify-center text-[#C9A96E] mb-8 relative">
+          <ShieldCheck size={48} />
+          <motion.div 
+            animate={{ rotate: 360 }}
+            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-0 border-2 border-t-[#C9A96E] border-r-transparent border-b-transparent border-l-transparent rounded-full"
+          />
         </div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">Verification Pending</h1>
-        <p className="text-gray-400">We've received your documents and are currently reviewing them. This process typically takes within an hour. We'll notify you once it's complete.</p>
+        <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">Verification in Progress</h2>
+        <p className="text-gray-400 max-w-md mb-8 leading-relaxed">
+          Your documents have been successfully submitted. Our team is currently reviewing your information. This process typically takes less than an hour.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-2xl mb-10">
+          <div className="p-4 bg-[#0B0B0B] rounded-xl border border-[#C9A96E]/5">
+            <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Status</p>
+            <p className="text-sm font-bold text-yellow-500">Pending Review</p>
+          </div>
+          <div className="p-4 bg-[#0B0B0B] rounded-xl border border-[#C9A96E]/5">
+            <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Estimated Time</p>
+            <p className="text-sm font-bold text-white">~1 Hour</p>
+          </div>
+          <div className="p-4 bg-[#0B0B0B] rounded-xl border border-[#C9A96E]/5">
+            <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Last Updated</p>
+            <p className="text-sm font-bold text-white">Just now</p>
+          </div>
+        </div>
         <button 
-          onClick={() => window.location.href = '/dashboard'}
-          className="px-8 py-3 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all"
+          onClick={() => navigate('/dashboard')}
+          className="px-8 py-4 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all flex items-center gap-2"
         >
           Go to Dashboard
+          <ArrowRight size={20} />
         </button>
       </div>
     );

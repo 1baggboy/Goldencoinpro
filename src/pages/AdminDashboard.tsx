@@ -105,17 +105,6 @@ export const AdminDashboard = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (pendingKyc.length > 0) {
-      const latestKyc = pendingKyc[0];
-      // Only notify if it's relatively new (within last minute)
-      const submittedAt = new Date(latestKyc.submittedAt).getTime();
-      if (Date.now() - submittedAt < 60000) {
-        addNotification("admin", "New KYC Submission", `Member ${latestKyc.fullName} has submitted documents for verification.`, "info");
-      }
-    }
-  }, [pendingKyc.length]);
-
   const approveDeposit = async (tx: any) => {
     try {
       const amountBtc = tx.amountBtc || tx.amount;
@@ -717,6 +706,13 @@ export const AdminDashboard = () => {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
+                      <Link 
+                        to={`/admin/support?user=${u.id}`}
+                        className="p-2 text-gray-500 hover:text-blue-500 transition-colors"
+                        title="Chat with User"
+                      >
+                        <MessageSquare size={16} />
+                      </Link>
                       <Link 
                         to={`/admin/user/${u.id}`}
                         className="p-2 text-gray-500 hover:text-[#C9A96E] transition-colors flex items-center gap-1 text-xs font-bold"

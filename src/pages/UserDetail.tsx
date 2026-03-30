@@ -24,7 +24,8 @@ import {
   Save,
   Camera,
   FileText,
-  Zap
+  Zap,
+  MessageSquare
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -226,6 +227,13 @@ export const UserDetail = () => {
           Back to Admin Panel
         </button>
         <div className="flex gap-3">
+          <button 
+            onClick={() => navigate(`/admin/support?user=${userId}`)}
+            className="px-4 py-2 bg-blue-500/10 text-blue-500 rounded-lg text-sm font-bold hover:bg-blue-500/20 transition-colors flex items-center gap-2"
+          >
+            <MessageSquare size={16} />
+            Chat with User
+          </button>
           <button 
             onClick={toggleRestriction}
             className={cn(

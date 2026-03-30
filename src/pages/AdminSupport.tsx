@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { 
   MessageSquare, 
   Search, 
@@ -17,8 +18,10 @@ import { formatDistanceToNow } from "date-fns";
 
 export const AdminSupport = () => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const initialUserId = searchParams.get("user");
   const [chats, setChats] = useState<any[]>([]);
-  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(initialUserId);
   const [messages, setMessages] = useState<any[]>([]);
   const [reply, setReply] = useState("");
   const [loading, setLoading] = useState(false);
@@ -45,7 +48,12 @@ export const AdminSupport = () => {
         }
       });
       
-      setChats(Object.values(uniqueChats));
+      const chatList = Object.values(uniqueChats);
+      setChats(chatList);
+
+      // If we have an initialUserId but it's not in the chat list yet (new chat), 
+      // we might need to fetch the user name or just wait for them to send a message.
+      // For now, if it's selected, it will show the ID.
     });
 
     return () => unsub();
