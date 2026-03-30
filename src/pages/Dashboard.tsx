@@ -360,12 +360,17 @@ const ActivityItem = ({ type, amount, status, date }: any) => (
       <p className={cn("text-sm font-bold", type === 'deposit' ? "text-green-500" : "text-red-500")}>
         {type === 'deposit' ? '+' : '-'}{amount} BTC
       </p>
-      <p className={cn(
-        "text-[10px] uppercase tracking-wider font-bold",
-        status === 'confirmed' ? "text-green-500" : status === 'pending' ? "text-yellow-500" : "text-red-500"
-      )}>
-        {status}
-      </p>
+      <div className="flex flex-col items-end">
+        <p className={cn(
+          "text-[10px] uppercase tracking-wider font-bold",
+          status === 'confirmed' ? "text-green-500" : status === 'pending' ? "text-yellow-500" : "text-red-500"
+        )}>
+          {status}
+        </p>
+        {status === 'failed' && (
+          <p className="text-[8px] text-red-400 italic">Rejected</p>
+        )}
+      </div>
     </div>
   </div>
 );

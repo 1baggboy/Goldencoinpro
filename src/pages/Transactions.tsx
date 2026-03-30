@@ -117,14 +117,19 @@ export const Transactions = () => {
                       </div>
                     </td>
                     <td className="px-6 py-5">
-                      <span className={cn(
-                        "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                        tx.status === 'confirmed' ? "bg-green-500/10 text-green-500 border border-green-500/20" : 
-                        tx.status === 'pending' ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20" : 
-                        "bg-red-500/10 text-red-500 border border-red-500/20"
-                      )}>
-                        {tx.status}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className={cn(
+                          "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider w-fit",
+                          tx.status === 'confirmed' ? "bg-green-500/10 text-green-500 border border-green-500/20" : 
+                          tx.status === 'pending' ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20" : 
+                          "bg-red-500/10 text-red-500 border border-red-500/20"
+                        )}>
+                          {tx.status}
+                        </span>
+                        {tx.status === 'failed' && tx.rejectionReason && (
+                          <span className="text-[10px] text-red-400 mt-1 italic">Reason: {tx.rejectionReason}</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-5">
                       <span className="text-sm text-gray-400">{format(new Date(tx.timestamp), "MMM dd, yyyy HH:mm")}</span>

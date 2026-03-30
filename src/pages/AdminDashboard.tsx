@@ -42,8 +42,10 @@ export const AdminDashboard = () => {
   const [selectedKyc, setSelectedKyc] = useState<any>(null);
   const [selectedTx, setSelectedTx] = useState<any>(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showTxRejectModal, setShowTxRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [rejectingKyc, setRejectingKyc] = useState<{ id: string, userId: string } | null>(null);
+  const [rejectingTx, setRejectingTx] = useState<{ id: string, userId: string, type: string, amount: number } | null>(null);
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalDeposits: 0,
@@ -171,9 +173,26 @@ export const AdminDashboard = () => {
     }
   };
 
-  const rejectTransaction = async (txId: string, userId: string, type: string, amount: number) => {
-    await updateDoc(doc(db, "transactions", txId), { status: "failed" });
-    await addNotification(userId, `${type.charAt(0).toUpperCase() + type.slice(1)} Rejected`, `Your ${type} request for ${amount} BTC has been rejected. Please contact support for more information.`, "error");
+  const handleRejectTransaction = async () => {
+    if (!rejectingTx || !rejectReason.trim()) return;
+    try {
+      await updateDoc(doc(db, "transactions", rejectingTx.id), { 
+        status: "failed",
+        rejectionReason: rejectReason
+      });
+      await addNotification(rejectingTx.userId, `${rejectingTx.type.charAt(0).toUpperCase() + rejectingTx.type.slice(1)} Rejected`, `Your ${rejectingTx.type} request for ${rejectingTx.amount} BTC has been rejected. Reason: ${rejectReason}`, "error");
+      setShowTxRejectModal(false);
+      setRejectReason("");
+      setRejectingTx(null);
+      setSelectedTx(null);
+    } catch (error) {
+      console.error("Error rejecting transaction:", error);
+    }
+  };
+
+  const initiateRejectTx = (tx: any) => {
+    setRejectingTx({ id: tx.id, userId: tx.userId, type: tx.type, amount: tx.amountBtc || tx.amount });
+    setShowTxRejectModal(true);
   };
 
   const approveKyc = async (kyc: any) => {
@@ -270,7 +289,7 @@ export const AdminDashboard = () => {
         <AdminStatCard title="Pending Deposits" value={pendingDeposits.length} icon={ArrowDownCircle} color="yellow" />
         <AdminStatCard title="Pending Withdraws" value={pendingWithdrawals.length} icon={ArrowUpCircle} color="red" />
         <AdminStatCard title="Pending KYC" value={pendingKyc.length} icon={ShieldCheck} color="blue" />
-        <AdminStatCard title="Support Chats" value={stats.activeChats} icon={MessageSquare} color="gold" />
+        <AdminStatCard title="Support Chats" value={stats.activeChats} icon={MessageSquare} color="gold" link="/admin/support" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -311,7 +330,7 @@ export const AdminDashboard = () => {
                       <Check size={18} />
                     </button>
                     <button 
-                      onClick={() => rejectTransaction(tx.id, tx.userId, tx.type, tx.amount)}
+                      onClick={() => initiateRejectTx(tx)}
                       className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
                     >
                       <X size={18} />
@@ -360,7 +379,7 @@ export const AdminDashboard = () => {
                       <Check size={18} />
                     </button>
                     <button 
-                      onClick={() => rejectTransaction(tx.id, tx.userId, tx.type, tx.amount)}
+                      onClick={() => initiateRejectTx(tx)}
                       className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
                     >
                       <X size={18} />
@@ -554,7 +573,7 @@ export const AdminDashboard = () => {
                 Approve
               </button>
               <button 
-                onClick={() => { rejectTransaction(selectedTx.id, selectedTx.userId, selectedTx.type, selectedTx.amount); setSelectedTx(null); }}
+                onClick={() => initiateRejectTx(selectedTx)}
                 className="flex-1 py-4 bg-red-500/10 text-red-500 border border-red-500/20 font-bold rounded-xl hover:bg-red-500/20 transition-all flex items-center justify-center gap-2"
               >
                 <X size={20} />
@@ -771,25 +790,97 @@ export const AdminDashboard = () => {
           </div>
         )}
       </AnimatePresence>
+      {/* Transaction Rejection Reason Modal */}
+      <AnimatePresence>
+        {showTxRejectModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => {
+                setShowTxRejectModal(false);
+                setRejectingTx(null);
+              }}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-[#121212] border border-[#C9A96E]/20 rounded-3xl p-8 shadow-2xl"
+            >
+              <h3 className="text-2xl font-bold text-white mb-2">Reject {rejectingTx?.type.charAt(0).toUpperCase()}{rejectingTx?.type.slice(1)}</h3>
+              <p className="text-gray-400 text-sm mb-6">Please provide a reason for rejecting this {rejectingTx?.type}. The user will be notified.</p>
+              
+              <div className="space-y-4">
+                <textarea 
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="e.g. Invalid transaction hash, insufficient funds..."
+                  className="w-full h-32 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl p-4 text-white outline-none focus:border-red-500/40 transition-all resize-none"
+                />
+                
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => {
+                      setShowTxRejectModal(false);
+                      setRejectingTx(null);
+                    }}
+                    className="flex-1 py-3 bg-[#1A1A1A] text-white font-bold rounded-xl border border-[#C9A96E]/10 hover:bg-[#222] transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleRejectTransaction}
+                    disabled={!rejectReason.trim()}
+                    className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-400 transition-all disabled:opacity-50"
+                  >
+                    Confirm Rejection
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
-const AdminStatCard = ({ title, value, icon: Icon, color }: any) => (
-  <div className="bg-[#121212] border border-[#C9A96E]/10 p-6 rounded-2xl flex items-center justify-between">
-    <div>
-      <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">{title}</p>
-      <h4 className="text-2xl font-bold text-white">{value}</h4>
+const AdminStatCard = ({ title, value, icon: Icon, color, link }: any) => {
+  const content = (
+    <>
+      <div>
+        <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">{title}</p>
+        <h4 className="text-2xl font-bold text-white tracking-tight">{value}</h4>
+      </div>
+      <div className={cn(
+        "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110",
+        color === 'yellow' ? "bg-yellow-500/10 text-yellow-500" : 
+        color === 'blue' ? "bg-blue-500/10 text-blue-500" : 
+        color === 'red' ? "bg-red-500/10 text-red-500" :
+        color === 'green' ? "bg-green-500/10 text-green-500" :
+        "bg-[#C9A96E]/10 text-[#C9A96E]"
+      )}>
+        <Icon size={24} />
+      </div>
+    </>
+  );
+
+  const className = "bg-[#121212] border border-[#C9A96E]/10 p-6 rounded-2xl flex items-center justify-between group transition-all hover:border-[#C9A96E]/30";
+
+  if (link) {
+    return (
+      <Link to={link} className={className}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className={className}>
+      {content}
     </div>
-    <div className={cn(
-      "w-12 h-12 rounded-xl flex items-center justify-center",
-      color === 'yellow' ? "bg-yellow-500/10 text-yellow-500" : 
-      color === 'blue' ? "bg-blue-500/10 text-blue-500" : 
-      color === 'red' ? "bg-red-500/10 text-red-500" :
-      color === 'green' ? "bg-green-500/10 text-green-500" :
-      "bg-[#C9A96E]/10 text-[#C9A96E]"
-    )}>
-      <Icon size={24} />
-    </div>
-  </div>
-);
+  );
+};
