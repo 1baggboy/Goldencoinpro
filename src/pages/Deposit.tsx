@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { useNotifications } from "../NotificationContext";
-import { collection, addDoc, query, where, onSnapshot } from "firebase/firestore";
+import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, increment } from "firebase/firestore";
 import { db } from "../firebase";
 import { motion } from "motion/react";
 
@@ -109,11 +109,19 @@ export const Deposit = () => {
         type: "deposit",
         amountUsd: valUsd,
         amountBtc: amountBtc,
-        status: "pending",
+        status: "confirmed",
         txHash: txHash,
         timestamp: new Date().toISOString(),
       });
-      await addNotification(user.uid, "Deposit Submitted", `Your deposit of $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC) has been submitted and is pending verification.`, "info");
+      
+      // Update user balance
+      await updateDoc(doc(db, "users", user.uid), {
+        btcBalance: increment(amountBtc),
+        tradingBalanceBtc: increment(amountBtc),
+        totalDeposited: increment(amountBtc)
+      });
+
+      await addNotification(user.uid, "Deposit Confirmed", `Your deposit of $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC) has been confirmed and added to your balance.`, "success");
       setSuccess(true);
       setAmountUsd("");
       setTxHash("");
