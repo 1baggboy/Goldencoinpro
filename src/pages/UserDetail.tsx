@@ -10,6 +10,8 @@ import {
   ArrowUpCircle, 
   Wallet, 
   ShieldCheck,
+  Check,
+  X,
   AlertCircle,
   ArrowLeft,
   User,
@@ -19,8 +21,11 @@ import {
   Lock,
   Unlock,
   Key,
-  Save
+  Save,
+  Camera,
+  FileText
 } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { 
   AreaChart, 
   Area, 
@@ -50,6 +55,7 @@ export const UserDetail = () => {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [investments, setInvestments] = useState<any[]>([]);
+  const [kycSubmission, setKycSubmission] = useState<any>(null);
   const [btcPrice, setBtcPrice] = useState<number>(65000);
   const [loading, setLoading] = useState(true);
   
@@ -58,6 +64,11 @@ export const UserDetail = () => {
   const [editWallet, setEditWallet] = useState<string>("");
   const [updating, setUpdating] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+  // KYC Rejection Modal
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejecting, setRejecting] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
@@ -87,6 +98,18 @@ export const UserDetail = () => {
       setInvestments(invs.sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0)));
     });
 
+    // Fetch user KYC submission
+    const qKyc = query(collection(db, "kyc_submissions"), where("userId", "==", userId));
+    const unsubKyc = onSnapshot(qKyc, (snap) => {
+      if (!snap.empty) {
+        // Get the most recent submission
+        const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        setKycSubmission(docs.sort((a: any, b: any) => (b.submittedAt || 0) - (a.submittedAt || 0))[0]);
+      } else {
+        setKycSubmission(null);
+      }
+    });
+
     // Fetch BTC price
     fetch("/api/market/btc-price")
       .then(res => res.json())
@@ -97,6 +120,7 @@ export const UserDetail = () => {
       unsubUser();
       unsubTx();
       unsubInv();
+      unsubKyc();
     };
   }, [userId]);
 
@@ -144,6 +168,40 @@ export const UserDetail = () => {
     } catch (e) {
       console.error(e);
       setMessage({ type: 'error', text: "Failed to send reset email." });
+    }
+  };
+
+  const handleApproveKyc = async () => {
+    if (!userId || !kycSubmission) return;
+    try {
+      await updateDoc(doc(db, "kyc_submissions", kycSubmission.id), { status: "approved" });
+      await updateDoc(doc(db, "users", userId), { kycStatus: "verified" });
+      await addNotification(userId, "KYC Verified", "Your KYC verification has been approved. You now have full access to withdrawals.", "success");
+      setMessage({ type: 'success', text: "KYC approved successfully!" });
+    } catch (e) {
+      console.error(e);
+      setMessage({ type: 'error', text: "Failed to approve KYC." });
+    }
+  };
+
+  const handleRejectKyc = async () => {
+    if (!userId || !kycSubmission || !rejectReason.trim()) return;
+    setRejecting(true);
+    try {
+      await updateDoc(doc(db, "kyc_submissions", kycSubmission.id), { 
+        status: "rejected",
+        rejectionReason: rejectReason 
+      });
+      await updateDoc(doc(db, "users", userId), { kycStatus: "rejected" });
+      await addNotification(userId, "KYC Rejected", `Your KYC verification was rejected. Reason: ${rejectReason}`, "error");
+      setMessage({ type: 'success', text: "KYC rejected successfully." });
+      setShowRejectModal(false);
+      setRejectReason("");
+    } catch (e) {
+      console.error(e);
+      setMessage({ type: 'error', text: "Failed to reject KYC." });
+    } finally {
+      setRejecting(false);
     }
   };
 
@@ -357,41 +415,171 @@ export const UserDetail = () => {
       </div>
 
       {/* User Investments */}
-      <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
-        <h3 className="text-xl font-bold text-white mb-6">User Investments</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {investments.length === 0 ? (
-            <div className="col-span-full py-10 text-center text-gray-500">No investments found for this user.</div>
-          ) : (
-            investments.map(inv => (
-              <div key={inv.id} className="p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <p className="text-sm font-bold text-white">{inv.planName}</p>
-                    <p className="text-xs text-gray-500">{inv.createdAt ? format(new Date(inv.createdAt), "MMM dd, yyyy HH:mm") : "---"}</p>
-                  </div>
-                  <span className={cn(
-                    "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                    inv.status === 'active' ? "bg-blue-500/10 text-blue-500" : "bg-green-500/10 text-green-500"
-                  )}>
-                    {inv.status}
-                  </span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <ShieldCheck size={20} className="text-[#C9A96E]" />
+            KYC Verification
+          </h3>
+          
+          {kycSubmission ? (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-[#0B0B0B] rounded-xl border border-[#C9A96E]/5">
+                  <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Full Name</p>
+                  <p className="text-sm font-bold text-white">{kycSubmission.fullName}</p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-[10px] text-gray-500 uppercase font-bold">Invested</p>
-                    <p className="text-sm font-bold text-white">{inv.amountBtc} BTC</p>
+                <div className="p-4 bg-[#0B0B0B] rounded-xl border border-[#C9A96E]/5">
+                  <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">ID Type</p>
+                  <p className="text-sm font-bold text-white capitalize">{kycSubmission.idType?.replace('_', ' ')}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <p className="text-[10px] text-gray-500 uppercase font-bold flex items-center gap-1">
+                    <FileText size={10} /> ID Document
+                  </p>
+                  <div className="aspect-[4/3] bg-[#0B0B0B] rounded-xl overflow-hidden border border-[#C9A96E]/10">
+                    {kycSubmission.idImage ? (
+                      <img src={kycSubmission.idImage} alt="ID" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-700">No image</div>
+                    )}
                   </div>
-                  <div>
-                    <p className="text-[10px] text-gray-500 uppercase font-bold">Expected</p>
-                    <p className="text-sm font-bold text-[#C9A96E]">{inv.expectedReturnBtc?.toFixed(4)} BTC</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-[10px] text-gray-500 uppercase font-bold flex items-center gap-1">
+                    <Camera size={10} /> Selfie
+                  </p>
+                  <div className="aspect-[4/3] bg-[#0B0B0B] rounded-xl overflow-hidden border border-[#C9A96E]/10">
+                    {kycSubmission.selfieImage ? (
+                      <img src={kycSubmission.selfieImage} alt="Selfie" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-700">No image</div>
+                    )}
                   </div>
                 </div>
               </div>
-            ))
+
+              {kycSubmission.status === 'pending' && (
+                <div className="flex gap-3 pt-4">
+                  <button 
+                    onClick={handleApproveKyc}
+                    className="flex-1 bg-green-500 text-[#0B0B0B] font-bold py-3 rounded-xl hover:bg-green-400 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Check size={18} />
+                    Approve
+                  </button>
+                  <button 
+                    onClick={() => setShowRejectModal(true)}
+                    className="flex-1 bg-red-500 text-white font-bold py-3 rounded-xl hover:bg-red-400 transition-all flex items-center justify-center gap-2"
+                  >
+                    <X size={18} />
+                    Reject
+                  </button>
+                </div>
+              )}
+
+              {kycSubmission.status === 'rejected' && (
+                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+                  <p className="text-xs font-bold text-red-500 uppercase mb-1">Rejection Reason</p>
+                  <p className="text-sm text-gray-300 italic">"{kycSubmission.rejectionReason || 'No reason provided.'}"</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="py-10 text-center text-gray-500 italic">
+              No KYC submission found for this user.
+            </div>
           )}
         </div>
+
+        <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+          <h3 className="text-xl font-bold text-white mb-6">User Investments</h3>
+          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+            {investments.length === 0 ? (
+              <div className="py-10 text-center text-gray-500">No investments found.</div>
+            ) : (
+              investments.map(inv => (
+                <div key={inv.id} className="p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <p className="text-sm font-bold text-white">{inv.planName}</p>
+                      <p className="text-[10px] text-gray-500">{inv.createdAt ? format(new Date(inv.createdAt), "MMM dd, yyyy") : "---"}</p>
+                    </div>
+                    <span className={cn(
+                      "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                      inv.status === 'active' ? "bg-blue-500/10 text-blue-500" : "bg-green-500/10 text-green-500"
+                    )}>
+                      {inv.status}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-[10px] text-gray-500 uppercase font-bold">Invested</p>
+                      <p className="text-sm font-bold text-white">{inv.amountBtc} BTC</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-gray-500 uppercase font-bold">Expected</p>
+                      <p className="text-sm font-bold text-[#C9A96E]">{inv.expectedReturnBtc?.toFixed(4)} BTC</p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* Rejection Modal */}
+      <AnimatePresence>
+        {showRejectModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowRejectModal(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-[#121212] border border-[#C9A96E]/20 rounded-3xl p-8 shadow-2xl"
+            >
+              <h3 className="text-2xl font-bold text-white mb-2">Reject KYC</h3>
+              <p className="text-gray-400 text-sm mb-6">Please provide a reason for rejecting this KYC submission. The user will be notified.</p>
+              
+              <div className="space-y-4">
+                <textarea 
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="e.g. ID image is blurry, document expired..."
+                  className="w-full h-32 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl p-4 text-white outline-none focus:border-red-500/40 transition-all resize-none"
+                />
+                
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => setShowRejectModal(false)}
+                    className="flex-1 py-3 bg-[#1A1A1A] text-white font-bold rounded-xl border border-[#C9A96E]/10 hover:bg-[#222] transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleRejectKyc}
+                    disabled={rejecting || !rejectReason.trim()}
+                    className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-400 transition-all disabled:opacity-50"
+                  >
+                    {rejecting ? "Rejecting..." : "Confirm Rejection"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

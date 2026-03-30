@@ -18,6 +18,7 @@ import { Landing } from "./pages/Landing";
 import { Restricted } from "./pages/Restricted";
 import { FAQ } from "./pages/FAQ";
 import { TwoFactorSetup } from "./pages/TwoFactorSetup";
+import { ForgotPassword } from "./pages/ForgotPassword";
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode, adminOnly?: boolean }> = ({ children, adminOnly }) => {
   const { user, profile, loading, isAdmin, isRestricted } = useAuth();
@@ -52,6 +53,7 @@ export default function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/2fa/setup" element={
               <ProtectedRoute>

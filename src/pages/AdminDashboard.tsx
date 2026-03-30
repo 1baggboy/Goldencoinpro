@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { 
   Users, 
   ArrowDownCircle, 
@@ -39,6 +40,9 @@ export const AdminDashboard = () => {
   const [pendingKyc, setPendingKyc] = useState<any[]>([]);
   const [selectedKyc, setSelectedKyc] = useState<any>(null);
   const [selectedTx, setSelectedTx] = useState<any>(null);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectingKyc, setRejectingKyc] = useState<{ id: string, userId: string } | null>(null);
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalDeposits: 0,
@@ -124,12 +128,30 @@ export const AdminDashboard = () => {
     await updateDoc(doc(db, "kyc_submissions", kyc.id), { status: "approved" });
     await updateDoc(doc(db, "users", kyc.userId), { kycStatus: "verified" });
     await addNotification(kyc.userId, "KYC Verified", "Your KYC verification has been approved. You can now access all features, including withdrawals.", "success");
+    setSelectedKyc(null);
   };
 
-  const rejectKyc = async (kycId: string, userId: string) => {
-    await updateDoc(doc(db, "kyc_submissions", kycId), { status: "rejected" });
-    await updateDoc(doc(db, "users", userId), { kycStatus: "rejected" });
-    await addNotification(userId, "KYC Rejected", "Your KYC verification has been rejected. Please review your documents and try again.", "error");
+  const handleRejectKyc = async () => {
+    if (!rejectingKyc || !rejectReason.trim()) return;
+    try {
+      await updateDoc(doc(db, "kyc_submissions", rejectingKyc.id), { 
+        status: "rejected",
+        rejectionReason: rejectReason 
+      });
+      await updateDoc(doc(db, "users", rejectingKyc.userId), { kycStatus: "rejected" });
+      await addNotification(rejectingKyc.userId, "KYC Rejected", `Your KYC verification was rejected. Reason: ${rejectReason}`, "error");
+      setShowRejectModal(false);
+      setRejectReason("");
+      setRejectingKyc(null);
+      setSelectedKyc(null);
+    } catch (error) {
+      console.error("Error rejecting KYC:", error);
+    }
+  };
+
+  const initiateRejectKyc = (id: string, userId: string) => {
+    setRejectingKyc({ id, userId });
+    setShowRejectModal(true);
   };
 
   const toggleUserStatus = async (userId: string, currentStatus: string) => {
@@ -325,7 +347,7 @@ export const AdminDashboard = () => {
                       <Check size={18} />
                     </button>
                     <button 
-                      onClick={() => rejectKyc(kyc.id, kyc.userId)}
+                      onClick={() => initiateRejectKyc(kyc.id, kyc.userId)}
                       className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
                     >
                       <X size={18} />
@@ -403,14 +425,14 @@ export const AdminDashboard = () => {
             </div>
             <div className="p-6 bg-[#0B0B0B] border-t border-[#C9A96E]/10 flex gap-4">
               <button 
-                onClick={() => { approveKyc(selectedKyc); setSelectedKyc(null); }}
+                onClick={() => approveKyc(selectedKyc)}
                 className="flex-1 py-4 bg-green-500 text-[#0B0B0B] font-bold rounded-xl hover:bg-green-600 transition-all flex items-center justify-center gap-2"
               >
                 <Check size={20} />
                 Approve KYC
               </button>
               <button 
-                onClick={() => { rejectKyc(selectedKyc.id, selectedKyc.userId); setSelectedKyc(null); }}
+                onClick={() => initiateRejectKyc(selectedKyc.id, selectedKyc.userId)}
                 className="flex-1 py-4 bg-red-500/10 text-red-500 border border-red-500/20 font-bold rounded-xl hover:bg-red-500/20 transition-all flex items-center justify-center gap-2"
               >
                 <X size={20} />
@@ -640,6 +662,61 @@ export const AdminDashboard = () => {
           </table>
         </div>
       </div>
+
+      {/* Rejection Reason Modal */}
+      <AnimatePresence>
+        {showRejectModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => {
+                setShowRejectModal(false);
+                setRejectingKyc(null);
+              }}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-[#121212] border border-[#C9A96E]/20 rounded-3xl p-8 shadow-2xl"
+            >
+              <h3 className="text-2xl font-bold text-white mb-2">Reject KYC</h3>
+              <p className="text-gray-400 text-sm mb-6">Please provide a reason for rejecting this KYC submission. The user will be notified.</p>
+              
+              <div className="space-y-4">
+                <textarea 
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="e.g. ID image is blurry, document expired..."
+                  className="w-full h-32 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl p-4 text-white outline-none focus:border-red-500/40 transition-all resize-none"
+                />
+                
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => {
+                      setShowRejectModal(false);
+                      setRejectingKyc(null);
+                    }}
+                    className="flex-1 py-3 bg-[#1A1A1A] text-white font-bold rounded-xl border border-[#C9A96E]/10 hover:bg-[#222] transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleRejectKyc}
+                    disabled={!rejectReason.trim()}
+                    className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-400 transition-all disabled:opacity-50"
+                  >
+                    Confirm Rejection
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

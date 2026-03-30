@@ -141,7 +141,7 @@ export const Login = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between ml-1">
                     <label className="text-sm font-medium text-gray-400">Password</label>
-                    <a href="#" className="text-xs text-[#C9A96E] hover:underline">Forgot password?</a>
+                    <Link to="/forgot-password" title="Reset your password" id="forgot-password-link" className="text-xs text-[#C9A96E] hover:underline">Forgot password?</Link>
                   </div>
                   <div className="relative group">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#C9A96E] transition-colors" size={20} />
