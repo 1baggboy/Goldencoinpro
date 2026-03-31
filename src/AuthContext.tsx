@@ -52,6 +52,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {
+        try {
+          // Force token refresh to ensure Firestore has the latest auth state
+          await firebaseUser.getIdToken(true);
+        } catch (e) {
+          console.error("Failed to refresh token:", e);
+        }
+        
         // Listen to profile changes
         const profileRef = doc(db, "users", firebaseUser.uid);
         console.log("Fetching profile for:", firebaseUser.uid);

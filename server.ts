@@ -3,7 +3,6 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import cors from "cors";
 import helmet from "helmet";
-import nodemailer from "nodemailer";
 
 async function startServer() {
   const app = express();
@@ -14,18 +13,6 @@ async function startServer() {
     contentSecurityPolicy: false, // Disable for development/iframe compatibility
   }));
   app.use(express.json());
-
-  // Configure Nodemailer
-  const port = Number(process.env.SMTP_PORT);
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: port,
-    secure: port === 465, // true for 465, false for other ports (e.g., 587)
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
 
   // API Routes
   app.get("/api/health", (req, res) => {
@@ -62,63 +49,6 @@ async function startServer() {
     } catch (error) {
       res.json({ usd: 65000 });
     }
-  });
-
-  // OTP Storage (In-memory for demo)
-  const otpStore = new Map<string, { otp: string, expires: number }>();
-
-  app.post("/api/auth/send-otp", async (req, res) => {
-    console.log("[OTP] Received request:", req.body);
-    const { email } = req.body;
-    if (!email) {
-        console.log("[OTP] Missing email");
-        return res.status(400).json({ error: "Email is required" });
-    }
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    otpStore.set(email, { otp, expires: Date.now() + 10 * 60 * 1000 }); // 10 mins
-
-    console.log(`[OTP] OTP for ${email}: ${otp}`);
-
-    // Send email
-    try {
-      const isSmtpConfigured = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
-      if (isSmtpConfigured) {
-        await transporter.sendMail({
-          from: process.env.SMTP_USER,
-          to: email,
-          subject: "Your Goldencoin OTP",
-          text: `Your OTP for Goldencoin is: ${otp}. It expires in 10 minutes.`,
-          html: `<p>Your OTP for Goldencoin is: <strong>${otp}</strong>. It expires in 10 minutes.</p>`,
-        });
-        res.json({ message: "OTP sent successfully" });
-      } else {
-        console.log(`[OTP] Mock email sent to ${email} with OTP: ${otp}. (SMTP not configured)`);
-        res.json({ message: "OTP sent successfully", mock: true, mockOtp: "123456" });
-      }
-    } catch (error) {
-      console.error("[OTP] Error sending email:", error);
-      res.status(500).json({ error: "Failed to send OTP email" });
-    }
-  });
-
-  app.post("/api/auth/verify-otp", async (req, res) => {
-    const { email, otp } = req.body;
-    
-    // Allow mock OTP if SMTP is not configured
-    const isSmtpConfigured = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
-    if (!isSmtpConfigured && otp === "123456") {
-      return res.json({ message: "Mock OTP verified successfully" });
-    }
-
-    const stored = otpStore.get(email);
-
-    if (!stored || stored.otp !== otp || stored.expires < Date.now()) {
-      return res.status(400).json({ error: "Invalid or expired OTP" });
-    }
-
-    otpStore.delete(email);
-    res.json({ message: "OTP verified successfully" });
   });
 
   // Vite middleware for development

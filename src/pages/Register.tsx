@@ -14,11 +14,6 @@ export const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [referralInput, setReferralInput] = useState("");
-  const [otp, setOtp] = useState("");
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const [isMockOtp, setIsMockOtp] = useState(false);
-  const [isOtpVerified, setIsOtpVerified] = useState(false);
-  const [otpLoading, setOtpLoading] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -34,61 +29,7 @@ export const Register = () => {
     special: /[^A-Za-z0-9]/.test(password),
   };
   const isPasswordStrong = Object.values(passwordCriteria).every(Boolean);
-  const canSubmit = name.length > 2 && isEmailValid && isPasswordStrong && isOtpVerified && acceptedTerms;
-
-  const sendOtp = async () => {
-    if (!isEmailValid) return;
-    setOtpLoading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      
-      if (!res.ok) {
-        const text = await res.text();
-        let errorMessage = "Failed to send OTP";
-        try {
-          const data = JSON.parse(text);
-          errorMessage = data.error || errorMessage;
-        } catch (e) {
-          console.error("Non-JSON error response:", text);
-        }
-        throw new Error(errorMessage);
-      }
-      const data = await res.json();
-      if (data.mock) {
-        setIsMockOtp(true);
-      }
-      setIsOtpSent(true);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setOtpLoading(false);
-    }
-  };
-
-  const verifyOtp = async () => {
-    if (!otp) return;
-    setOtpLoading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Invalid OTP");
-      setIsOtpVerified(true);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setOtpLoading(false);
-    }
-  };
+  const canSubmit = name.length > 2 && isEmailValid && isPasswordStrong && acceptedTerms;
 
   const generateReferralCode = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -101,34 +42,39 @@ export const Register = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isOtpVerified) {
-      setError("Please verify your email with the OTP first.");
-      return;
-    }
     setLoading(true);
     setError("");
     try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      try {
+        // Force token refresh to ensure Firestore has the latest auth state
+        await user.getIdToken(true);
+      } catch (e) {
+        console.error("Failed to refresh token:", e);
+      }
+
       let referredByUid = "";
       const finalReferralCode = referralCode || referralInput;
       if (finalReferralCode) {
         if (!/^[a-zA-Z0-9]+$/.test(finalReferralCode)) {
-          setError("Referral code must be alphanumeric.");
-          setLoading(false);
-          return;
-        }
-        const q = query(collection(db, "users"), where("referralCode", "==", finalReferralCode));
-        const snap = await getDocs(q);
-        if (!snap.empty) {
-          referredByUid = snap.docs[0].id;
+          // Ignore invalid referral code format
+          console.warn("Invalid referral code format.");
         } else {
-          setError("Invalid referral code.");
-          setLoading(false);
-          return;
+          try {
+            const q = query(collection(db, "users"), where("referralCode", "==", finalReferralCode));
+            const snap = await getDocs(q);
+            if (!snap.empty) {
+              referredByUid = snap.docs[0].id;
+            } else {
+              console.warn("Invalid referral code.");
+            }
+          } catch (err) {
+            console.error("Error checking referral code:", err);
+          }
         }
       }
-
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
 
       await updateProfile(user, { displayName: name });
 
@@ -226,61 +172,18 @@ export const Register = () => {
                   type="email"
                   required
                   value={email}
-                  disabled={isOtpSent}
                   onChange={(e) => setEmail(e.target.value)}
                   className={cn(
                     "w-full border rounded-xl py-4 pl-12 pr-4 outline-none transition-all",
-                    email && !isEmailValid ? "border-red-500/50 focus:border-red-500" : "bg-slate-50 border-slate-200 text-slate-950 focus:border-[#C9A96E]/40 dark:bg-[#0B0B0B] dark:border-[#C9A96E]/10 dark:text-white dark:focus:border-[#C9A96E]/40",
-                    isOtpSent && "opacity-50"
+                    email && !isEmailValid ? "border-red-500/50 focus:border-red-500" : "bg-slate-50 border-slate-200 text-slate-950 focus:border-[#C9A96E]/40 dark:bg-[#0B0B0B] dark:border-[#C9A96E]/10 dark:text-white dark:focus:border-[#C9A96E]/40"
                   )}
                   placeholder="name@example.com"
                 />
               </div>
-              {!isOtpSent && (
-                <button
-                  type="button"
-                  onClick={sendOtp}
-                  disabled={!isEmailValid || otpLoading}
-                  className="px-4 bg-[#C9A96E]/10 text-[#C9A96E] font-bold rounded-xl border border-[#C9A96E]/20 hover:bg-[#C9A96E]/20 transition-all disabled:opacity-50 text-xs"
-                >
-                  {otpLoading ? "..." : "Send OTP"}
-                </button>
-              )}
             </div>
             {email && !isEmailValid && (
               <p className="text-[10px] text-red-500 ml-1 flex items-center gap-1">
                 <AlertCircle size={10} /> Please enter a valid email address
-              </p>
-            )}
-            {isOtpSent && !isOtpVerified && (
-              <div className="mt-4 space-y-2">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    className="flex-1 border rounded-xl py-3 px-4 outline-none transition-all text-center tracking-[0.5em] font-bold bg-slate-50 border-slate-200 text-slate-950 focus:border-[#C9A96E]/40 dark:bg-[#0B0B0B] dark:border-[#C9A96E]/20 dark:text-white dark:focus:border-[#C9A96E]/40"
-                    placeholder="000000"
-                    maxLength={6}
-                  />
-                  <button
-                    type="button"
-                    onClick={verifyOtp}
-                    disabled={otp.length !== 6 || otpLoading}
-                    className="px-6 bg-[#C9A96E] text-slate-950 font-bold rounded-xl hover:bg-[#D4B985] transition-all disabled:opacity-50 text-sm"
-                  >
-                    {otpLoading ? "..." : "Verify"}
-                  </button>
-                </div>
-                <p className="text-[10px] text-slate-500 ml-1">
-                  Enter the 6-digit code sent to your email.
-                  {isMockOtp && <span className="text-[#C9A96E] ml-1">(Demo mode: use 123456)</span>}
-                </p>
-              </div>
-            )}
-            {isOtpVerified && (
-              <p className="text-[10px] text-green-500 ml-1 flex items-center gap-1">
-                <Check size={10} /> Email verified successfully
               </p>
             )}
           </div>
