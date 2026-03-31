@@ -60,12 +60,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log("Profile found:", docSnap.data());
             setProfile(docSnap.data() as UserProfile);
           } else {
-            console.log("Profile not found");
+            console.log("Profile not found for uid:", firebaseUser.uid);
             setProfile(null);
           }
           setLoading(false);
         }, (error) => {
-          console.error("Profile snapshot error for", firebaseUser.uid, ":", error);
+          console.error("Profile snapshot error for", firebaseUser.uid, ":", error.message, error.code, error);
           setLoading(false);
         });
         return () => unsubProfile();
