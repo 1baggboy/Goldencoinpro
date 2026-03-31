@@ -134,6 +134,7 @@ export const Register = () => {
         displayName: name,
         role: isAdminEmail ? "admin" : "user",
         usdBalance: 0,
+        btcBalance: 0,
         tradingBalanceBtc: 0,
         totalDepositedUsd: 0,
         referralCode: generateReferralCode(),
@@ -147,6 +148,7 @@ export const Register = () => {
 
       if (referredByUid) {
         await updateDoc(doc(db, "users", referredByUid), {
+          usdBalance: increment(10),
           referralBonusEarned: increment(10),
         });
         
