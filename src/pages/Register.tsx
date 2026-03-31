@@ -16,6 +16,7 @@ export const Register = () => {
   const [referralInput, setReferralInput] = useState("");
   const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isMockOtp, setIsMockOtp] = useState(false);
   const [isOtpVerified, setIsOtpVerified] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [error, setError] = useState("");
@@ -56,6 +57,10 @@ export const Register = () => {
           console.error("Non-JSON error response:", text);
         }
         throw new Error(errorMessage);
+      }
+      const data = await res.json();
+      if (data.mock) {
+        setIsMockOtp(true);
       }
       setIsOtpSent(true);
     } catch (err: any) {
@@ -269,6 +274,7 @@ export const Register = () => {
                 </div>
                 <p className="text-[10px] text-slate-500 ml-1">
                   Enter the 6-digit code sent to your email.
+                  {isMockOtp && <span className="text-[#C9A96E] ml-1">(Demo mode: use 123456)</span>}
                 </p>
               </div>
             )}

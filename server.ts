@@ -82,14 +82,20 @@ async function startServer() {
 
     // Send email
     try {
-      await transporter.sendMail({
-        from: process.env.SMTP_USER,
-        to: email,
-        subject: "Your Goldencoin OTP",
-        text: `Your OTP for Goldencoin is: ${otp}. It expires in 10 minutes.`,
-        html: `<p>Your OTP for Goldencoin is: <strong>${otp}</strong>. It expires in 10 minutes.</p>`,
-      });
-      res.json({ message: "OTP sent successfully" });
+      const isSmtpConfigured = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
+      if (isSmtpConfigured) {
+        await transporter.sendMail({
+          from: process.env.SMTP_USER,
+          to: email,
+          subject: "Your Goldencoin OTP",
+          text: `Your OTP for Goldencoin is: ${otp}. It expires in 10 minutes.`,
+          html: `<p>Your OTP for Goldencoin is: <strong>${otp}</strong>. It expires in 10 minutes.</p>`,
+        });
+        res.json({ message: "OTP sent successfully" });
+      } else {
+        console.log(`[OTP] Mock email sent to ${email} with OTP: ${otp}. (SMTP not configured)`);
+        res.json({ message: "OTP sent successfully", mock: true, mockOtp: "123456" });
+      }
     } catch (error) {
       console.error("[OTP] Error sending email:", error);
       res.status(500).json({ error: "Failed to send OTP email" });
@@ -98,6 +104,13 @@ async function startServer() {
 
   app.post("/api/auth/verify-otp", async (req, res) => {
     const { email, otp } = req.body;
+    
+    // Allow mock OTP if SMTP is not configured
+    const isSmtpConfigured = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
+    if (!isSmtpConfigured && otp === "123456") {
+      return res.json({ message: "Mock OTP verified successfully" });
+    }
+
     const stored = otpStore.get(email);
 
     if (!stored || stored.otp !== otp || stored.expires < Date.now()) {
