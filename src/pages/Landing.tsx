@@ -10,6 +10,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { motion } from "motion/react";
+import { ThemeToggle } from "../components/ThemeToggle";
 
 export const Landing = () => {
   return (
@@ -26,6 +27,7 @@ export const Landing = () => {
           <a href="#about" className="hover:text-[#C9A96E] transition-colors">About</a>
         </div>
         <div className="flex items-center gap-4">
+          <ThemeToggle />
           <Link to="/login" className="text-sm font-semibold hover:text-[#C9A96E] transition-colors">Login</Link>
           <Link to="/register" className="px-5 py-2.5 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-lg hover:bg-[#D4B985] transition-all text-sm">
             Get Started

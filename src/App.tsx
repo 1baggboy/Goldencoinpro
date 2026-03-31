@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./AuthContext";
 import { NotificationProvider } from "./NotificationContext";
+import { ThemeProvider } from "./ThemeContext";
 import { Layout } from "./components/Layout";
 import { Dashboard } from "./pages/Dashboard";
 import { Login } from "./pages/Login";
@@ -22,6 +23,7 @@ import { TwoFactorSetup } from "./pages/TwoFactorSetup";
 import { ForgotPassword } from "./pages/ForgotPassword";
 import { PrivacyPolicy, TermsOfService, RiskDisclaimer } from "./pages/Legal";
 import { SupportWidget } from "./components/SupportWidget";
+import { Toaster } from "sonner";
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode, adminOnly?: boolean }> = ({ children, adminOnly }) => {
   const { user, profile, loading, isAdmin, isRestricted } = useAuth();
@@ -51,7 +53,8 @@ export default function App() {
   return (
     <AuthProvider>
       <NotificationProvider>
-        <Router>
+        <ThemeProvider>
+          <Router>
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
@@ -153,7 +156,9 @@ export default function App() {
             } />
           </Routes>
           <SupportWidget />
+          <Toaster richColors position="top-right" />
         </Router>
+        </ThemeProvider>
       </NotificationProvider>
     </AuthProvider>
   );

@@ -17,6 +17,7 @@ import { db } from "../firebase";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "../lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 
 const INVESTMENT_PLANS = [
   {
@@ -108,7 +109,7 @@ export const Invest = () => {
 
       // 1. Deduct balance
       await updateDoc(doc(db, "users", user.uid), {
-        btcBalance: increment(-btcAmount),
+        usdBalance: increment(-usdAmount),
         tradingBalanceBtc: increment(-btcAmount)
       });
 
@@ -143,7 +144,7 @@ export const Invest = () => {
       }
 
       await addNotification(user.uid, "Investment Started", `Your investment of ${btcAmount} BTC in the ${selectedPlan.name} has started.`, "success");
-      setMessage({ type: 'success', text: "Investment started successfully!" });
+      toast.success("Investment started successfully!");
       setAmount("");
     } catch (error) {
       console.error("Investment error:", error);
@@ -163,7 +164,7 @@ export const Invest = () => {
 
       // 2. Add return to balance
       await updateDoc(doc(db, "users", user.uid), {
-        btcBalance: increment(inv.expectedReturnBtc)
+        tradingBalanceBtc: increment(inv.expectedReturnBtc)
       });
 
       await addNotification(user.uid, "Investment Claimed", `You have successfully claimed your profit of ${inv.expectedReturnBtc.toFixed(6)} BTC from the ${inv.planName}.`, "success");

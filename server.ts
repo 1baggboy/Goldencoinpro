@@ -55,8 +55,12 @@ async function startServer() {
   const otpStore = new Map<string, { otp: string, expires: number }>();
 
   app.post("/api/auth/send-otp", async (req, res) => {
+    console.log("[OTP] Received request:", req.body);
     const { email } = req.body;
-    if (!email) return res.status(400).json({ error: "Email is required" });
+    if (!email) {
+        console.log("[OTP] Missing email");
+        return res.status(400).json({ error: "Email is required" });
+    }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otpStore.set(email, { otp, expires: Date.now() + 10 * 60 * 1000 }); // 10 mins

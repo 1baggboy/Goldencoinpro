@@ -89,7 +89,7 @@ export const Dashboard = () => {
     };
   }, [user]);
 
-  const usdBalance = (profile?.btcBalance || 0) * (prices?.btc?.usd || 65000);
+  const usdBalance = profile?.usdBalance || 0;
   const tradingUsdBalance = (profile?.tradingBalanceBtc || 0) * (prices?.btc?.usd || 65000);
 
   const copyReferralCode = () => {
@@ -151,7 +151,7 @@ export const Dashboard = () => {
         <StatCard 
           title="Account Balance" 
           value={`$${usdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
-          subValue={`${profile?.btcBalance?.toFixed(4) || "0.0000"} BTC`}
+          subValue={`${(usdBalance / (prices?.btc?.usd || 65000)).toFixed(4) || "0.0000"} BTC`}
           icon={Wallet}
           color="gold"
         />
@@ -165,7 +165,7 @@ export const Dashboard = () => {
         <StatCard 
           title="Total Deposited" 
           value={`$${(profile?.totalDepositedUsd || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
-          subValue={`${profile?.totalDeposited?.toFixed(4) || "0.0000"} BTC`}
+          subValue={`Total USD deposited`}
           icon={TrendingUp}
           color="green"
         />

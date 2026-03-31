@@ -122,9 +122,8 @@ export const Deposit = () => {
       
       // Update user balance
       await updateDoc(doc(db, "users", user.uid), {
-        btcBalance: increment(amountBtc),
+        usdBalance: increment(valUsd),
         tradingBalanceBtc: increment(amountBtc),
-        totalDeposited: increment(amountBtc),
         totalDepositedUsd: increment(valUsd)
       });
 

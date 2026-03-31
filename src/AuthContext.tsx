@@ -8,9 +8,9 @@ interface UserProfile {
   email: string;
   displayName: string;
   role: "user" | "admin";
-  btcBalance: number;
-  tradingBalanceBtc?: number;
-  totalDeposited: number;
+  usdBalance: number; // Main account balance in USD
+  tradingBalanceBtc: number; // Trading balance in BTC
+  totalDepositedUsd: number; // Total deposited in USD
   kycStatus: "not_submitted" | "pending" | "verified" | "rejected";
   kycRejectionReason?: string;
   createdAt: string;
@@ -23,6 +23,7 @@ interface UserProfile {
   referralCode: string;
   referredBy?: string;
   referralBonusEarned: number;
+  hasTraded?: boolean;
 }
 
 interface AuthContextType {

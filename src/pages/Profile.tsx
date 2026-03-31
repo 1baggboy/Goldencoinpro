@@ -92,7 +92,7 @@ export const Profile = () => {
     if (!user || !profile) return;
     
     // Check if user has balance
-    if (profile.btcBalance > 0 || (profile.tradingBalanceBtc && profile.tradingBalanceBtc > 0)) {
+    if (profile.usdBalance > 0 || (profile.tradingBalanceBtc && profile.tradingBalanceBtc > 0)) {
       setMessage({ type: 'error', text: "You must withdraw your entire balance before deleting your account." });
       setShowDeleteModal(false);
       return;

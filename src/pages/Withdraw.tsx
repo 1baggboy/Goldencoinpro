@@ -93,9 +93,9 @@ export const Withdraw = () => {
       return;
     }
 
-    // 3. Check Minimum ($50)
-    if (valUsd < 50) {
-      setError("Minimum withdrawal amount is $50.");
+    // 3. Check Minimum ($1000)
+    if (valUsd < 1000) {
+      setError("Minimum withdrawal amount is $1000.");
       return;
     }
 
