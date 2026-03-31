@@ -110,6 +110,10 @@
     "/notifications/{notificationId}": {
       "schema": "notifications",
       "description": "User notifications"
+    },
+    "/support_chats/{chatId}": {
+      "schema": "support_chats",
+      "description": "Customer support chat messages"
     }
   }
 }

@@ -24,12 +24,13 @@ import { ForgotPassword } from "./pages/ForgotPassword";
 import { PrivacyPolicy, TermsOfService, RiskDisclaimer } from "./pages/Legal";
 import { SupportWidget } from "./components/SupportWidget";
 import { Toaster } from "sonner";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode, adminOnly?: boolean }> = ({ children, adminOnly }) => {
   const { user, profile, loading, isAdmin, isRestricted } = useAuth();
   const location = useLocation();
 
-  if (loading) return <div className="flex items-center justify-center h-screen bg-[#0B0B0B] text-[#C9A96E]">Loading...</div>;
+  if (loading) return <div className="flex items-center justify-center h-screen bg-slate-950 text-[#C9A96E]">Loading...</div>;
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
   
   // Handle restricted users
@@ -51,115 +52,117 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode, adminOnly?: boolean 
 
 export default function App() {
   return (
-    <AuthProvider>
-      <NotificationProvider>
-        <ThemeProvider>
-          <Router>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/terms-of-service" element={<TermsOfService />} />
-            <Route path="/risk-disclaimer" element={<RiskDisclaimer />} />
-            <Route path="/2fa/setup" element={
-              <ProtectedRoute>
-                <TwoFactorSetup />
-              </ProtectedRoute>
-            } />
-            <Route path="/restricted" element={
-              <ProtectedRoute>
-                <Restricted />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Layout>
-                  <Dashboard />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/transactions" element={
-              <ProtectedRoute>
-                <Layout>
-                  <Transactions />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/deposit" element={
-              <ProtectedRoute>
-                <Layout>
-                  <Deposit />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/withdraw" element={
-              <ProtectedRoute>
-                <Layout>
-                  <Withdraw />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/kyc" element={
-              <ProtectedRoute>
-                <Layout>
-                  <KYC />
-                </Layout>
-              </ProtectedRoute>
-            } />
-
-            <Route path="/invest" element={
-              <ProtectedRoute>
-                <Layout>
-                  <Invest />
-                </Layout>
-              </ProtectedRoute>
-            } />
-
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <Layout>
-                  <Profile />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/admin" element={
-              <ProtectedRoute adminOnly>
-                <Layout>
-                  <AdminDashboard />
-                </Layout>
-              </ProtectedRoute>
-            } />
-
-            <Route path="/admin/support" element={
-              <ProtectedRoute adminOnly>
-                <Layout>
-                  <AdminSupport />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/admin/user/:userId" element={
-              <ProtectedRoute adminOnly>
-                <Layout>
-                  <UserDetail />
-                </Layout>
-              </ProtectedRoute>
-            } />
-          </Routes>
-          <SupportWidget />
-          <Toaster richColors position="top-right" />
-        </Router>
-        </ThemeProvider>
-      </NotificationProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <NotificationProvider>
+          <ThemeProvider>
+            <Router>
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/faq" element={<FAQ />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/risk-disclaimer" element={<RiskDisclaimer />} />
+              <Route path="/2fa/setup" element={
+                <ProtectedRoute>
+                  <TwoFactorSetup />
+                </ProtectedRoute>
+              } />
+              <Route path="/restricted" element={
+                <ProtectedRoute>
+                  <Restricted />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Dashboard />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/transactions" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Transactions />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/deposit" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Deposit />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/withdraw" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Withdraw />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/kyc" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <KYC />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+  
+              <Route path="/invest" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Invest />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+  
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Profile />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/admin" element={
+                <ProtectedRoute adminOnly>
+                  <Layout>
+                    <AdminDashboard />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+  
+              <Route path="/admin/support" element={
+                <ProtectedRoute adminOnly>
+                  <Layout>
+                    <AdminSupport />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/admin/user/:userId" element={
+                <ProtectedRoute adminOnly>
+                  <Layout>
+                    <UserDetail />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+            </Routes>
+            <SupportWidget />
+            <Toaster richColors position="top-right" />
+          </Router>
+          </ThemeProvider>
+        </NotificationProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }

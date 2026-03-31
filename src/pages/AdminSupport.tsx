@@ -113,7 +113,7 @@ export const AdminSupport = () => {
   return (
     <div className="h-[calc(100vh-160px)] flex gap-6">
       {/* Chat List */}
-      <div className="w-80 bg-[#121212] border border-[#C9A96E]/10 rounded-2xl flex flex-col overflow-hidden">
+      <div className="w-80 bg-slate-900 border border-[#C9A96E]/10 rounded-2xl flex flex-col overflow-hidden">
         <div className="p-4 border-b border-[#C9A96E]/10">
           <h3 className="font-bold text-white mb-4 flex items-center gap-2">
             <MessageSquare size={18} className="text-[#C9A96E]" />
@@ -126,7 +126,7 @@ export const AdminSupport = () => {
               placeholder="Search users..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-lg py-2 pl-9 pr-4 text-xs text-white outline-none focus:border-[#C9A96E]/40"
+              className="w-full bg-slate-950 border border-[#C9A96E]/10 rounded-lg py-2 pl-9 pr-4 text-xs text-white outline-none focus:border-[#C9A96E]/40"
             />
           </div>
         </div>
@@ -170,11 +170,11 @@ export const AdminSupport = () => {
       </div>
 
       {/* Chat Window */}
-      <div className="flex-1 bg-[#121212] border border-[#C9A96E]/10 rounded-2xl flex flex-col overflow-hidden">
+      <div className="flex-1 bg-slate-900 border border-[#C9A96E]/10 rounded-2xl flex flex-col overflow-hidden">
         {selectedChatId ? (
           <>
             {/* Header */}
-            <div className="p-4 bg-[#0B0B0B] border-b border-[#C9A96E]/10 flex items-center justify-between">
+            <div className="p-4 bg-slate-950 border-b border-[#C9A96E]/10 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-[#C9A96E]/10 rounded-full flex items-center justify-center text-[#C9A96E]">
                   <User size={20} />
@@ -194,7 +194,7 @@ export const AdminSupport = () => {
             {/* Messages */}
             <div 
               ref={scrollRef}
-              className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide bg-[#0B0B0B]/30"
+              className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide bg-slate-950/30"
             >
               {messages.map((msg) => (
                 <div 
@@ -208,7 +208,7 @@ export const AdminSupport = () => {
                     "p-4 rounded-2xl text-sm leading-relaxed shadow-sm",
                     msg.sender === 'admin' 
                       ? "bg-[#C9A96E] text-[#0B0B0B] rounded-tr-none" 
-                      : "bg-[#1A1A1A] text-white border border-[#C9A96E]/10 rounded-tl-none"
+                      : "bg-slate-800 text-white border border-[#C9A96E]/10 rounded-tl-none"
                   )}>
                     {msg.text}
                   </div>
@@ -220,14 +220,14 @@ export const AdminSupport = () => {
             </div>
 
             {/* Input */}
-            <form onSubmit={handleSendReply} className="p-4 bg-[#0B0B0B] border-t border-[#C9A96E]/10">
+            <form onSubmit={handleSendReply} className="p-4 bg-slate-950 border-t border-[#C9A96E]/10">
               <div className="relative flex gap-3">
                 <input 
                   type="text"
                   value={reply}
                   onChange={(e) => setReply(e.target.value)}
                   placeholder="Type your reply..."
-                  className="flex-1 bg-[#121212] border border-[#C9A96E]/10 rounded-xl py-4 px-6 text-sm text-white outline-none focus:border-[#C9A96E]/40 transition-all shadow-inner"
+                  className="flex-1 bg-slate-900 border border-[#C9A96E]/10 rounded-xl py-4 px-6 text-sm text-white outline-none focus:border-[#C9A96E]/40 transition-all shadow-inner"
                 />
                 <button 
                   type="submit"

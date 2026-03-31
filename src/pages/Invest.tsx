@@ -199,7 +199,7 @@ export const Invest = () => {
                   "p-6 rounded-2xl border transition-all text-left relative overflow-hidden group",
                   selectedPlan.id === plan.id 
                     ? "bg-[#C9A96E]/10 border-[#C9A96E] shadow-[0_0_20px_rgba(201,169,110,0.1)]" 
-                    : "bg-[#121212] border-[#C9A96E]/10 hover:border-[#C9A96E]/30"
+                    : "bg-slate-900 border-[#C9A96E]/10 hover:border-[#C9A96E]/30"
                 )}
               >
                 <div className={cn(
@@ -226,7 +226,7 @@ export const Invest = () => {
           </div>
 
           {/* Investment Form */}
-          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-8">
+          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-8">
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-xl font-bold text-white">Start Investment</h3>
               <div className="text-right">
@@ -246,7 +246,7 @@ export const Invest = () => {
                     step="1"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 pl-10 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono"
+                    className="w-full bg-slate-950 border border-[#C9A96E]/10 rounded-xl py-4 pl-10 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono"
                     placeholder={`Min $${selectedPlan.minAmount.toLocaleString()}`}
                     required
                   />
@@ -296,7 +296,7 @@ export const Invest = () => {
         </div>
 
         {/* Active Investments */}
-        <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6 h-fit">
+        <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6 h-fit">
           <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
             <Timer size={20} className="text-[#C9A96E]" />
             Active Investments
@@ -314,7 +314,7 @@ export const Invest = () => {
                 const progress = Math.min(100, Math.max(0, ((Date.now() - inv.startTime) / (inv.endTime - inv.startTime)) * 100));
 
                 return (
-                  <div key={inv.id} className="p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl space-y-4">
+                  <div key={inv.id} className="p-4 bg-slate-950 border border-[#C9A96E]/10 rounded-xl space-y-4">
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="text-xs font-bold text-[#C9A96E] uppercase tracking-widest">{inv.planName}</p>

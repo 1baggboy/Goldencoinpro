@@ -109,7 +109,8 @@ export const FAQ = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12 py-10">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+      <div className="max-w-4xl mx-auto space-y-12 py-10 px-4">
       <div className="text-center space-y-4">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
@@ -118,8 +119,8 @@ export const FAQ = () => {
         >
           <HelpCircle size={32} />
         </motion.div>
-        <h1 className="text-4xl font-bold text-white tracking-tight">Frequently Asked Questions</h1>
-        <p className="text-gray-400 max-w-xl mx-auto">
+        <h1 className="text-4xl font-bold text-slate-950 dark:text-white tracking-tight">Frequently Asked Questions</h1>
+        <p className="text-slate-600 dark:text-gray-400 max-w-xl mx-auto">
           Find answers to common questions about GoldenCoin Limited, our platform, and how to manage your digital assets.
         </p>
       </div>
@@ -132,13 +133,13 @@ export const FAQ = () => {
           placeholder="Search for answers..." 
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-[#121212] border border-[#C9A96E]/10 rounded-2xl py-4 pl-12 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all shadow-xl"
+          className="w-full bg-white dark:bg-slate-900 border border-[#C9A96E]/10 rounded-2xl py-4 pl-12 pr-4 text-slate-950 dark:text-white outline-none focus:border-[#C9A96E]/40 transition-all shadow-xl"
         />
       </div>
 
       <div className="space-y-8">
         {filteredFaqs.length === 0 ? (
-          <div className="text-center py-20 bg-[#121212] rounded-3xl border border-[#C9A96E]/10">
+          <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-[#C9A96E]/10">
             <p className="text-gray-500">No results found for "{searchTerm}"</p>
           </div>
         ) : (
@@ -146,7 +147,7 @@ export const FAQ = () => {
             <div key={catIdx} className="space-y-4">
               <div className="flex items-center gap-3 px-2">
                 <cat.icon size={20} className="text-[#C9A96E]" />
-                <h2 className="text-lg font-bold text-white uppercase tracking-widest">{cat.category}</h2>
+                <h2 className="text-lg font-bold text-slate-950 dark:text-white uppercase tracking-widest">{cat.category}</h2>
               </div>
               <div className="grid grid-cols-1 gap-4">
                 {cat.questions.map((item, qIdx) => {
@@ -156,7 +157,7 @@ export const FAQ = () => {
                     <div 
                       key={id} 
                       className={cn(
-                        "bg-[#121212] border rounded-2xl transition-all overflow-hidden",
+                        "bg-white dark:bg-slate-900 border rounded-2xl transition-all overflow-hidden",
                         isOpen ? "border-[#C9A96E]/40 ring-1 ring-[#C9A96E]/20" : "border-[#C9A96E]/10"
                       )}
                     >
@@ -164,7 +165,7 @@ export const FAQ = () => {
                         onClick={() => toggleFaq(id)}
                         className="w-full p-6 flex items-center justify-between text-left"
                       >
-                        <span className="font-bold text-white pr-8">{item.q}</span>
+                        <span className="font-bold text-slate-950 dark:text-white pr-8">{item.q}</span>
                         {isOpen ? <ChevronUp className="text-[#C9A96E]" size={20} /> : <ChevronDown className="text-gray-500" size={20} />}
                       </button>
                       <AnimatePresence>
@@ -175,7 +176,7 @@ export const FAQ = () => {
                             exit={{ height: 0, opacity: 0 }}
                             transition={{ duration: 0.3 }}
                           >
-                            <div className="px-6 pb-6 text-gray-400 text-sm leading-relaxed border-t border-[#C9A96E]/5 pt-4">
+                            <div className="px-6 pb-6 text-slate-600 dark:text-gray-400 text-sm leading-relaxed border-t border-[#C9A96E]/5 pt-4">
                               {item.a}
                             </div>
                           </motion.div>
@@ -208,6 +209,7 @@ export const FAQ = () => {
           Contact Support
           <ArrowRight size={18} />
         </a>
+      </div>
       </div>
     </div>
   );

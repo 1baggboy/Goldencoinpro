@@ -6,6 +6,8 @@ import { doc, getDoc } from "firebase/firestore";
 import { verify } from "otplib";
 import { Mail, Lock, ArrowRight, Chrome, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { useTheme } from "../ThemeContext";
+import { cn } from "../lib/utils";
 
 export const Login = () => {
   const [email, setEmail] = useState("");
@@ -17,6 +19,7 @@ export const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { theme } = useTheme();
 
   const from = location.state?.from?.pathname || "/dashboard";
 
@@ -25,12 +28,6 @@ export const Login = () => {
     setLoading(true);
     setError("");
     try {
-      // First, check if user has 2FA enabled without signing in yet
-      // We need to find the user by email. Since we can't easily query by email without being signed in 
-      // (due to security rules), we'll try to sign in first, then check profile.
-      // If 2FA is enabled, we'll sign them out immediately and show the 2FA prompt.
-      // This is a simplified flow for this environment.
-      
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
       const userData = userDoc.data();
@@ -38,7 +35,6 @@ export const Login = () => {
       if (userData?.twoFactorEnabled) {
         setTempUser({ uid: userCredential.user.uid, secret: userData.twoFactorSecret });
         setShowTwoFactor(true);
-        // Sign out for now until 2FA is verified
         await auth.signOut();
       } else {
         navigate(from, { replace: true });
@@ -62,7 +58,6 @@ export const Login = () => {
       });
 
       if (result.valid) {
-        // Re-authenticate
         await signInWithEmailAndPassword(auth, email, password);
         navigate(from, { replace: true });
       } else {
@@ -86,7 +81,7 @@ export const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0B0B] flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden transition-colors duration-300 bg-slate-50 dark:bg-slate-950">
       {/* Background Gradients */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#C9A96E]/5 rounded-full blur-[120px] -z-10"></div>
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#C9A96E]/5 rounded-full blur-[120px] -z-10"></div>
@@ -94,14 +89,14 @@ export const Login = () => {
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md bg-[#121212] border border-[#C9A96E]/10 rounded-3xl p-8 md:p-12 shadow-2xl relative z-10"
+        className="w-full max-w-md border rounded-3xl p-8 md:p-12 shadow-2xl relative z-10 transition-colors duration-300 bg-white border-slate-200 dark:bg-slate-900 dark:border-[#C9A96E]/10"
       >
         <div className="text-center mb-10">
           <Link to="/" className="inline-flex items-center gap-3 mb-6">
             <img src="/logo.svg" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
           </Link>
-          <h2 className="text-3xl font-bold text-white tracking-tight">Welcome Back</h2>
-          <p className="text-gray-500 mt-2">Enter your credentials to access your account.</p>
+          <h2 className="text-3xl font-bold tracking-tight text-slate-950 dark:text-white">Welcome Back</h2>
+          <p className="text-slate-500 mt-2">Enter your credentials to access your account.</p>
         </div>
 
         {error && (
@@ -121,15 +116,15 @@ export const Login = () => {
             >
               <form onSubmit={handleLogin} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-400 ml-1">Email Address</label>
+                  <label className="text-sm font-medium ml-1 text-slate-600 dark:text-gray-400">Email Address</label>
                   <div className="relative group">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#C9A96E] transition-colors" size={20} />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 transition-colors text-slate-400 group-focus-within:text-[#C9A96E] dark:text-gray-600 dark:group-focus-within:text-[#C9A96E]" size={20} />
                     <input
                       type="email"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 pl-12 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
+                      className="w-full border rounded-xl py-4 pl-12 pr-4 outline-none transition-all bg-slate-50 border-slate-200 text-slate-950 focus:border-[#C9A96E]/40 dark:bg-[#0B0B0B] dark:border-[#C9A96E]/10 dark:text-white dark:focus:border-[#C9A96E]/40"
                       placeholder="name@example.com"
                     />
                   </div>
@@ -137,17 +132,17 @@ export const Login = () => {
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between ml-1">
-                    <label className="text-sm font-medium text-gray-400">Password</label>
+                    <label className="text-sm font-medium text-slate-600 dark:text-gray-400">Password</label>
                     <Link to="/forgot-password" title="Reset your password" id="forgot-password-link" className="text-xs text-[#C9A96E] hover:underline">Forgot password?</Link>
                   </div>
                   <div className="relative group">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#C9A96E] transition-colors" size={20} />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 transition-colors text-slate-400 group-focus-within:text-[#C9A96E] dark:text-gray-600 dark:group-focus-within:text-[#C9A96E]" size={20} />
                     <input
                       type="password"
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 pl-12 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
+                      className="w-full border rounded-xl py-4 pl-12 pr-4 outline-none transition-all bg-slate-50 border-slate-200 text-slate-950 focus:border-[#C9A96E]/40 dark:bg-[#0B0B0B] dark:border-[#C9A96E]/10 dark:text-white dark:focus:border-[#C9A96E]/40"
                       placeholder="••••••••"
                     />
                   </div>
@@ -156,7 +151,7 @@ export const Login = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-4 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all flex items-center justify-center gap-2 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-4 bg-[#C9A96E] text-slate-950 font-bold rounded-xl hover:bg-[#D4B985] transition-all flex items-center justify-center gap-2 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? "Signing in..." : "Sign In"} <ArrowRight size={20} />
                 </button>
@@ -164,16 +159,16 @@ export const Login = () => {
 
               <div className="mt-8 relative">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-[#C9A96E]/10"></div>
+                  <div className="w-full border-t border-slate-200 dark:border-[#C9A96E]/10"></div>
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-[#121212] px-4 text-gray-600 font-bold tracking-widest">Or continue with</span>
+                  <span className="px-4 font-bold tracking-widest bg-white text-slate-400 dark:bg-slate-900 dark:text-gray-600">Or continue with</span>
                 </div>
               </div>
 
               <button
                 onClick={handleGoogleLogin}
-                className="w-full mt-8 py-4 bg-[#1A1A1A] text-white font-bold rounded-xl border border-[#C9A96E]/10 hover:bg-[#222] transition-all flex items-center justify-center gap-3"
+                className="w-full mt-8 py-4 font-bold rounded-xl border transition-all flex items-center justify-center gap-3 bg-slate-50 text-slate-950 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 text-white border-[#C9A96E]/10 hover:bg-slate-700"
               >
                 <Chrome size={20} className="text-[#C9A96E]" />
                 Google Account
@@ -191,8 +186,8 @@ export const Login = () => {
                 <div className="w-16 h-16 bg-[#C9A96E]/10 text-[#C9A96E] rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <ShieldCheck size={32} />
                 </div>
-                <h3 className="text-xl font-bold text-white">Two-Factor Verification</h3>
-                <p className="text-sm text-gray-500">Enter the 6-digit code from your authenticator app.</p>
+                <h3 className="text-xl font-bold text-slate-950 dark:text-white">Two-Factor Verification</h3>
+                <p className="text-sm text-slate-500">Enter the 6-digit code from your authenticator app.</p>
               </div>
 
               <form onSubmit={verifyTwoFactor} className="space-y-6">
@@ -204,7 +199,7 @@ export const Login = () => {
                     autoFocus
                     value={twoFactorCode}
                     onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ""))}
-                    className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 text-center text-3xl font-bold tracking-[0.5em] text-[#C9A96E] outline-none focus:border-[#C9A96E]/40 transition-all"
+                    className="w-full border rounded-xl py-4 text-center text-3xl font-bold tracking-[0.5em] text-[#C9A96E] outline-none transition-all bg-slate-50 border-slate-200 focus:border-[#C9A96E]/40 dark:bg-[#0B0B0B] dark:border-[#C9A96E]/10 dark:focus:border-[#C9A96E]/40"
                   />
                   
                   {error && (
@@ -219,14 +214,14 @@ export const Login = () => {
                   <button 
                     type="button"
                     onClick={() => setShowTwoFactor(false)}
-                    className="flex-1 py-4 bg-[#1A1A1A] text-white font-bold rounded-xl border border-[#C9A96E]/10 hover:bg-[#222] transition-all"
+                    className="flex-1 py-4 font-bold rounded-xl border transition-all bg-slate-50 text-slate-950 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 text-white border-[#C9A96E]/10 hover:bg-slate-700"
                   >
                     Back
                   </button>
                   <button 
                     type="submit"
                     disabled={loading || twoFactorCode.length !== 6}
-                    className="flex-[2] py-4 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="flex-[2] py-4 bg-[#C9A96E] text-slate-950 font-bold rounded-xl hover:bg-[#D4B985] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     {loading ? <Loader2 className="animate-spin" size={20} /> : <ShieldCheck size={20} />}
                     Verify

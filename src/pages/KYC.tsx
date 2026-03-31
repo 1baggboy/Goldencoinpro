@@ -118,7 +118,7 @@ export const KYC = () => {
         </div>
         <h1 className="text-3xl font-bold text-white tracking-tight">You're Verified!</h1>
         <p className="text-gray-400">Your account has full access to all Goldencoin features. Your identity has been successfully confirmed.</p>
-        <div className="p-6 bg-[#121212] border border-green-500/20 rounded-2xl flex items-center justify-between">
+        <div className="p-6 bg-slate-900 border border-green-500/20 rounded-2xl flex items-center justify-between">
           <div className="text-left">
             <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">Verification Level</p>
             <p className="text-lg font-bold text-white">Institutional Tier</p>
@@ -133,7 +133,7 @@ export const KYC = () => {
 
   if (profile?.kycStatus === 'pending' || success) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8 bg-[#121212] border border-[#C9A96E]/10 rounded-3xl relative">
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8 bg-slate-900 border border-[#C9A96E]/10 rounded-3xl relative">
         {/* Success Modal */}
         <AnimatePresence>
           {showSuccessModal && (
@@ -152,7 +152,7 @@ export const KYC = () => {
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative w-full max-w-md bg-[#121212] border border-[#C9A96E]/20 rounded-3xl p-8 text-center shadow-2xl"
+                className="relative w-full max-w-md bg-slate-900 border border-[#C9A96E]/20 rounded-3xl p-8 text-center shadow-2xl"
               >
                 <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto text-green-500 mb-6">
                   <Check size={40} />
@@ -186,15 +186,15 @@ export const KYC = () => {
           Your documents have been successfully submitted. Our team is currently reviewing your information. This process typically takes less than an hour.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-2xl mb-10">
-          <div className="p-4 bg-[#0B0B0B] rounded-xl border border-[#C9A96E]/5">
+          <div className="p-4 bg-slate-950 rounded-xl border border-[#C9A96E]/5">
             <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Status</p>
             <p className="text-sm font-bold text-yellow-500">Pending Review</p>
           </div>
-          <div className="p-4 bg-[#0B0B0B] rounded-xl border border-[#C9A96E]/5">
+          <div className="p-4 bg-slate-950 rounded-xl border border-[#C9A96E]/5">
             <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Estimated Time</p>
             <p className="text-sm font-bold text-white">~1 Hour</p>
           </div>
-          <div className="p-4 bg-[#0B0B0B] rounded-xl border border-[#C9A96E]/5">
+          <div className="p-4 bg-slate-950 rounded-xl border border-[#C9A96E]/5">
             <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Last Updated</p>
             <p className="text-sm font-bold text-white">Just now</p>
           </div>
@@ -239,11 +239,11 @@ export const KYC = () => {
       {/* Progress Bar */}
       <div className="flex items-center gap-4 mb-12">
         <StepIndicator active={step >= 1} completed={step > 1} label="Personal Info" />
-        <div className={cn("flex-1 h-1 rounded-full", step > 1 ? "bg-[#C9A96E]" : "bg-[#121212]")}></div>
+        <div className={cn("flex-1 h-1 rounded-full", step > 1 ? "bg-[#C9A96E]" : "bg-slate-900")}></div>
         <StepIndicator active={step >= 2} completed={step > 2} label="ID Document" />
       </div>
 
-      <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-3xl p-8 md:p-12 shadow-2xl">
+      <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-3xl p-8 md:p-12 shadow-2xl">
         {error && (
           <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-500 text-sm font-medium">
             <AlertCircle size={18} />
@@ -261,7 +261,7 @@ export const KYC = () => {
                   type="text"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
+                  className="w-full bg-slate-950 border border-[#C9A96E]/10 rounded-xl py-4 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
                   placeholder="As shown on your ID"
                 />
               </div>
@@ -270,7 +270,7 @@ export const KYC = () => {
                 <select 
                   value={formData.idType}
                   onChange={(e) => setFormData({ ...formData, idType: e.target.value })}
-                  className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
+                  className="w-full bg-slate-950 border border-[#C9A96E]/10 rounded-xl py-4 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
                 >
                   <option value="passport">Passport</option>
                   <option value="national_id">National ID Card</option>
@@ -283,7 +283,7 @@ export const KYC = () => {
                   type="text"
                   value={formData.idNumber}
                   onChange={(e) => setFormData({ ...formData, idNumber: e.target.value })}
-                  className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
+                  className="w-full bg-slate-950 border border-[#C9A96E]/10 rounded-xl py-4 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
                   placeholder="Enter ID number"
                 />
               </div>
@@ -316,7 +316,7 @@ export const KYC = () => {
               </label>
             ) : (
               <div className="space-y-4">
-                <div className="relative aspect-video bg-[#0B0B0B] rounded-2xl overflow-hidden border border-[#C9A96E]/20">
+                <div className="relative aspect-video bg-slate-950 rounded-2xl overflow-hidden border border-[#C9A96E]/20">
                   <img src={idImage} alt="ID Preview" className="w-full h-full object-contain" />
                   <button 
                     onClick={() => setIdImage(null)}
@@ -333,7 +333,7 @@ export const KYC = () => {
             )}
 
             <div className="flex gap-4 mt-8">
-              <button onClick={handleBack} className="flex-1 py-4 bg-[#1A1A1A] text-white font-bold rounded-xl border border-[#C9A96E]/10 hover:bg-[#222] transition-all">
+              <button onClick={handleBack} className="flex-1 py-4 bg-slate-800 text-white font-bold rounded-xl border border-[#C9A96E]/10 hover:bg-slate-700 transition-all">
                 Back
               </button>
               <button 
@@ -355,7 +355,7 @@ const StepIndicator = ({ active, completed, label }: any) => (
   <div className="flex flex-col items-center gap-2">
     <div className={cn(
       "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300",
-      completed ? "bg-[#C9A96E] text-[#0B0B0B]" : active ? "bg-[#C9A96E]/20 text-[#C9A96E] border border-[#C9A96E]/40" : "bg-[#121212] text-gray-600 border border-transparent"
+      completed ? "bg-[#C9A96E] text-[#0B0B0B]" : active ? "bg-[#C9A96E]/20 text-[#C9A96E] border border-[#C9A96E]/40" : "bg-slate-900 text-gray-600 border border-transparent"
     )}>
       {completed ? <Check size={20} /> : <div className="w-2 h-2 rounded-full bg-current"></div>}
     </div>

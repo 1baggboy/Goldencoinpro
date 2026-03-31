@@ -107,7 +107,7 @@ export const TwoFactorSetup = () => {
   if (profile?.twoFactorEnabled && step !== 4) {
     return (
       <div className="max-w-2xl mx-auto py-10 px-4">
-        <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-3xl p-8 text-center space-y-6">
+        <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-3xl p-8 text-center space-y-6">
           <div className="w-20 h-20 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto">
             <ShieldCheck size={40} />
           </div>
@@ -129,8 +129,9 @@ export const TwoFactorSetup = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-10 px-4">
-      <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-3xl p-8 md:p-12 shadow-2xl">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+      <div className="max-w-2xl mx-auto py-10 px-4">
+      <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-3xl p-8 md:p-12 shadow-2xl">
         <div className="flex items-center gap-4 mb-8">
           <div className="w-12 h-12 bg-[#C9A96E]/10 rounded-2xl flex items-center justify-center text-[#C9A96E]">
             <ShieldCheck size={28} />
@@ -143,13 +144,13 @@ export const TwoFactorSetup = () => {
 
         {/* Steps Progress */}
         <div className="flex items-center justify-between mb-12 relative">
-          <div className="absolute top-1/2 left-0 w-full h-0.5 bg-[#1A1A1A] -translate-y-1/2 -z-10"></div>
+          <div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-800 -translate-y-1/2 -z-10"></div>
           {[1, 2, 3].map((s) => (
             <div 
               key={s}
               className={cn(
                 "w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-500",
-                step >= s ? "bg-[#C9A96E] text-[#0B0B0B]" : "bg-[#1A1A1A] text-gray-500 border border-[#C9A96E]/10"
+                step >= s ? "bg-[#C9A96E] text-[#0B0B0B]" : "bg-slate-800 text-gray-500 border border-[#C9A96E]/10"
               )}
             >
               {s}
@@ -208,7 +209,7 @@ export const TwoFactorSetup = () => {
 
               <div className="space-y-2">
                 <p className="text-xs text-gray-500 text-center">Or enter this code manually in your app:</p>
-                <div className="flex items-center gap-2 bg-[#0B0B0B] border border-[#C9A96E]/10 p-4 rounded-xl">
+                <div className="flex items-center gap-2 bg-slate-950 border border-[#C9A96E]/10 p-4 rounded-xl">
                   <code className="text-[#C9A96E] font-mono font-bold flex-1 text-center tracking-widest">{secret}</code>
                   <button 
                     onClick={copyToClipboard}
@@ -248,7 +249,7 @@ export const TwoFactorSetup = () => {
                   placeholder="000000"
                   value={verificationCode}
                   onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))}
-                  className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 text-center text-3xl font-bold tracking-[0.5em] text-[#C9A96E] outline-none focus:border-[#C9A96E]/40 transition-all"
+                  className="w-full bg-slate-950 border border-[#C9A96E]/10 rounded-xl py-4 text-center text-3xl font-bold tracking-[0.5em] text-[#C9A96E] outline-none focus:border-[#C9A96E]/40 transition-all"
                 />
                 
                 {error && (
@@ -262,7 +263,7 @@ export const TwoFactorSetup = () => {
               <div className="flex gap-4">
                 <button 
                   onClick={() => setStep(2)}
-                  className="flex-1 py-4 bg-[#1A1A1A] text-white font-bold rounded-xl border border-[#C9A96E]/10 hover:bg-[#222] transition-all"
+                  className="flex-1 py-4 bg-slate-800 text-white font-bold rounded-xl border border-[#C9A96E]/10 hover:bg-slate-700 transition-all"
                 >
                   Back
                 </button>
@@ -301,6 +302,7 @@ export const TwoFactorSetup = () => {
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
       </div>
     </div>
   );

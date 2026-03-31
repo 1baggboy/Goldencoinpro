@@ -153,16 +153,16 @@ export const Deposit = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Wallet Address Section */}
-        <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-8 space-y-8">
+        <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-8 space-y-8">
           <div className="flex justify-center">
             <div className="p-4 bg-white rounded-2xl">
-              <QrCode size={180} className="text-[#0B0B0B]" />
+              <QrCode size={180} className="text-slate-950" />
             </div>
           </div>
 
           <div className="space-y-4">
             <label className="text-sm font-medium text-gray-500">Your BTC Deposit Address</label>
-            <div className="flex items-center gap-2 p-4 bg-[#0B0B0B] border border-[#C9A96E]/20 rounded-xl">
+            <div className="flex items-center gap-2 p-4 bg-slate-950 border border-[#C9A96E]/20 rounded-xl">
               <span className="text-sm font-mono text-gray-300 break-all flex-1">{walletAddress}</span>
               <button 
                 onClick={handleCopy}
@@ -182,7 +182,7 @@ export const Deposit = () => {
         </div>
 
         {/* Proof of Payment Section */}
-        <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-8">
+        <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-8">
           <h3 className="text-xl font-bold text-white mb-6">Submit Proof of Payment</h3>
           
           {success ? (
@@ -221,7 +221,7 @@ export const Deposit = () => {
                     required
                     value={amountUsd}
                     onChange={(e) => setAmountUsd(e.target.value)}
-                    className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 pl-8 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono"
+                    className="w-full bg-slate-950 border border-[#C9A96E]/10 rounded-xl py-4 pl-8 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono"
                     placeholder="0.00"
                   />
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</div>
@@ -239,7 +239,7 @@ export const Deposit = () => {
                   required
                   value={txHash}
                   onChange={(e) => setTxHash(e.target.value)}
-                  className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
+                  className="w-full bg-slate-950 border border-[#C9A96E]/10 rounded-xl py-4 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
                   placeholder="Enter transaction hash"
                 />
               </div>

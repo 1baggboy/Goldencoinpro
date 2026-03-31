@@ -284,7 +284,7 @@ export const UserDetail = () => {
         {/* Left Column: Profile & Admin Controls */}
         <div className="lg:col-span-1 space-y-8">
           {/* User Identity Card */}
-          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6 text-center">
+          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6 text-center">
             <div className="w-20 h-20 bg-[#C9A96E]/10 rounded-3xl flex items-center justify-center text-[#C9A96E] text-3xl font-bold mx-auto mb-4 overflow-hidden">
               {userProfile.photoURL ? (
                 <img src={userProfile.photoURL} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -317,7 +317,7 @@ export const UserDetail = () => {
           </div>
 
           {/* Admin Edit Form */}
-          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6 space-y-6">
+          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6 space-y-6">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <Settings size={18} className="text-[#C9A96E]" />
               Quick Edit
@@ -331,7 +331,7 @@ export const UserDetail = () => {
                   step="0.0001"
                   value={editBalance}
                   onChange={(e) => setEditBalance(e.target.value)}
-                  className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-3 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono"
+                  className="w-full bg-slate-950 border border-[#C9A96E]/10 rounded-xl py-3 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono"
                 />
               </div>
 
@@ -342,7 +342,7 @@ export const UserDetail = () => {
                   step="0.0001"
                   value={editTradingBalance}
                   onChange={(e) => setEditTradingBalance(e.target.value)}
-                  className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-3 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono"
+                  className="w-full bg-slate-950 border border-[#C9A96E]/10 rounded-xl py-3 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono"
                 />
               </div>
               
@@ -352,7 +352,7 @@ export const UserDetail = () => {
                   type="text"
                   value={editWallet}
                   onChange={(e) => setEditWallet(e.target.value)}
-                  className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-3 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono text-xs"
+                  className="w-full bg-slate-950 border border-[#C9A96E]/10 rounded-xl py-3 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono text-xs"
                   placeholder="Enter BTC address"
                 />
               </div>
@@ -404,7 +404,7 @@ export const UserDetail = () => {
           </div>
 
           {/* Performance Chart */}
-          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
             <h3 className="text-xl font-bold text-white mb-8">User Portfolio Performance</h3>
             <div className="h-[250px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -419,7 +419,7 @@ export const UserDetail = () => {
                   <XAxis dataKey="name" stroke="#4B5563" fontSize={12} tickLine={false} axisLine={false} />
                   <YAxis stroke="#4B5563" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val}`} />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: '#121212', border: '1px solid rgba(201, 169, 110, 0.2)', borderRadius: '12px' }}
+                    contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(201, 169, 110, 0.2)', borderRadius: '12px' }}
                     itemStyle={{ color: '#C9A96E' }}
                   />
                   <Area type="monotone" dataKey="value" stroke="#C9A96E" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
@@ -429,7 +429,7 @@ export const UserDetail = () => {
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
             <h3 className="text-xl font-bold text-white mb-6">Recent Activity</h3>
             <div className="space-y-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
               {activities.length === 0 ? (
@@ -484,7 +484,7 @@ export const UserDetail = () => {
 
       {/* User Investments */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+        <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
           <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
             <ShieldCheck size={20} className="text-[#C9A96E]" />
             KYC Verification
@@ -493,11 +493,11 @@ export const UserDetail = () => {
           {kycSubmission ? (
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-[#0B0B0B] rounded-xl border border-[#C9A96E]/5">
+                <div className="p-4 bg-slate-950 rounded-xl border border-[#C9A96E]/5">
                   <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Full Name</p>
                   <p className="text-sm font-bold text-white">{kycSubmission.fullName}</p>
                 </div>
-                <div className="p-4 bg-[#0B0B0B] rounded-xl border border-[#C9A96E]/5">
+                <div className="p-4 bg-slate-950 rounded-xl border border-[#C9A96E]/5">
                   <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">ID Type</p>
                   <p className="text-sm font-bold text-white capitalize">{kycSubmission.idType?.replace('_', ' ')}</p>
                 </div>
@@ -508,7 +508,7 @@ export const UserDetail = () => {
                   <p className="text-[10px] text-gray-500 uppercase font-bold flex items-center gap-1">
                     <FileText size={10} /> ID Document
                   </p>
-                  <div className="aspect-[4/3] bg-[#0B0B0B] rounded-xl overflow-hidden border border-[#C9A96E]/10">
+                  <div className="aspect-[4/3] bg-slate-950 rounded-xl overflow-hidden border border-[#C9A96E]/10">
                     {kycSubmission.idImage ? (
                       <img src={kycSubmission.idImage} alt="ID" className="w-full h-full object-cover" />
                     ) : (
@@ -520,7 +520,7 @@ export const UserDetail = () => {
                   <p className="text-[10px] text-gray-500 uppercase font-bold flex items-center gap-1">
                     <Camera size={10} /> Selfie
                   </p>
-                  <div className="aspect-[4/3] bg-[#0B0B0B] rounded-xl overflow-hidden border border-[#C9A96E]/10">
+                  <div className="aspect-[4/3] bg-slate-950 rounded-xl overflow-hidden border border-[#C9A96E]/10">
                     {kycSubmission.selfieImage ? (
                       <img src={kycSubmission.selfieImage} alt="Selfie" className="w-full h-full object-cover" />
                     ) : (
@@ -563,14 +563,14 @@ export const UserDetail = () => {
           )}
         </div>
 
-        <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+        <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
           <h3 className="text-xl font-bold text-white mb-6">User Investments</h3>
           <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
             {investments.length === 0 ? (
               <div className="py-10 text-center text-gray-500">No investments found.</div>
             ) : (
               investments.map(inv => (
-                <div key={inv.id} className="p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl">
+                <div key={inv.id} className="p-4 bg-slate-950 border border-[#C9A96E]/10 rounded-xl">
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <p className="text-sm font-bold text-white">{inv.planName}</p>
@@ -615,7 +615,7 @@ export const UserDetail = () => {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-md bg-[#121212] border border-[#C9A96E]/20 rounded-3xl p-8 shadow-2xl"
+              className="relative w-full max-w-md bg-slate-900 border border-[#C9A96E]/20 rounded-3xl p-8 shadow-2xl"
             >
               <h3 className="text-2xl font-bold text-white mb-2">Reject KYC</h3>
               <p className="text-gray-400 text-sm mb-6">Please provide a reason for rejecting this KYC submission. The user will be notified.</p>
@@ -625,13 +625,13 @@ export const UserDetail = () => {
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
                   placeholder="e.g. ID image is blurry, document expired..."
-                  className="w-full h-32 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl p-4 text-white outline-none focus:border-red-500/40 transition-all resize-none"
+                  className="w-full h-32 bg-slate-950 border border-[#C9A96E]/10 rounded-xl p-4 text-white outline-none focus:border-red-500/40 transition-all resize-none"
                 />
                 
                 <div className="flex gap-4">
                   <button 
                     onClick={() => setShowRejectModal(false)}
-                    className="flex-1 py-3 bg-[#1A1A1A] text-white font-bold rounded-xl border border-[#C9A96E]/10 hover:bg-[#222] transition-all"
+                    className="flex-1 py-3 bg-slate-800 text-white font-bold rounded-xl border border-[#C9A96E]/10 hover:bg-slate-700 transition-all"
                   >
                     Cancel
                   </button>
@@ -653,7 +653,7 @@ export const UserDetail = () => {
 };
 
 const StatCard = ({ title, value, subValue, icon: Icon, color }: any) => (
-  <div className="bg-[#121212] border border-[#C9A96E]/10 p-6 rounded-2xl">
+  <div className="bg-slate-900 border border-[#C9A96E]/10 p-6 rounded-2xl">
     <div className="flex items-center justify-between">
       <div>
         <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">{title}</p>

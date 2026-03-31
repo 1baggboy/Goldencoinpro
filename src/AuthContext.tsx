@@ -9,6 +9,7 @@ interface UserProfile {
   displayName: string;
   role: "user" | "admin";
   usdBalance: number; // Main account balance in USD
+  btcBalance: number; // BTC balance
   tradingBalanceBtc: number; // Trading balance in BTC
   totalDepositedUsd: number; // Total deposited in USD
   kycStatus: "not_submitted" | "pending" | "verified" | "rejected";
@@ -53,15 +54,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (firebaseUser) {
         // Listen to profile changes
         const profileRef = doc(db, "users", firebaseUser.uid);
+        console.log("Fetching profile for:", firebaseUser.uid);
         const unsubProfile = onSnapshot(profileRef, (docSnap) => {
           if (docSnap.exists()) {
+            console.log("Profile found:", docSnap.data());
             setProfile(docSnap.data() as UserProfile);
           } else {
+            console.log("Profile not found");
             setProfile(null);
           }
           setLoading(false);
         }, (error) => {
-          console.error("Profile snapshot error:", error);
+          console.error("Profile snapshot error for", firebaseUser.uid, ":", error);
           setLoading(false);
         });
         return () => unsubProfile();

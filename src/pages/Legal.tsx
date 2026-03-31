@@ -4,8 +4,8 @@ import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 
 const LegalLayout = ({ title, icon: Icon, children }: any) => (
-  <div className="bg-[#0B0B0B] min-h-screen text-white font-sans selection:bg-[#C9A96E] selection:text-[#0B0B0B]">
-    <nav className="h-20 border-b border-[#C9A96E]/10 px-6 md:px-12 flex items-center justify-between sticky top-0 bg-[#0B0B0B]/80 backdrop-blur-md z-50">
+  <div className="bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-950 dark:text-white font-sans selection:bg-[#C9A96E] selection:text-slate-950 transition-colors duration-300">
+    <nav className="h-20 border-b border-[#C9A96E]/10 px-6 md:px-12 flex items-center justify-between sticky top-0 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md z-50">
       <Link to="/" className="flex items-center gap-3">
         <img src="/logo.svg" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
       </Link>
@@ -26,17 +26,17 @@ const LegalLayout = ({ title, icon: Icon, children }: any) => (
           </div>
           <div>
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight">{title}</h1>
-            <p className="text-gray-500 mt-2">Last updated: March 30, 2026</p>
+            <p className="text-slate-500 mt-2">Last updated: March 30, 2026</p>
           </div>
         </div>
 
-        <div className="prose prose-invert prose-gold max-w-none space-y-12 text-gray-400 leading-relaxed">
+        <div className="prose prose-slate dark:prose-invert prose-gold max-w-none space-y-12 text-slate-600 dark:text-gray-400 leading-relaxed">
           {children}
         </div>
       </motion.div>
     </div>
 
-    <footer className="py-20 px-6 border-t border-[#C9A96E]/10 text-center text-xs text-gray-600">
+    <footer className="py-20 px-6 border-t border-[#C9A96E]/10 text-center text-xs text-slate-500">
       <p>© 2026 Goldencoin Limited. All rights reserved.</p>
     </footer>
   </div>

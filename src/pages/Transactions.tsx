@@ -66,20 +66,20 @@ export const Transactions = () => {
             <input
               type="text"
               placeholder="Search TXID..."
-              className="bg-[#121212] border border-[#C9A96E]/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white outline-none focus:border-[#C9A96E]/40 transition-all w-64"
+              className="bg-slate-900 border border-[#C9A96E]/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white outline-none focus:border-[#C9A96E]/40 transition-all w-64"
             />
           </div>
-          <button className="p-2.5 bg-[#121212] border border-[#C9A96E]/10 rounded-xl text-gray-400 hover:text-[#C9A96E] transition-all">
+          <button className="p-2.5 bg-slate-900 border border-[#C9A96E]/10 rounded-xl text-gray-400 hover:text-[#C9A96E] transition-all">
             <Filter size={20} />
           </button>
         </div>
       </div>
 
-      <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl overflow-hidden shadow-2xl">
+      <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#0B0B0B]/50 border-b border-[#C9A96E]/10">
+              <tr className="bg-slate-950/50 border-b border-[#C9A96E]/10">
                 <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-widest">Type</th>
                 <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-widest">Amount</th>
                 <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-widest">Status</th>
@@ -162,13 +162,13 @@ export const Transactions = () => {
         </div>
 
         {/* Pagination */}
-        <div className="px-6 py-4 bg-[#0B0B0B]/30 border-t border-[#C9A96E]/10 flex items-center justify-between">
+        <div className="px-6 py-4 bg-slate-950/30 border-t border-[#C9A96E]/10 flex items-center justify-between">
           <p className="text-xs text-gray-500">Showing {transactions.length} transactions</p>
           <div className="flex gap-2">
-            <button className="p-2 bg-[#121212] border border-[#C9A96E]/10 rounded-lg text-gray-500 hover:text-[#C9A96E] disabled:opacity-30" disabled>
+            <button className="p-2 bg-slate-900 border border-[#C9A96E]/10 rounded-lg text-gray-500 hover:text-[#C9A96E] disabled:opacity-30" disabled>
               <ChevronLeft size={18} />
             </button>
-            <button className="p-2 bg-[#121212] border border-[#C9A96E]/10 rounded-lg text-gray-500 hover:text-[#C9A96E] disabled:opacity-30" disabled>
+            <button className="p-2 bg-slate-900 border border-[#C9A96E]/10 rounded-lg text-gray-500 hover:text-[#C9A96E] disabled:opacity-30" disabled>
               <ChevronRight size={18} />
             </button>
           </div>
@@ -190,10 +190,10 @@ export const Transactions = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md bg-[#121212] border border-[#C9A96E]/20 rounded-3xl overflow-hidden shadow-2xl"
+              className="relative w-full max-w-md bg-slate-900 border border-[#C9A96E]/20 rounded-3xl overflow-hidden shadow-2xl"
             >
               {/* Header */}
-              <div className="p-6 border-b border-[#C9A96E]/10 flex items-center justify-between bg-[#0B0B0B]/50">
+              <div className="p-6 border-b border-[#C9A96E]/10 flex items-center justify-between bg-slate-950/50">
                 <h3 className="text-xl font-bold text-white">Transaction Receipt</h3>
                 <button 
                   onClick={() => setSelectedTx(null)}
@@ -233,7 +233,7 @@ export const Transactions = () => {
               </div>
 
               {/* Details */}
-              <div className="p-6 space-y-4 bg-[#0B0B0B]/20">
+              <div className="p-6 space-y-4 bg-slate-950/20">
                 <div className="flex justify-between items-center py-2 border-b border-white/5">
                   <span className="text-sm text-gray-500">Type</span>
                   <span className="text-sm font-semibold text-white capitalize">{selectedTx.type}</span>
@@ -285,10 +285,10 @@ export const Transactions = () => {
               </div>
               
               {/* Footer */}
-              <div className="p-6 bg-[#0B0B0B]/50">
+              <div className="p-6 bg-slate-950/50">
                 <button 
                   onClick={() => setSelectedTx(null)}
-                  className="w-full py-3 bg-[#121212] border border-[#C9A96E]/20 text-white font-bold rounded-xl hover:bg-[#C9A96E]/10 transition-all"
+                  className="w-full py-3 bg-slate-900 border border-[#C9A96E]/20 text-white font-bold rounded-xl hover:bg-[#C9A96E]/10 transition-all"
                 >
                   Close Receipt
                 </button>

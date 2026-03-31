@@ -6,6 +6,8 @@ import { collection, addDoc, query, where, onSnapshot, orderBy, serverTimestamp 
 import { db } from "../firebase";
 import { cn } from "../lib/utils";
 
+import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
+
 export const SupportWidget = () => {
   const { user, profile } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -13,6 +15,8 @@ export const SupportWidget = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [guestId, setGuestId] = useState<string | null>(null);
+  const [guestName, setGuestName] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,10 +42,12 @@ export const SupportWidget = () => {
 
     const unsub = onSnapshot(q, (snap) => {
       setMessages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, "support_chats");
     });
 
     return () => unsub();
-  }, [user, isOpen]);
+  }, [user, guestId, isOpen]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -53,12 +59,14 @@ export const SupportWidget = () => {
     e.preventDefault();
     const chatUserId = user?.uid || guestId;
     if (!message.trim() || !chatUserId) return;
+    if (!user && (!guestName.trim() || !guestEmail.trim())) return;
 
     setLoading(true);
     try {
       await addDoc(collection(db, "support_chats"), {
         userId: chatUserId,
-        userName: profile?.displayName || "Guest User",
+        userName: user ? profile?.displayName : guestName,
+        userEmail: user ? user.email : guestEmail,
         text: message,
         sender: "user",
         createdAt: serverTimestamp(),
@@ -79,12 +87,12 @@ export const SupportWidget = () => {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="absolute bottom-20 right-0 w-[350px] md:w-[400px] h-[500px] bg-[#121212] border border-[#C9A96E]/20 rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+            className="absolute bottom-20 right-0 w-[350px] md:w-[400px] h-[500px] bg-slate-900 border border-[#C9A96E]/20 rounded-3xl shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="p-4 bg-[#C9A96E] flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#0B0B0B]/10 rounded-full flex items-center justify-center text-[#0B0B0B]">
+                <div className="w-10 h-10 bg-slate-950/10 rounded-full flex items-center justify-center text-[#0B0B0B]">
                   <Headset size={20} />
                 </div>
                 <div>
@@ -127,7 +135,7 @@ export const SupportWidget = () => {
                       "p-3 rounded-2xl text-sm",
                       msg.sender === 'user' 
                         ? "bg-[#C9A96E] text-[#0B0B0B] rounded-tr-none" 
-                        : "bg-[#1A1A1A] text-white border border-[#C9A96E]/10 rounded-tl-none"
+                        : "bg-slate-800 text-white border border-[#C9A96E]/10 rounded-tl-none"
                     )}>
                       {msg.text}
                     </div>
@@ -140,18 +148,38 @@ export const SupportWidget = () => {
             </div>
 
             {/* Input */}
-            <form onSubmit={handleSendMessage} className="p-4 bg-[#0B0B0B] border-t border-[#C9A96E]/10">
+            <form onSubmit={handleSendMessage} className="p-4 bg-slate-950 border-t border-[#C9A96E]/10 space-y-2">
+              {!user && (
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    placeholder="Your Name"
+                    className="bg-slate-900 border border-[#C9A96E]/10 rounded-xl py-2 px-3 text-xs text-white outline-none focus:border-[#C9A96E]/40"
+                    required
+                  />
+                  <input
+                    type="email"
+                    value={guestEmail}
+                    onChange={(e) => setGuestEmail(e.target.value)}
+                    placeholder="Your Email"
+                    className="bg-slate-900 border border-[#C9A96E]/10 rounded-xl py-2 px-3 text-xs text-white outline-none focus:border-[#C9A96E]/40"
+                    required
+                  />
+                </div>
+              )}
               <div className="relative">
                 <input 
                   type="text"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Type your message..."
-                  className="w-full bg-[#121212] border border-[#C9A96E]/10 rounded-xl py-3 pl-4 pr-12 text-sm text-white outline-none focus:border-[#C9A96E]/40 transition-all"
+                  className="w-full bg-slate-900 border border-[#C9A96E]/10 rounded-xl py-3 pl-4 pr-12 text-sm text-white outline-none focus:border-[#C9A96E]/40 transition-all"
                 />
                 <button 
                   type="submit"
-                  disabled={loading || !message.trim()}
+                  disabled={loading || !message.trim() || (!user && (!guestName.trim() || !guestEmail.trim()))}
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-[#C9A96E] text-[#0B0B0B] rounded-lg hover:bg-[#D4B985] transition-all disabled:opacity-50"
                 >
                   <Send size={16} />

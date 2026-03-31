@@ -189,7 +189,7 @@ export const AdminDashboard = () => {
   const handleRejectTransaction = async () => {
     if (!rejectingTx || !rejectReason.trim()) return;
     try {
-      const amountBtc = Number(rejectingTx.amountBtc || rejectingTx.amount || 0);
+      const amountBtc = Number(rejectingTx.amount || 0);
       await updateDoc(doc(db, "transactions", rejectingTx.id), { 
         status: "failed",
         rejectionReason: rejectReason
@@ -314,7 +314,7 @@ export const AdminDashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
         {/* Pending KYC */}
-        <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+        <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
           <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
             <ShieldCheck size={20} className="text-blue-500" />
             Pending KYC
@@ -324,7 +324,7 @@ export const AdminDashboard = () => {
               <p className="text-sm text-gray-500 py-10 text-center">No pending KYC requests.</p>
             ) : (
               pendingKyc.map(kyc => (
-                <div key={kyc.id} className="p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl flex items-center justify-between group">
+                <div key={kyc.id} className="p-4 bg-slate-950 border border-[#C9A96E]/10 rounded-xl flex items-center justify-between group">
                   <div>
                     <p className="text-sm font-bold text-white">{kyc.fullName}</p>
                     <p className="text-xs text-gray-500 mt-1 capitalize">{kyc.idType?.replace('_', ' ')}: {kyc.idNumber}</p>
@@ -360,7 +360,7 @@ export const AdminDashboard = () => {
       {/* KYC Details Modal */}
       {selectedKyc && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#121212] border border-[#C9A96E]/20 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl">
+          <div className="bg-slate-900 border border-[#C9A96E]/20 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl">
             <div className="p-6 border-b border-[#C9A96E]/10 flex items-center justify-between">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <ShieldCheck className="text-blue-500" />
@@ -391,9 +391,9 @@ export const AdminDashboard = () => {
                   </div>
                 </div>
                 <div className="space-y-6">
-                  <div className="p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl">
+                  <div className="p-4 bg-slate-950 border border-[#C9A96E]/10 rounded-xl">
                     <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-3">ID Document</p>
-                    <div className="aspect-video bg-[#1A1A1A] rounded-lg overflow-hidden border border-[#C9A96E]/5">
+                    <div className="aspect-video bg-slate-900 rounded-lg overflow-hidden border border-[#C9A96E]/5">
                       {selectedKyc.idImage ? (
                         <img src={selectedKyc.idImage} alt="ID Document" className="w-full h-full object-contain" />
                       ) : (
@@ -407,7 +407,7 @@ export const AdminDashboard = () => {
                 </div>
               </div>
             </div>
-            <div className="p-6 bg-[#0B0B0B] border-t border-[#C9A96E]/10 flex gap-4">
+            <div className="p-6 bg-slate-950 border-t border-[#C9A96E]/10 flex gap-4">
               <button 
                 onClick={() => approveKyc(selectedKyc)}
                 className="flex-1 py-4 bg-green-500 text-[#0B0B0B] font-bold rounded-xl hover:bg-green-600 transition-all flex items-center justify-center gap-2"
@@ -430,7 +430,7 @@ export const AdminDashboard = () => {
       {/* Transaction Details Modal */}
       {selectedTx && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#121212] border border-[#C9A96E]/20 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl">
+          <div className="bg-slate-900 border border-[#C9A96E]/20 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl">
             <div className="p-6 border-b border-[#C9A96E]/10 flex items-center justify-between">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 {selectedTx.type === 'deposit' ? <ArrowDownCircle className="text-yellow-500" /> : <ArrowUpCircle className="text-red-500" />}
@@ -441,7 +441,7 @@ export const AdminDashboard = () => {
               </button>
             </div>
             <div className="p-8 space-y-6">
-              <div className="flex justify-between items-center p-4 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-2xl">
+              <div className="flex justify-between items-center p-4 bg-slate-950 border border-[#C9A96E]/10 rounded-2xl">
                 <div className="space-y-4 flex-1">
                   <div>
                     <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Amount (BTC)</p>
@@ -464,12 +464,12 @@ export const AdminDashboard = () => {
                 {selectedTx.type === 'deposit' ? (
                   <div>
                     <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Transaction Hash (TXID)</p>
-                    <p className="text-sm text-white font-mono break-all bg-[#0B0B0B] p-3 rounded-lg border border-[#C9A96E]/5">{selectedTx.txHash}</p>
+                    <p className="text-sm text-white font-mono break-all bg-slate-950 p-3 rounded-lg border border-[#C9A96E]/5">{selectedTx.txHash}</p>
                   </div>
                 ) : (
                   <div>
                     <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Destination Wallet</p>
-                    <p className="text-sm text-white font-mono break-all bg-[#0B0B0B] p-3 rounded-lg border border-[#C9A96E]/5">{selectedTx.walletAddress}</p>
+                    <p className="text-sm text-white font-mono break-all bg-slate-950 p-3 rounded-lg border border-[#C9A96E]/5">{selectedTx.walletAddress}</p>
                   </div>
                 )}
                 <div>
@@ -482,7 +482,7 @@ export const AdminDashboard = () => {
                 </div>
               </div>
             </div>
-            <div className="p-6 bg-[#0B0B0B] border-t border-[#C9A96E]/10 flex gap-4">
+            <div className="p-6 bg-slate-950 border-t border-[#C9A96E]/10 flex gap-4">
               <button 
                 onClick={() => { 
                   if (selectedTx.type === 'deposit') approveDeposit(selectedTx);
@@ -507,7 +507,7 @@ export const AdminDashboard = () => {
       )}
 
       {/* User Management Table */}
-      <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl overflow-hidden">
+      <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl overflow-hidden">
         <div className="p-6 border-b border-[#C9A96E]/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h3 className="text-xl font-bold text-white">All Users</h3>
           <div className="flex flex-wrap items-center gap-4">
@@ -518,7 +518,7 @@ export const AdminDashboard = () => {
                 placeholder="Search users..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-lg py-2 pl-10 pr-4 text-sm text-white outline-none focus:border-[#C9A96E]/40"
+                className="bg-slate-950 border border-[#C9A96E]/10 rounded-lg py-2 pl-10 pr-4 text-sm text-white outline-none focus:border-[#C9A96E]/40"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -526,7 +526,7 @@ export const AdminDashboard = () => {
               <select 
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-lg py-2 px-3 text-xs text-gray-400 outline-none focus:border-[#C9A96E]/40"
+                className="bg-slate-950 border border-[#C9A96E]/10 rounded-lg py-2 px-3 text-xs text-gray-400 outline-none focus:border-[#C9A96E]/40"
               >
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
@@ -535,7 +535,7 @@ export const AdminDashboard = () => {
               <select 
                 value={filterKyc}
                 onChange={(e) => setFilterKyc(e.target.value)}
-                className="bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-lg py-2 px-3 text-xs text-gray-400 outline-none focus:border-[#C9A96E]/40"
+                className="bg-slate-950 border border-[#C9A96E]/10 rounded-lg py-2 px-3 text-xs text-gray-400 outline-none focus:border-[#C9A96E]/40"
               >
                 <option value="all">All KYC</option>
                 <option value="verified">Verified</option>
@@ -549,7 +549,7 @@ export const AdminDashboard = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#0B0B0B]/50 border-b border-[#C9A96E]/10">
+              <tr className="bg-slate-950/50 border-b border-[#C9A96E]/10">
                 <th 
                   className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest cursor-pointer hover:text-[#C9A96E] transition-colors"
                   onClick={() => handleSort("name")}
@@ -683,7 +683,7 @@ export const AdminDashboard = () => {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-md bg-[#121212] border border-[#C9A96E]/20 rounded-3xl p-8 shadow-2xl"
+              className="relative w-full max-w-md bg-slate-900 border border-[#C9A96E]/20 rounded-3xl p-8 shadow-2xl"
             >
               <h3 className="text-2xl font-bold text-white mb-2">Reject KYC</h3>
               <p className="text-gray-400 text-sm mb-6">Please provide a reason for rejecting this KYC submission. The user will be notified.</p>
@@ -693,7 +693,7 @@ export const AdminDashboard = () => {
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
                   placeholder="e.g. ID image is blurry, document expired..."
-                  className="w-full h-32 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl p-4 text-white outline-none focus:border-red-500/40 transition-all resize-none"
+                  className="w-full h-32 bg-slate-950 border border-[#C9A96E]/10 rounded-xl p-4 text-white outline-none focus:border-red-500/40 transition-all resize-none"
                 />
                 
                 <div className="flex gap-4">
@@ -702,7 +702,7 @@ export const AdminDashboard = () => {
                       setShowRejectModal(false);
                       setRejectingKyc(null);
                     }}
-                    className="flex-1 py-3 bg-[#1A1A1A] text-white font-bold rounded-xl border border-[#C9A96E]/10 hover:bg-[#222] transition-all"
+                    className="flex-1 py-3 bg-slate-800 text-white font-bold rounded-xl border border-[#C9A96E]/10 hover:bg-slate-700 transition-all"
                   >
                     Cancel
                   </button>
@@ -737,7 +737,7 @@ export const AdminDashboard = () => {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-md bg-[#121212] border border-[#C9A96E]/20 rounded-3xl p-8 shadow-2xl"
+              className="relative w-full max-w-md bg-slate-900 border border-[#C9A96E]/20 rounded-3xl p-8 shadow-2xl"
             >
               <h3 className="text-2xl font-bold text-white mb-2">Reject {rejectingTx?.type.charAt(0).toUpperCase()}{rejectingTx?.type.slice(1)}</h3>
               <p className="text-gray-400 text-sm mb-6">Please provide a reason for rejecting this {rejectingTx?.type}. The user will be notified.</p>
@@ -747,7 +747,7 @@ export const AdminDashboard = () => {
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
                   placeholder="e.g. Invalid transaction hash, insufficient funds..."
-                  className="w-full h-32 bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl p-4 text-white outline-none focus:border-red-500/40 transition-all resize-none"
+                  className="w-full h-32 bg-slate-950 border border-[#C9A96E]/10 rounded-xl p-4 text-white outline-none focus:border-red-500/40 transition-all resize-none"
                 />
                 
                 <div className="flex gap-4">
@@ -756,7 +756,7 @@ export const AdminDashboard = () => {
                       setShowTxRejectModal(false);
                       setRejectingTx(null);
                     }}
-                    className="flex-1 py-3 bg-[#1A1A1A] text-white font-bold rounded-xl border border-[#C9A96E]/10 hover:bg-[#222] transition-all"
+                    className="flex-1 py-3 bg-slate-800 text-white font-bold rounded-xl border border-[#C9A96E]/10 hover:bg-slate-700 transition-all"
                   >
                     Cancel
                   </button>
@@ -797,7 +797,7 @@ const AdminStatCard = ({ title, value, icon: Icon, color, link }: any) => {
     </>
   );
 
-  const className = "bg-[#121212] border border-[#C9A96E]/10 p-6 rounded-2xl flex items-center justify-between group transition-all hover:border-[#C9A96E]/30";
+  const className = "bg-slate-900 border border-[#C9A96E]/10 p-6 rounded-2xl flex items-center justify-between group transition-all hover:border-[#C9A96E]/30";
 
   if (link) {
     return (

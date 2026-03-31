@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { User, Mail, ShieldCheck, Save, Camera, AlertCircle, Phone, Users, Lock, ShieldAlert, Trash2 } from "lucide-react";
+import { User, Mail, ShieldCheck, Save, Camera, AlertCircle, Phone, Users, Lock, ShieldAlert, Trash2, Moon, Sun } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { useNotifications } from "../NotificationContext";
+import { useTheme } from "../ThemeContext";
 import { doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { deleteUser } from "firebase/auth";
@@ -12,6 +13,7 @@ import { Link, useNavigate } from "react-router-dom";
 export const Profile = () => {
   const { profile, user } = useAuth();
   const { addNotification } = useNotifications();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [displayName, setDisplayName] = useState(profile?.displayName || "");
   const [phoneNumber, setPhoneNumber] = useState(profile?.phoneNumber || "");
@@ -142,7 +144,7 @@ export const Profile = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Profile Card */}
         <div className="lg:col-span-1 space-y-6">
-          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-8 text-center relative overflow-hidden group">
+          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-8 text-center relative overflow-hidden group">
             <div className="relative inline-block mb-4">
               <div className="w-24 h-24 bg-[#C9A96E]/10 border-2 border-[#C9A96E]/30 rounded-full flex items-center justify-center text-[#C9A96E] text-4xl font-bold overflow-hidden">
                 {uploading ? (
@@ -176,7 +178,25 @@ export const Profile = () => {
             <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-[#C9A96E]/5 rounded-full blur-2xl group-hover:bg-[#C9A96E]/10 transition-all duration-500"></div>
           </div>
 
-          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
+            <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-widest">Preferences</h4>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {theme === 'light' ? <Sun size={14} className="text-gray-500" /> : <Moon size={14} className="text-gray-500" />}
+                  <span className="text-xs text-gray-500">Theme Mode</span>
+                </div>
+                <button
+                  onClick={toggleTheme}
+                  className="px-3 py-1 bg-[#C9A96E]/10 text-[#C9A96E] text-[10px] font-bold rounded-full border border-[#C9A96E]/20 hover:bg-[#C9A96E]/20 transition-all uppercase tracking-widest"
+                >
+                  {theme === 'light' ? "Light" : "Dark"}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
             <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-widest">Account Info</h4>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -196,7 +216,7 @@ export const Profile = () => {
             </div>
           </div>
 
-          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
             <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-widest">Security</h4>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -224,7 +244,7 @@ export const Profile = () => {
 
         {/* Edit Form */}
         <div className="lg:col-span-2">
-          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-8">
+          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-8">
             <h3 className="text-xl font-bold text-white mb-8">Personal Information</h3>
             
             <form onSubmit={handleUpdate} className="space-y-6">
@@ -237,7 +257,7 @@ export const Profile = () => {
                       type="text"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-3 pl-12 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
+                      className="w-full bg-slate-950 border border-[#C9A96E]/10 rounded-xl py-3 pl-12 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
                       placeholder="Enter your full name"
                       required
                     />
@@ -252,7 +272,7 @@ export const Profile = () => {
                       type="tel"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                      className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-3 pl-12 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
+                      className="w-full bg-slate-950 border border-[#C9A96E]/10 rounded-xl py-3 pl-12 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
                       placeholder="+1 234 567 890"
                     />
                   </div>
@@ -265,7 +285,7 @@ export const Profile = () => {
                     <select
                       value={gender}
                       onChange={(e) => setGender(e.target.value)}
-                      className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-3 pl-12 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all appearance-none"
+                      className="w-full bg-slate-950 border border-[#C9A96E]/10 rounded-xl py-3 pl-12 pr-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all appearance-none"
                     >
                       <option value="">Select Gender</option>
                       <option value="male">Male</option>
@@ -284,7 +304,7 @@ export const Profile = () => {
                     type="email"
                     value={profile?.email || ""}
                     readOnly
-                    className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-3 pl-12 pr-4 text-gray-500 outline-none cursor-not-allowed"
+                    className="w-full bg-slate-950 border border-[#C9A96E]/10 rounded-xl py-3 pl-12 pr-4 text-gray-500 outline-none cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -347,7 +367,7 @@ export const Profile = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="relative w-full max-w-md bg-[#121212] border border-red-500/20 rounded-3xl p-8 shadow-2xl"
+            className="relative w-full max-w-md bg-slate-900 border border-red-500/20 rounded-3xl p-8 shadow-2xl"
           >
             <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center text-red-500 mb-6 mx-auto">
               <AlertCircle size={32} />
@@ -361,7 +381,7 @@ export const Profile = () => {
               <button 
                 onClick={() => setShowDeleteModal(false)}
                 disabled={deleting}
-                className="flex-1 py-4 bg-[#1A1A1A] text-white font-bold rounded-xl border border-white/10 hover:bg-[#222] transition-all disabled:opacity-50"
+                className="flex-1 py-4 bg-slate-800 text-white font-bold rounded-xl border border-white/10 hover:bg-slate-700 transition-all disabled:opacity-50"
               >
                 Cancel
               </button>

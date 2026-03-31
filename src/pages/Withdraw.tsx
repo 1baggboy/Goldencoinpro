@@ -78,6 +78,10 @@ export const Withdraw = () => {
     setError(null);
 
     const valUsd = parseFloat(amountUsd);
+    if (isNaN(valUsd) || valUsd <= 0) {
+      setError("Please enter a valid positive amount.");
+      return;
+    }
     const amountBtc = valUsd / btcPrice;
     const dailyWithdrawnUsd = dailyWithdrawn * btcPrice;
 
@@ -102,6 +106,13 @@ export const Withdraw = () => {
     // 4. Check Daily Maximum ($50,000)
     if (dailyWithdrawnUsd + valUsd > 50000) {
       setError(`Daily withdrawal limit exceeded. You have already withdrawn $${dailyWithdrawnUsd.toLocaleString()} today. Remaining limit: $${(50000 - dailyWithdrawnUsd).toLocaleString()}`);
+      return;
+    }
+
+    // 5. Validate BTC Wallet Address
+    const btcRegex = /^(1[a-km-zA-HJ-NP-Z1-9]{25,34}|3[a-km-zA-HJ-NP-Z1-9]{25,34}|bc1[a-zA-HJ-NP-Z0-9]{25,90})$/;
+    if (!btcRegex.test(walletAddress)) {
+      setError("Please enter a valid BTC wallet address (Legacy, P2SH, or SegWit).");
       return;
     }
 
@@ -156,7 +167,7 @@ export const Withdraw = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Left: Info & Limits */}
         <div className="md:col-span-1 space-y-6">
-          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
             <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Withdrawal Limits</h4>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
@@ -179,7 +190,7 @@ export const Withdraw = () => {
             </div>
           </div>
 
-          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
             <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Current Balance</h4>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-[#C9A96E]/10 rounded-xl flex items-center justify-center text-[#C9A96E]">
@@ -202,7 +213,7 @@ export const Withdraw = () => {
 
         {/* Right: Form */}
         <div className="md:col-span-2">
-          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-8">
+          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-8">
             {success ? (
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -251,7 +262,7 @@ export const Withdraw = () => {
                       required
                       value={amountUsd}
                       onChange={(e) => setAmountUsd(e.target.value)}
-                      className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-2xl py-5 pl-12 pr-24 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono text-lg"
+                      className="w-full bg-slate-950 border border-[#C9A96E]/10 rounded-2xl py-5 pl-12 pr-24 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono text-lg"
                       placeholder="0.00"
                     />
                     <div className="absolute left-8 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</div>
@@ -285,7 +296,12 @@ export const Withdraw = () => {
                     required
                     value={walletAddress}
                     onChange={(e) => setWalletAddress(e.target.value)}
-                    className="w-full bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl py-4 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono text-sm"
+                    className={cn(
+                      "w-full bg-slate-950 border rounded-xl py-4 px-4 text-white outline-none transition-all font-mono text-sm",
+                      walletAddress && !/^(1[a-km-zA-HJ-NP-Z1-9]{25,34}|3[a-km-zA-HJ-NP-Z1-9]{25,34}|bc1[a-zA-HJ-NP-Z0-9]{25,90})$/.test(walletAddress)
+                        ? "border-red-500/50 focus:border-red-500"
+                        : "border-[#C9A96E]/10 focus:border-[#C9A96E]/40"
+                    )}
                     placeholder="Enter your BTC address"
                   />
                 </div>

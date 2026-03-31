@@ -31,9 +31,9 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOp
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute right-0 mt-2 w-80 md:w-96 bg-[#121212] border border-[#C9A96E]/20 rounded-2xl shadow-2xl z-50 overflow-hidden"
+            className="absolute right-0 mt-2 w-80 md:w-96 bg-slate-900 border border-[#C9A96E]/20 rounded-2xl shadow-2xl z-50 overflow-hidden"
           >
-            <div className="p-4 border-b border-[#C9A96E]/10 flex items-center justify-between bg-[#0B0B0B]/50">
+            <div className="p-4 border-b border-[#C9A96E]/10 flex items-center justify-between bg-slate-950/50">
               <h3 className="font-bold text-white">Notifications</h3>
               {unreadCount > 0 && (
                 <button 

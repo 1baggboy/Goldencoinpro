@@ -3,6 +3,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import cors from "cors";
 import helmet from "helmet";
+import nodemailer from "nodemailer";
 
 async function startServer() {
   const app = express();
@@ -13,6 +14,18 @@ async function startServer() {
     contentSecurityPolicy: false, // Disable for development/iframe compatibility
   }));
   app.use(express.json());
+
+  // Configure Nodemailer
+  const port = Number(process.env.SMTP_PORT);
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: port,
+    secure: port === 465, // true for 465, false for other ports (e.g., 587)
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
 
   // API Routes
   app.get("/api/health", (req, res) => {
@@ -67,11 +80,20 @@ async function startServer() {
 
     console.log(`[OTP] OTP for ${email}: ${otp}`);
 
-    // In a real app, use nodemailer here. 
-    // Since we don't have SMTP credentials, we'll simulate success.
-    // But we'll log it so the developer can see it in the console.
-    
-    res.json({ message: "OTP sent successfully (Check server logs for the code)" });
+    // Send email
+    try {
+      await transporter.sendMail({
+        from: process.env.SMTP_USER,
+        to: email,
+        subject: "Your Goldencoin OTP",
+        text: `Your OTP for Goldencoin is: ${otp}. It expires in 10 minutes.`,
+        html: `<p>Your OTP for Goldencoin is: <strong>${otp}</strong>. It expires in 10 minutes.</p>`,
+      });
+      res.json({ message: "OTP sent successfully" });
+    } catch (error) {
+      console.error("[OTP] Error sending email:", error);
+      res.status(500).json({ error: "Failed to send OTP email" });
+    }
   });
 
   app.post("/api/auth/verify-otp", async (req, res) => {

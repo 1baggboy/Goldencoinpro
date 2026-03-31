@@ -13,11 +13,11 @@ export const Restricted = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0B0B] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full bg-[#121212] border border-red-500/20 rounded-3xl p-8 text-center space-y-6 shadow-2xl shadow-red-500/5"
+        className="max-w-md w-full bg-slate-900 border border-red-500/20 rounded-3xl p-8 text-center space-y-6 shadow-2xl shadow-red-500/5"
       >
         <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto text-red-500">
           <ShieldAlert size={40} />

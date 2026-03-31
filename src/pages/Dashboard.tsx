@@ -122,24 +122,24 @@ export const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 text-[#0B0B0B] dark:text-white">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-white tracking-tight">Welcome back, {profile?.displayName?.split(' ')[0]}!</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Welcome back, {profile?.displayName?.split(' ')[0]}!</h1>
             <span className="px-2 py-0.5 bg-[#C9A96E]/10 text-[#C9A96E] text-[10px] font-bold rounded-full uppercase tracking-widest border border-[#C9A96E]/20">
               Member
             </span>
           </div>
-          <p className="text-gray-400 mt-1">Here's what's happening with your portfolio today.</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Here's what's happening with your portfolio today.</p>
         </div>
         <div className="flex gap-3">
           <Link to="/deposit" className="px-6 py-3 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all flex items-center gap-2">
             <ArrowDownCircle size={18} />
             Deposit
           </Link>
-          <Link to="/withdraw" className="px-6 py-3 bg-[#121212] text-white font-bold rounded-xl border border-[#C9A96E]/20 hover:bg-[#1A1A1A] transition-all flex items-center gap-2">
+          <Link to="/withdraw" className="px-6 py-3 bg-slate-200 dark:bg-slate-900 text-[#0B0B0B] dark:text-white font-bold rounded-xl border border-[#C9A96E]/20 hover:bg-slate-300 dark:hover:bg-slate-800 transition-all flex items-center gap-2">
             <ArrowUpCircle size={18} />
             Withdraw
           </Link>
@@ -199,7 +199,7 @@ export const Dashboard = () => {
       </div>
 
       {/* Market Ticker */}
-      <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-4 overflow-hidden">
+      <div className="bg-slate-100 dark:bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-4 overflow-hidden">
         <div className="flex items-center gap-8 animate-marquee whitespace-nowrap">
           <TickerItem symbol="BTC" price={prices?.btc?.usd} change={prices?.btc?.change} />
           <TickerItem symbol="ETH" price={prices?.eth?.usd} change={prices?.eth?.change} />
@@ -216,10 +216,10 @@ export const Dashboard = () => {
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Chart */}
-        <div className="lg:col-span-2 bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+        <div className="lg:col-span-2 bg-slate-100 dark:bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-8">
-            <h3 className="text-xl font-bold text-white">Portfolio Performance</h3>
-            <select className="bg-[#0B0B0B] border border-[#C9A96E]/20 rounded-lg px-3 py-1 text-sm text-gray-400 outline-none">
+            <h3 className="text-xl font-bold text-[#0B0B0B] dark:text-white">Portfolio Performance</h3>
+            <select className="bg-slate-200 dark:bg-slate-950 border border-[#C9A96E]/20 rounded-lg px-3 py-1 text-sm text-gray-600 dark:text-gray-400 outline-none">
               <option>Last 7 Days</option>
               <option>Last 30 Days</option>
             </select>
@@ -233,11 +233,11 @@ export const Dashboard = () => {
                     <stop offset="95%" stopColor="#C9A96E" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1A1A1A" vertical={false} />
-                <XAxis dataKey="name" stroke="#4B5563" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#4B5563" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val}`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#C9A96E" opacity={0.1} vertical={false} />
+                <XAxis dataKey="name" stroke="#6B7280" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#6B7280" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val}`} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#121212', border: '1px solid rgba(201, 169, 110, 0.2)', borderRadius: '12px' }}
+                  contentStyle={{ backgroundColor: '#E0E0E0', borderColor: 'rgba(201, 169, 110, 0.2)', borderRadius: '12px' }}
                   itemStyle={{ color: '#C9A96E' }}
                 />
                 <Area type="monotone" dataKey="value" stroke="#C9A96E" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
@@ -249,22 +249,22 @@ export const Dashboard = () => {
         {/* Referral & Activity Column */}
         <div className="space-y-8">
           {/* Referral Card */}
-          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+          <div className="bg-slate-100 dark:bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-[#C9A96E]/10 text-[#C9A96E] rounded-xl flex items-center justify-center">
                 <Users size={20} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">Refer and Earn Cash</h3>
-                <p className="text-xs text-gray-500">Invite friends and earn cash bonuses</p>
+                <h3 className="text-lg font-bold text-[#0B0B0B] dark:text-white">Refer and Earn Cash</h3>
+                <p className="text-xs text-gray-600 dark:text-gray-500">Invite friends and earn cash bonuses</p>
               </div>
             </div>
             
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-[10px] text-gray-500 uppercase font-bold tracking-widest ml-1">Referral Code</label>
-                <div className="bg-[#0B0B0B] border border-[#C9A96E]/20 rounded-xl p-3 flex items-center justify-between gap-2">
-                  <span className="text-sm font-bold text-white font-mono">{profile?.referralCode}</span>
+                <label className="text-[10px] text-gray-600 dark:text-gray-500 uppercase font-bold tracking-widest ml-1">Referral Code</label>
+                <div className="bg-slate-200 dark:bg-slate-950 border border-[#C9A96E]/20 rounded-xl p-3 flex items-center justify-between gap-2">
+                  <span className="text-sm font-bold text-[#0B0B0B] dark:text-white font-mono">{profile?.referralCode}</span>
                   <button 
                     onClick={copyReferralCode}
                     className="p-2 hover:bg-[#C9A96E]/10 text-[#C9A96E] rounded-lg transition-all"
@@ -276,16 +276,16 @@ export const Dashboard = () => {
               </div>
               
               <div className="flex items-center justify-between pt-2 border-t border-[#C9A96E]/10">
-                <span className="text-sm text-gray-400">Bonus Earned</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">Bonus Earned</span>
                 <span className="text-sm font-bold text-[#C9A96E]">${profile?.referralBonusEarned?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}</span>
               </div>
             </div>
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-[#121212] border border-[#C9A96E]/10 rounded-2xl p-6">
+          <div className="bg-slate-100 dark:bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white">Recent Activity</h3>
+              <h3 className="text-xl font-bold text-[#0B0B0B] dark:text-white">Recent Activity</h3>
               <Link to="/transactions" className="text-sm text-[#C9A96E] hover:underline">View all</Link>
             </div>
             <div className="space-y-6">
@@ -301,7 +301,7 @@ export const Dashboard = () => {
                 ))
               ) : (
                 <div className="text-center py-4">
-                  <p className="text-sm text-gray-500">No recent activity</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-500">No recent activity</p>
                 </div>
               )}
             </div>
@@ -317,15 +317,15 @@ const StatCard = ({ title, value, subValue, icon: Icon, color, onClick }: any) =
     whileHover={{ y: -5 }}
     onClick={onClick}
     className={cn(
-      "bg-[#121212] border border-[#C9A96E]/10 p-6 rounded-2xl relative overflow-hidden group",
+      "bg-slate-100 dark:bg-slate-900 border border-[#C9A96E]/10 p-6 rounded-2xl relative overflow-hidden group",
       onClick && "cursor-pointer hover:border-[#C9A96E]/30"
     )}
   >
     <div className="flex items-center justify-between relative z-10">
       <div>
-        <p className="text-sm text-gray-500 font-medium mb-1">{title}</p>
-        <h4 className="text-2xl font-bold text-white tracking-tight">{value}</h4>
-        <p className={cn("text-xs mt-1", color === 'green' ? "text-green-500" : color === 'yellow' ? "text-yellow-500" : color === 'red' ? "text-red-500" : "text-gray-400")}>
+        <p className="text-sm text-gray-600 dark:text-gray-500 font-medium mb-1">{title}</p>
+        <h4 className="text-2xl font-bold text-[#0B0B0B] dark:text-white tracking-tight">{value}</h4>
+        <p className={cn("text-xs mt-1", color === 'green' ? "text-green-600 dark:text-green-500" : color === 'yellow' ? "text-yellow-600 dark:text-yellow-500" : color === 'red' ? "text-red-600 dark:text-red-500" : "text-gray-500 dark:text-gray-400")}>
           {subValue}
         </p>
       </div>
@@ -345,9 +345,9 @@ const StatCard = ({ title, value, subValue, icon: Icon, color, onClick }: any) =
 
 const TickerItem = ({ symbol, price, change }: any) => (
   <div className="inline-flex items-center gap-3 px-6 border-r border-[#C9A96E]/10 last:border-none">
-    <span className="text-sm font-bold text-white">{symbol}</span>
-    <span className="text-sm font-medium text-gray-300">${price?.toLocaleString() || "---"}</span>
-    <span className={cn("text-xs font-bold", (change || 0) >= 0 ? "text-green-500" : "text-red-500")}>
+    <span className="text-sm font-bold text-[#0B0B0B] dark:text-white">{symbol}</span>
+    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">${price?.toLocaleString() || "---"}</span>
+    <span className={cn("text-xs font-bold", (change || 0) >= 0 ? "text-green-600 dark:text-green-500" : "text-red-600 dark:text-red-500")}>
       {(change || 0) >= 0 ? '+' : ''}{(change || 0).toFixed(2)}%
     </span>
   </div>
@@ -358,23 +358,23 @@ const ActivityItem = ({ type, amount, status, date }: any) => (
     <div className="flex items-center gap-4">
       <div className={cn(
         "w-10 h-10 rounded-full flex items-center justify-center",
-        type === 'deposit' ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
+        type === 'deposit' ? "bg-green-500/10 text-green-600 dark:text-green-500" : "bg-red-500/10 text-red-600 dark:text-red-500"
       )}>
         {type === 'deposit' ? <ArrowDownCircle size={18} /> : <ArrowUpCircle size={18} />}
       </div>
       <div>
-        <p className="text-sm font-semibold text-white capitalize">{type}</p>
-        <p className="text-xs text-gray-500">{date}</p>
+        <p className="text-sm font-semibold text-[#0B0B0B] dark:text-white capitalize">{type}</p>
+        <p className="text-xs text-gray-600 dark:text-gray-500">{date}</p>
       </div>
     </div>
     <div className="text-right">
-      <p className={cn("text-sm font-bold", type === 'deposit' ? "text-green-500" : "text-red-500")}>
+      <p className={cn("text-sm font-bold", type === 'deposit' ? "text-green-600 dark:text-green-500" : "text-red-600 dark:text-red-500")}>
         {type === 'deposit' ? '+' : '-'}{amount} BTC
       </p>
       <div className="flex flex-col items-end">
         <p className={cn(
           "text-[10px] uppercase tracking-wider font-bold",
-          status === 'confirmed' ? "text-green-500" : status === 'pending' ? "text-yellow-500" : "text-red-500"
+          status === 'confirmed' ? "text-green-600 dark:text-green-500" : status === 'pending' ? "text-yellow-600 dark:text-yellow-500" : "text-red-600 dark:text-red-500"
         )}>
           {status}
         </p>
