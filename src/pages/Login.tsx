@@ -145,6 +145,29 @@ export const Login = () => {
                 >
                   {loading ? "Signing in..." : "Sign In"} <ArrowRight size={20} />
                 </button>
+
+                <div className="pt-6 border-t border-slate-200 dark:border-[#C9A96E]/10 space-y-4">
+                  <div className="text-center">
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Default Admin Access</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail("lookuptoadams@gmail.com");
+                      setPassword("Admin@123");
+                    }}
+                    className="w-full py-4 bg-slate-100 dark:bg-slate-800 text-slate-950 dark:text-white font-bold rounded-xl border border-[#C9A96E]/20 hover:border-[#C9A96E]/50 transition-all flex items-center justify-center gap-3 group"
+                  >
+                    <div className="w-8 h-8 bg-[#C9A96E]/10 rounded-lg flex items-center justify-center text-[#C9A96E] group-hover:scale-110 transition-transform">
+                      <ShieldCheck size={18} />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-bold">Login as Admin</p>
+                      <p className="text-[10px] text-slate-500 font-medium">lookuptoadams@gmail.com</p>
+                    </div>
+                    <ArrowRight size={16} className="ml-auto text-slate-400 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </div>
               </form>
             </motion.div>
           ) : (
