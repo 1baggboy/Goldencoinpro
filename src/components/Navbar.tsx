@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Bell, Search, User, Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../AuthContext";
+import { APP_CONFIG } from "../config";
 import { useNotifications } from "../NotificationContext";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -42,7 +43,7 @@ export const Navbar = ({ onMenuClick }: { onMenuClick?: () => void }) => {
         <ThemeToggle />
         <div className="hidden lg:flex items-center gap-6 mr-4">
           <Link to="/faq" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-[#C9A96E] transition-colors">FAQ</Link>
-          <a href="mailto:lookuptoadams@gmail.com" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-[#C9A96E] transition-colors">Support</a>
+          <a href={`mailto:${APP_CONFIG.supportEmail}`} className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-[#C9A96E] transition-colors">Support</a>
           <Link to="/dashboard" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-[#C9A96E] transition-colors">Dashboard</Link>
         </div>
 

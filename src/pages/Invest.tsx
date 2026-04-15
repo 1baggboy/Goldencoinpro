@@ -14,6 +14,7 @@ import { useAuth } from "../AuthContext";
 import { useNotifications } from "../NotificationContext";
 import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, increment, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
+import { APP_CONFIG } from "../config";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "../lib/utils";
 import { formatDistanceToNow } from "date-fns";
@@ -73,12 +74,19 @@ export const Invest = () => {
     });
 
     // Fetch BTC price
-    fetch("/api/market/btc-price")
-      .then(res => res.json())
-      .then(data => setBtcPrice(data.usd))
-      .catch(console.error);
+    const fetchBtcPrice = () => {
+      fetch("/api/market/btc-price")
+        .then(res => res.json())
+        .then(data => setBtcPrice(data.usd))
+        .catch(console.error);
+    };
+    fetchBtcPrice();
+    const priceInterval = setInterval(fetchBtcPrice, APP_CONFIG.btcPriceUpdateInterval);
 
-    return () => unsub();
+    return () => {
+      unsub();
+      clearInterval(priceInterval);
+    };
   }, [user]);
 
   const handleInvest = async (e: React.FormEvent) => {

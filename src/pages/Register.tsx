@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc, getDocs, query, collection, where, updateDoc, increment, addDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import { APP_CONFIG } from "../config";
 import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 import { Mail, Lock, User, ArrowRight, ShieldCheck, Check, X, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -79,7 +80,7 @@ export const Register = () => {
 
       await updateProfile(user, { displayName: name });
 
-      const isAdminEmail = user.email === "lookuptoadams@gmail.com";
+      const isAdminEmail = user.email ? APP_CONFIG.adminEmails.includes(user.email) : false;
       try {
         await setDoc(doc(db, "users", user.uid), {
           uid: user.uid,

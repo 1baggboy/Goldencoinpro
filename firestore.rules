@@ -16,10 +16,9 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() && 
         (
-          request.auth.token.email == "lookuptoadams@gmail.com" ||
-          request.auth.token.email == "reachpaula.kar@gmail.com" ||
+          request.auth.token.email == "info.goldencoinltd@gmail.com" ||
           (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'admin')
         );
     }
 
@@ -70,15 +69,20 @@ service cloud.firestore {
 
     // Users Collection
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && request.resource.data.status == 'active' && (request.resource.data.role == 'user' || (request.resource.data.role == 'admin' && (request.auth.token.email == 'lookuptoadams@gmail.com' || request.auth.token.email == 'reachpaula.kar@gmail.com')));
+      // Allow any authenticated user to read their own profile, and admins to read all
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      
+      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && 
+                    request.resource.data.get('status', 'active') == 'active' && 
+                    (request.resource.data.role == 'user' || (request.resource.data.role == 'admin' && request.auth.token.email == 'info.goldencoinltd@gmail.com'));
+      
       allow update: if isAdmin() || (isOwner(userId) && (
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['kycStatus']) && request.resource.data.kycStatus in ['pending', 'not_submitted']) ||
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['btcBalance', 'usdBalance', 'tradingBalanceBtc', 'totalDeposited', 'totalDepositedUsd', 'hasTraded', 'displayName', 'phoneNumber', 'gender', 'photoURL', 'twoFactorEnabled', 'twoFactorSecret']))
       )) || (
         isAuthenticated() && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.referredBy == userId &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('referredBy', '') == userId &&
         (
           (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['referralBonusEarned', 'usdBalance']) &&
            request.resource.data.referralBonusEarned == resource.data.referralBonusEarned + 10 &&
@@ -88,7 +92,7 @@ service cloud.firestore {
            request.resource.data.btcBalance == resource.data.btcBalance + 0.0005)
         )
       );
-      allow delete: if isOwner(userId);
+      allow delete: if isOwner(userId) || isAdmin();
     }
 
     // Transactions Collection

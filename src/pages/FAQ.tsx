@@ -12,6 +12,7 @@ import {
   Users
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { APP_CONFIG } from "../config";
 import { cn } from "../lib/utils";
 import { Link } from "react-router-dom";
 
@@ -203,7 +204,7 @@ export const FAQ = () => {
           </div>
         </div>
         <a 
-          href="mailto:lookuptoadams@gmail.com" 
+          href={`mailto:${APP_CONFIG.supportEmail}`} 
           className="px-8 py-3 bg-[#0B0B0B] text-white font-bold rounded-xl hover:bg-[#1A1A1A] transition-all flex items-center gap-2"
         >
           Contact Support

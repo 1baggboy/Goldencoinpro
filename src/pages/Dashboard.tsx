@@ -23,6 +23,7 @@ import {
   ResponsiveContainer 
 } from "recharts";
 import { useAuth } from "../AuthContext";
+import { APP_CONFIG } from "../config";
 import { motion } from "motion/react";
 import { Link, useNavigate } from "react-router-dom";
 import { cn } from "../lib/utils";
@@ -59,7 +60,7 @@ export const Dashboard = () => {
       }
     };
     fetchPrices();
-    const interval = setInterval(fetchPrices, 30000);
+    const interval = setInterval(fetchPrices, APP_CONFIG.btcPriceUpdateInterval);
 
     // Fetch active investments count
     let unsubInvestments = () => {};
@@ -112,7 +113,7 @@ export const Dashboard = () => {
           Please contact support to resolve this issue.
         </p>
         <button 
-          onClick={() => window.location.href = "mailto:lookuptoadams@gmail.com"}
+          onClick={() => window.location.href = `mailto:${APP_CONFIG.supportEmail}`}
           className="px-8 py-3 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all"
         >
           Contact Support

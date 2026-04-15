@@ -20,6 +20,7 @@ import {
   MessageSquare
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
+import { APP_CONFIG } from "../config";
 import { useNotifications } from "../NotificationContext";
 import { collection, query, onSnapshot, doc, updateDoc, increment, getDocs, where, getDoc, deleteDoc, writeBatch } from "firebase/firestore";
 import { db } from "../firebase";
@@ -47,6 +48,7 @@ export const AdminDashboard = () => {
   const [rejectingKyc, setRejectingKyc] = useState<{ id: string, userId: string } | null>(null);
   const [rejectingTx, setRejectingTx] = useState<{ id: string, userId: string, type: string, amount: number } | null>(null);
   const [isResetting, setIsResetting] = useState(false);
+  const [btcPrice, setBtcPrice] = useState<number>(65000);
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalDeposits: 0,
@@ -96,6 +98,19 @@ export const AdminDashboard = () => {
       setStats(prev => ({ ...prev, activeChats: uniqueUsers.size }));
     });
 
+    // Fetch BTC Price
+    const fetchBtcPrice = async () => {
+      try {
+        const res = await fetch("/api/market/btc-price");
+        const data = await res.json();
+        setBtcPrice(data.usd);
+      } catch (e) {
+        console.error("BTC price fetch error:", e);
+      }
+    };
+    fetchBtcPrice();
+    const priceInterval = setInterval(fetchBtcPrice, APP_CONFIG.btcPriceUpdateInterval);
+
     return () => {
       unsubUsers();
       unsubI();
@@ -103,6 +118,7 @@ export const AdminDashboard = () => {
       unsubW();
       unsubK();
       unsubChats();
+      clearInterval(priceInterval);
     };
   }, []);
 
@@ -756,7 +772,10 @@ export const AdminDashboard = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-sm font-bold text-[#C9A96E]">{u.btcBalance?.toFixed(4)} BTC</span>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-[#C9A96E]">{u.btcBalance?.toFixed(4)} BTC</span>
+                      <span className="text-[10px] text-gray-500">≈ ${(u.btcBalance * btcPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">

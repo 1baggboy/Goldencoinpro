@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, onSnapshot, getDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
+import { APP_CONFIG } from "./config";
 
 interface UserProfile {
   uid: string;
@@ -85,7 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
-  const isAdmin = profile?.role === "admin" || user?.email === "lookuptoadams@gmail.com";
+  const isAdmin = profile?.role === "admin" || (user?.email ? APP_CONFIG.adminEmails.includes(user.email) : false);
   const isRestricted = profile?.status === "restricted";
 
   return (

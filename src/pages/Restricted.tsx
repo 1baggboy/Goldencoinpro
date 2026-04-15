@@ -4,6 +4,7 @@ import { useAuth } from "../AuthContext";
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
 import { motion } from "motion/react";
+import { APP_CONFIG } from "../config";
 
 export const Restricted = () => {
   const { profile } = useAuth();
@@ -37,7 +38,7 @@ export const Restricted = () => {
         <div className="grid grid-cols-1 gap-3">
           <button 
             className="w-full py-4 bg-white/5 text-white font-bold rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-2 border border-white/10"
-            onClick={() => window.location.href = "mailto:lookuptoadams@gmail.com"}
+            onClick={() => window.location.href = `mailto:${APP_CONFIG.supportEmail}`}
           >
             <MessageSquare size={18} />
             Contact Support

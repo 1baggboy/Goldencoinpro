@@ -15,6 +15,7 @@ import {
   Moon
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
+import { APP_CONFIG } from "../config";
 import { auth } from "../firebase";
 import { cn } from "../lib/utils";
 import { useTheme } from "../ThemeContext";
@@ -31,7 +32,7 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () =>
     { name: "Transactions", icon: History, path: "/transactions" },
     { name: "KYC Verification", icon: ShieldCheck, path: "/kyc" },
     { name: "Profile", icon: Settings, path: "/profile" },
-    { name: "Support", icon: MessageSquare, path: "mailto:lookuptoadams@gmail.com", isExternal: true },
+    { name: "Support", icon: MessageSquare, path: `mailto:${APP_CONFIG.supportEmail}`, isExternal: true },
   ];
 
   if (isAdmin) {
