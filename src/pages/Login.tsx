@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { verify } from "otplib";
-import { Mail, Lock, ArrowRight, Chrome, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
+import { Mail, Lock, ArrowRight, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useTheme } from "../ThemeContext";
 import { cn } from "../lib/utils";
@@ -70,16 +70,6 @@ export const Login = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      navigate(from, { replace: true });
-    } catch (err: any) {
-      setError(err.message || "Google login failed");
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden transition-colors duration-300 bg-slate-50 dark:bg-slate-950">
       {/* Background Gradients */}
@@ -93,7 +83,7 @@ export const Login = () => {
       >
         <div className="text-center mb-10">
           <Link to="/" className="inline-flex items-center gap-3 mb-6">
-            <img src="/logo.svg" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
+            <img src="/logo.svg" alt="GOLDENCOIN" className="h-16 w-auto" referrerPolicy="no-referrer" />
           </Link>
           <h2 className="text-3xl font-bold tracking-tight text-slate-950 dark:text-white">Welcome Back</h2>
           <p className="text-slate-500 mt-2">Enter your credentials to access your account.</p>
@@ -156,23 +146,6 @@ export const Login = () => {
                   {loading ? "Signing in..." : "Sign In"} <ArrowRight size={20} />
                 </button>
               </form>
-
-              <div className="mt-8 relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200 dark:border-[#C9A96E]/10"></div>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="px-4 font-bold tracking-widest bg-white text-slate-400 dark:bg-slate-900 dark:text-gray-600">Or continue with</span>
-                </div>
-              </div>
-
-              <button
-                onClick={handleGoogleLogin}
-                className="w-full mt-8 py-4 font-bold rounded-xl border transition-all flex items-center justify-center gap-3 bg-slate-50 text-slate-950 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 text-white border-[#C9A96E]/10 hover:bg-slate-700"
-              >
-                <Chrome size={20} className="text-[#C9A96E]" />
-                Google Account
-              </button>
             </motion.div>
           ) : (
             <motion.div
