@@ -25,7 +25,7 @@ export const Navbar = ({ onMenuClick }: { onMenuClick?: () => void }) => {
           <Menu size={24} />
         </button>
         <Link to={profile ? "/dashboard" : "/"} className="flex items-center gap-2 relative z-50">
-          <img src="/logo.svg" alt="GOLDENCOIN" className="h-8 w-auto" referrerPolicy="no-referrer" />
+          <img src="/logo.webp" alt="GOLDENCOIN" className="h-8 w-auto" referrerPolicy="no-referrer" />
         </Link>
       </div>
 
