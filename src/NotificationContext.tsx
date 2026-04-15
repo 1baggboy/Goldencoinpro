@@ -11,7 +11,7 @@ import {
   doc, 
   Timestamp 
 } from "firebase/firestore";
-import { db } from "./firebase";
+import { db, auth } from "./firebase";
 import { useAuth } from "./AuthContext";
 import { handleFirestoreError, OperationType } from "./lib/firestoreErrorHandler";
 
@@ -41,7 +41,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !auth.currentUser) {
       setNotifications([]);
       setUnreadCount(0);
       return;

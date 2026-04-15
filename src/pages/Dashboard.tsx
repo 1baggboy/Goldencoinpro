@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Tooltip as ReactTooltip } from "react-tooltip";
 import { 
   TrendingUp, 
   ArrowDownCircle, 
@@ -11,7 +12,8 @@ import {
   Lock,
   Copy,
   Check,
-  Users
+  Users,
+  Inbox
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -124,6 +126,7 @@ export const Dashboard = () => {
 
   return (
     <div className="space-y-8 text-[#0B0B0B] dark:text-white">
+      <ReactTooltip id="dashboard-tooltip" className="z-50" />
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -268,8 +271,9 @@ export const Dashboard = () => {
                   <span className="text-sm font-bold text-[#0B0B0B] dark:text-white font-mono">{profile?.referralCode}</span>
                   <button 
                     onClick={copyReferralCode}
+                    data-tooltip-id="dashboard-tooltip"
+                    data-tooltip-content="Copy Referral Code"
                     className="p-2 hover:bg-[#C9A96E]/10 text-[#C9A96E] rounded-lg transition-all"
-                    title="Copy Code"
                   >
                     {copied ? <Check size={16} /> : <Copy size={16} />}
                   </button>
@@ -301,7 +305,10 @@ export const Dashboard = () => {
                   />
                 ))
               ) : (
-                <div className="text-center py-4">
+                <div className="text-center py-8 flex flex-col items-center">
+                  <div className="w-12 h-12 bg-slate-200 dark:bg-slate-950 rounded-full flex items-center justify-center text-gray-500 mb-3">
+                    <Inbox size={24} />
+                  </div>
                   <p className="text-sm text-gray-600 dark:text-gray-500">No recent activity</p>
                 </div>
               )}

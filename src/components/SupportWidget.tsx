@@ -2,37 +2,52 @@ import React, { useState, useEffect, useRef } from "react";
 import { MessageSquare, X, Send, User, Headset } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../AuthContext";
-import { collection, addDoc, query, where, onSnapshot, orderBy, serverTimestamp } from "firebase/firestore";
-import { db } from "../firebase";
+import { signInAnonymously, onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "../firebase";
+import { collection, addDoc, query, where, onSnapshot, orderBy, serverTimestamp, updateDoc, doc, getDocs } from "firebase/firestore";
 import { cn } from "../lib/utils";
 
 import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 
 export const SupportWidget = () => {
-  const { user, profile } = useAuth();
+  const { user: authUser, profile } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [guestId, setGuestId] = useState<string | null>(null);
+  const [chatUserId, setChatUserId] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Handle Anonymous Auth for guests
   useEffect(() => {
-    if (!user) {
-      let id = localStorage.getItem("support_guest_id");
-      if (!id) {
-        id = "guest_" + Math.random().toString(36).substring(7);
-        localStorage.setItem("support_guest_id", id);
-      }
-      setGuestId(id);
+    if (authUser) {
+      setChatUserId(authUser.uid);
+    } else {
+      const unsub = onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          setChatUserId(user.uid);
+        } else {
+          try {
+            const cred = await signInAnonymously(auth);
+            setChatUserId(cred.user.uid);
+          } catch (error: any) {
+            if (error.code === 'auth/admin-restricted-operation') {
+              console.error("Anonymous authentication is disabled in Firebase Console. Please enable it to allow guest support chat.");
+            } else {
+              console.error("Anonymous auth error:", error);
+            }
+          }
+        }
+      });
+      return () => unsub();
     }
-  }, [user]);
+  }, [authUser]);
 
   useEffect(() => {
-    const chatUserId = user?.uid || guestId;
-    if (!chatUserId || !isOpen) return;
+    if (!chatUserId || !isOpen || !auth.currentUser) return;
 
     const q = query(
       collection(db, "support_chats"),
@@ -47,7 +62,46 @@ export const SupportWidget = () => {
     });
 
     return () => unsub();
-  }, [user, guestId, isOpen]);
+  }, [chatUserId, isOpen]);
+
+  // Listen for unread messages from admin
+  useEffect(() => {
+    if (!chatUserId || !auth.currentUser) return;
+
+    const q = query(
+      collection(db, "support_chats"),
+      where("userId", "==", chatUserId),
+      where("sender", "==", "admin"),
+      where("read", "==", false)
+    );
+
+    const unsub = onSnapshot(q, (snap) => {
+      setUnreadCount(snap.docs.length);
+    }, (error) => {
+      // Silent fail for unread count if permissions are tricky
+      console.error("Unread count error:", error);
+    });
+
+    return () => unsub();
+  }, [chatUserId]);
+
+  // Mark as read when opened
+  useEffect(() => {
+    if (isOpen && unreadCount > 0 && chatUserId) {
+      const q = query(
+        collection(db, "support_chats"),
+        where("userId", "==", chatUserId),
+        where("sender", "==", "admin"),
+        where("read", "==", false)
+      );
+      
+      getDocs(q).then(snap => {
+        snap.docs.forEach(d => {
+          updateDoc(doc(db, "support_chats", d.id), { read: true });
+        });
+      }).catch(err => console.error("Error marking as read:", err));
+    }
+  }, [isOpen, unreadCount, chatUserId]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -57,20 +111,31 @@ export const SupportWidget = () => {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    const chatUserId = user?.uid || guestId;
     if (!message.trim() || !chatUserId) return;
-    if (!user && (!guestName.trim() || !guestEmail.trim())) return;
+    if (!authUser && (!guestName.trim() || !guestEmail.trim())) return;
 
     setLoading(true);
     try {
       await addDoc(collection(db, "support_chats"), {
         userId: chatUserId,
-        userName: user ? profile?.displayName : guestName,
-        userEmail: user ? user.email : guestEmail,
+        userName: authUser ? profile?.displayName : guestName,
+        userEmail: authUser ? authUser.email : guestEmail,
         text: message,
         sender: "user",
+        read: false,
         createdAt: serverTimestamp(),
       });
+
+      // Add notification for admin
+      await addDoc(collection(db, "notifications"), {
+        userId: "admin",
+        title: "New Support Message",
+        message: `Support message from ${authUser ? profile?.displayName : guestName || 'Guest'}`,
+        type: "info",
+        read: false,
+        timestamp: new Date().toISOString(),
+      });
+
       setMessage("");
     } catch (error) {
       console.error("Support message error:", error);
@@ -135,13 +200,17 @@ export const SupportWidget = () => {
                       "p-3 rounded-2xl text-sm",
                       msg.sender === 'user' 
                         ? "bg-[#C9A96E] text-[#0B0B0B] rounded-tr-none" 
-                        : "bg-slate-800 text-white border border-[#C9A96E]/10 rounded-tl-none"
+                        : msg.sender === 'system'
+                          ? "bg-slate-800/50 text-gray-400 italic text-center w-full rounded-none border-none"
+                          : "bg-slate-800 text-white border border-[#C9A96E]/10 rounded-tl-none"
                     )}>
                       {msg.text}
                     </div>
-                    <span className="text-[10px] text-gray-500 mt-1">
-                      {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Sending...'}
-                    </span>
+                    {msg.sender !== 'system' && (
+                      <span className="text-[10px] text-gray-500 mt-1">
+                        {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Sending...'}
+                      </span>
+                    )}
                   </div>
                 ))
               )}
@@ -149,7 +218,7 @@ export const SupportWidget = () => {
 
             {/* Input */}
             <form onSubmit={handleSendMessage} className="p-4 bg-slate-950 border-t border-[#C9A96E]/10 space-y-2">
-              {!user && (
+              {!authUser && (
                 <div className="grid grid-cols-2 gap-2">
                   <input
                     type="text"
@@ -179,7 +248,7 @@ export const SupportWidget = () => {
                 />
                 <button 
                   type="submit"
-                  disabled={loading || !message.trim() || (!user && (!guestName.trim() || !guestEmail.trim()))}
+                  disabled={loading || !message.trim() || (!authUser && (!guestName.trim() || !guestEmail.trim()))}
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-[#C9A96E] text-[#0B0B0B] rounded-lg hover:bg-[#D4B985] transition-all disabled:opacity-50"
                 >
                   <Send size={16} />
@@ -194,9 +263,14 @@ export const SupportWidget = () => {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 bg-[#C9A96E] text-[#0B0B0B] rounded-full shadow-2xl flex items-center justify-center hover:bg-[#D4B985] transition-all"
+        className="w-14 h-14 bg-[#C9A96E] text-[#0B0B0B] rounded-full shadow-2xl flex items-center justify-center hover:bg-[#D4B985] transition-all relative"
       >
         {isOpen ? <X size={24} /> : <MessageSquare size={24} />}
+        {!isOpen && unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-slate-950 animate-bounce">
+            {unreadCount}
+          </span>
+        )}
       </motion.button>
     </div>
   );

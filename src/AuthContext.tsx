@@ -53,27 +53,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {
+        console.log("User authenticated:", firebaseUser.uid, firebaseUser.email);
         try {
           // Force token refresh to ensure Firestore has the latest auth state
-          await firebaseUser.getIdToken(true);
+          const token = await firebaseUser.getIdToken(true);
+          console.log("Token refreshed");
         } catch (e) {
           console.error("Failed to refresh token:", e);
         }
         
         // Listen to profile changes
         const profileRef = doc(db, "users", firebaseUser.uid);
-        console.log("Fetching profile for:", firebaseUser.uid);
+        console.log("Attaching onSnapshot for:", firebaseUser.uid);
         const unsubProfile = onSnapshot(profileRef, (docSnap) => {
           if (docSnap.exists()) {
-            console.log("Profile found:", docSnap.data());
+            console.log("Profile snapshot received:", docSnap.data());
             setProfile(docSnap.data() as UserProfile);
           } else {
-            console.log("Profile not found for uid:", firebaseUser.uid);
+            console.log("Profile snapshot: document does not exist for", firebaseUser.uid);
             setProfile(null);
           }
           setLoading(false);
         }, (error) => {
           console.error("Profile snapshot error for", firebaseUser.uid, ":", error.message, error.code, error);
+          // If permission denied, maybe retry once after a delay?
           setLoading(false);
         });
         return () => unsubProfile();

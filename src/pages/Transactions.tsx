@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Tooltip } from "react-tooltip";
 import { 
   History, 
   Search, 
@@ -12,7 +13,8 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  Copy
+  Copy,
+  Inbox
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
@@ -50,6 +52,7 @@ export const Transactions = () => {
 
   return (
     <div className="space-y-8">
+      <Tooltip id="tx-tooltip" className="z-50" />
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-[#C9A96E]/10 rounded-2xl flex items-center justify-center text-[#C9A96E]">
@@ -95,7 +98,15 @@ export const Transactions = () => {
                 </tr>
               ) : transactions.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-20 text-center text-gray-500">No transactions found.</td>
+                  <td colSpan={6} className="px-6 py-20">
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <div className="w-16 h-16 bg-slate-950 rounded-full flex items-center justify-center text-gray-700 mb-4">
+                        <Inbox size={32} />
+                      </div>
+                      <h4 className="text-lg font-bold text-white mb-1">No transactions found</h4>
+                      <p className="text-sm text-gray-500">Your transaction history will appear here.</p>
+                    </div>
+                  </td>
                 </tr>
               ) : (
                 transactions.map((tx) => (
@@ -149,6 +160,8 @@ export const Transactions = () => {
                     <td className="px-6 py-5 text-right">
                       <button 
                         onClick={() => setSelectedTx(tx)}
+                        data-tooltip-id="tx-tooltip"
+                        data-tooltip-content="View Receipt"
                         className="p-2 text-gray-500 hover:text-[#C9A96E] transition-colors"
                       >
                         <ExternalLink size={18} />
@@ -251,8 +264,9 @@ export const Transactions = () => {
                     {selectedTx.txHash && (
                       <button 
                         onClick={() => navigator.clipboard.writeText(selectedTx.txHash)}
+                        data-tooltip-id="tx-tooltip"
+                        data-tooltip-content="Copy TXID"
                         className="text-gray-500 hover:text-[#C9A96E] transition-colors"
-                        title="Copy TXID"
                       >
                         <Copy size={14} />
                       </button>
@@ -274,8 +288,9 @@ export const Transactions = () => {
                       </span>
                       <button 
                         onClick={() => navigator.clipboard.writeText(selectedTx.walletAddress)}
+                        data-tooltip-id="tx-tooltip"
+                        data-tooltip-content="Copy Address"
                         className="text-gray-500 hover:text-[#C9A96E] transition-colors"
-                        title="Copy Address"
                       >
                         <Copy size={14} />
                       </button>

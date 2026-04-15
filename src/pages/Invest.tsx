@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Tooltip } from "react-tooltip";
 import { 
   TrendingUp, 
   Clock, 
@@ -8,7 +9,8 @@ import {
   AlertCircle, 
   CheckCircle2,
   Wallet,
-  Timer
+  Timer,
+  Inbox
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { useNotifications } from "../NotificationContext";
@@ -185,6 +187,7 @@ export const Invest = () => {
 
   return (
     <div className="space-y-8 pb-20">
+      <Tooltip id="invest-tooltip" className="z-50" />
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 bg-[#C9A96E]/10 rounded-2xl flex items-center justify-center text-[#C9A96E]">
           <TrendingUp size={28} />
@@ -312,7 +315,10 @@ export const Invest = () => {
           
           <div className="space-y-4">
             {activeInvestments.length === 0 ? (
-              <div className="text-center py-10">
+              <div className="text-center py-12 flex flex-col items-center">
+                <div className="w-16 h-16 bg-slate-950 rounded-full flex items-center justify-center text-gray-700 mb-4">
+                  <Inbox size={32} />
+                </div>
                 <p className="text-sm text-gray-500">No active investments.</p>
                 <p className="text-xs text-gray-600 mt-1">Start a plan to grow your BTC.</p>
               </div>

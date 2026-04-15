@@ -5,6 +5,7 @@ import { useAuth } from "../AuthContext";
 import { APP_CONFIG } from "../config";
 import { useNotifications } from "../NotificationContext";
 import { ThemeToggle } from "./ThemeToggle";
+import { NotificationDropdown } from "../pages/NotificationDropdown";
 
 export const Navbar = ({ onMenuClick }: { onMenuClick?: () => void }) => {
   const { profile } = useAuth();
@@ -57,6 +58,10 @@ export const Navbar = ({ onMenuClick }: { onMenuClick?: () => void }) => {
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-950"></span>
             )}
           </button>
+          <NotificationDropdown 
+            isOpen={isNotificationsOpen} 
+            onClose={() => setIsNotificationsOpen(false)} 
+          />
         </div>
 
         <Link to="/profile" className="flex items-center gap-3 pl-4 border-l border-[#C9A96E]/10 hover:opacity-80 transition-opacity">

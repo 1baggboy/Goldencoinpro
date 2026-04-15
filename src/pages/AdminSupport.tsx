@@ -11,13 +11,13 @@ import {
   ChevronRight
 } from "lucide-react";
 import { collection, query, onSnapshot, orderBy, addDoc, serverTimestamp, where, doc, updateDoc, getDocs } from "firebase/firestore";
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import { useAuth } from "../AuthContext";
 import { cn } from "../lib/utils";
 import { formatDistanceToNow } from "date-fns";
 
 export const AdminSupport = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [searchParams] = useSearchParams();
   const initialUserId = searchParams.get("user");
   const [chats, setChats] = useState<any[]>([]);
@@ -26,10 +26,13 @@ export const AdminSupport = () => {
   const [reply, setReply] = useState("");
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filter, setFilter] = useState<"active" | "closed">("active");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Fetch all unique chat users
   useEffect(() => {
+    if (!isAdmin || !auth.currentUser) return;
+
     const q = query(collection(db, "support_chats"), orderBy("createdAt", "desc"));
     const unsub = onSnapshot(q, (snap) => {
       const allMsgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -43,7 +46,8 @@ export const AdminSupport = () => {
             userName: msg.userName,
             lastMessage: msg.text,
             lastTimestamp: msg.createdAt,
-            unread: msg.sender === 'user' // Simple logic for now
+            unread: msg.sender === 'user' && msg.read === false,
+            isClosed: (msg.sender === 'system' && (msg.text === "Chat ended due to inactivity" || msg.text === "Chat closed by agent"))
           };
         }
       });
@@ -59,9 +63,38 @@ export const AdminSupport = () => {
     return () => unsub();
   }, []);
 
+  // Auto-close logic
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const twentyMinutes = 20 * 60 * 1000;
+
+      chats.forEach(async (chat) => {
+        if (!chat.isClosed && chat.lastTimestamp) {
+          const lastTime = chat.lastTimestamp.toDate ? chat.lastTimestamp.toDate().getTime() : new Date().getTime();
+          if (now - lastTime > twentyMinutes) {
+            try {
+              await addDoc(collection(db, "support_chats"), {
+                userId: chat.userId,
+                userName: "System",
+                text: "Chat ended due to inactivity",
+                sender: "system",
+                createdAt: serverTimestamp(),
+              });
+            } catch (e) {
+              console.error("Auto-close error:", e);
+            }
+          }
+        }
+      });
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, [chats]);
+
   // Fetch messages for selected chat
   useEffect(() => {
-    if (!selectedChatId) return;
+    if (!selectedChatId || !isAdmin) return;
 
     const q = query(
       collection(db, "support_chats"),
@@ -82,6 +115,24 @@ export const AdminSupport = () => {
     }
   }, [messages]);
 
+  // Mark messages as read when admin views chat
+  useEffect(() => {
+    if (selectedChatId && isAdmin) {
+      const q = query(
+        collection(db, "support_chats"),
+        where("userId", "==", selectedChatId),
+        where("sender", "==", "user"),
+        where("read", "==", false)
+      );
+      
+      getDocs(q).then(snap => {
+        snap.docs.forEach(d => {
+          updateDoc(doc(db, "support_chats", d.id), { read: true });
+        });
+      }).catch(err => console.error("Error marking as read by admin:", err));
+    }
+  }, [selectedChatId, isAdmin, messages]); // messages dependency to trigger when new ones arrive
+
   const handleSendReply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reply.trim() || !selectedChatId) return;
@@ -93,8 +144,20 @@ export const AdminSupport = () => {
         userName: "Support Agent",
         text: reply,
         sender: "admin",
+        read: false,
         createdAt: serverTimestamp(),
       });
+
+      // Also add a system notification for the user
+      await addDoc(collection(db, "notifications"), {
+        userId: selectedChatId,
+        title: "Support Message",
+        message: "A support agent has replied to your message.",
+        type: "info",
+        read: false,
+        timestamp: new Date().toISOString(),
+      });
+
       setReply("");
     } catch (error) {
       console.error("Reply error:", error);
@@ -103,10 +166,30 @@ export const AdminSupport = () => {
     }
   };
 
-  const filteredChats = chats.filter(c => 
-    c.userName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    c.userId?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleCloseChat = async () => {
+    if (!selectedChatId) return;
+    setLoading(true);
+    try {
+      await addDoc(collection(db, "support_chats"), {
+        userId: selectedChatId,
+        userName: "System",
+        text: "Chat closed by agent",
+        sender: "system",
+        createdAt: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error("Close chat error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredChats = chats.filter(c => {
+    const matchesSearch = c.userName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         c.userId?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filter === "active" ? !c.isClosed : c.isClosed;
+    return matchesSearch && matchesFilter;
+  });
 
   const selectedChat = chats.find(c => c.userId === selectedChatId);
 
@@ -115,9 +198,31 @@ export const AdminSupport = () => {
       {/* Chat List */}
       <div className="w-80 bg-slate-900 border border-[#C9A96E]/10 rounded-2xl flex flex-col overflow-hidden">
         <div className="p-4 border-b border-[#C9A96E]/10">
-          <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-            <MessageSquare size={18} className="text-[#C9A96E]" />
-            Support Chats
+          <h3 className="font-bold text-white mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MessageSquare size={18} className="text-[#C9A96E]" />
+              Support Chats
+            </div>
+            <div className="flex bg-slate-950 rounded-lg p-1">
+              <button 
+                onClick={() => setFilter("active")}
+                className={cn(
+                  "px-2 py-1 text-[10px] font-bold rounded-md transition-all",
+                  filter === "active" ? "bg-[#C9A96E] text-[#0B0B0B]" : "text-gray-500 hover:text-white"
+                )}
+              >
+                ACTIVE
+              </button>
+              <button 
+                onClick={() => setFilter("closed")}
+                className={cn(
+                  "px-2 py-1 text-[10px] font-bold rounded-md transition-all",
+                  filter === "closed" ? "bg-[#C9A96E] text-[#0B0B0B]" : "text-gray-500 hover:text-white"
+                )}
+              >
+                CLOSED
+              </button>
+            </div>
           </h3>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
@@ -160,7 +265,7 @@ export const AdminSupport = () => {
                   </div>
                   <p className="text-xs text-gray-500 truncate">{chat.lastMessage}</p>
                 </div>
-                {chat.unread && (
+                {chat.unread && !chat.isClosed && (
                   <div className="w-2 h-2 bg-[#C9A96E] rounded-full mt-2"></div>
                 )}
               </button>
@@ -184,10 +289,25 @@ export const AdminSupport = () => {
                   <p className="text-[10px] text-gray-500 font-mono">{selectedChatId}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-1 bg-green-500/10 text-green-500 text-[10px] font-bold rounded-full border border-green-500/20">
-                  ACTIVE SESSION
-                </span>
+              <div className="flex items-center gap-3">
+                {selectedChat?.isClosed ? (
+                  <span className="px-2 py-1 bg-gray-500/10 text-gray-500 text-[10px] font-bold rounded-full border border-gray-500/20">
+                    CLOSED SESSION
+                  </span>
+                ) : (
+                  <>
+                    <span className="px-2 py-1 bg-green-500/10 text-green-500 text-[10px] font-bold rounded-full border border-green-500/20">
+                      ACTIVE SESSION
+                    </span>
+                    <button 
+                      onClick={handleCloseChat}
+                      disabled={loading}
+                      className="px-3 py-1 bg-red-500/10 text-red-500 text-[10px] font-bold rounded-full border border-red-500/20 hover:bg-red-500/20 transition-all"
+                    >
+                      CLOSE CHAT
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
@@ -201,44 +321,52 @@ export const AdminSupport = () => {
                   key={msg.id}
                   className={cn(
                     "flex flex-col max-w-[70%]",
-                    msg.sender === 'admin' ? "ml-auto items-end" : "mr-auto items-start"
+                    msg.sender === 'admin' ? "ml-auto items-end" : 
+                    msg.sender === 'system' ? "mx-auto items-center max-w-full w-full" :
+                    "mr-auto items-start"
                   )}
                 >
                   <div className={cn(
                     "p-4 rounded-2xl text-sm leading-relaxed shadow-sm",
                     msg.sender === 'admin' 
                       ? "bg-[#C9A96E] text-[#0B0B0B] rounded-tr-none" 
-                      : "bg-slate-800 text-white border border-[#C9A96E]/10 rounded-tl-none"
+                      : msg.sender === 'system'
+                        ? "bg-slate-800/50 text-gray-400 italic text-center w-full rounded-none border-none shadow-none"
+                        : "bg-slate-800 text-white border border-[#C9A96E]/10 rounded-tl-none"
                   )}>
                     {msg.text}
                   </div>
-                  <span className="text-[10px] text-gray-500 mt-1 px-1">
-                    {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleString() : 'Sending...'}
-                  </span>
+                  {msg.sender !== 'system' && (
+                    <span className="text-[10px] text-gray-500 mt-1 px-1">
+                      {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleString() : 'Sending...'}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
 
             {/* Input */}
-            <form onSubmit={handleSendReply} className="p-4 bg-slate-950 border-t border-[#C9A96E]/10">
-              <div className="relative flex gap-3">
-                <input 
-                  type="text"
-                  value={reply}
-                  onChange={(e) => setReply(e.target.value)}
-                  placeholder="Type your reply..."
-                  className="flex-1 bg-slate-900 border border-[#C9A96E]/10 rounded-xl py-4 px-6 text-sm text-white outline-none focus:border-[#C9A96E]/40 transition-all shadow-inner"
-                />
-                <button 
-                  type="submit"
-                  disabled={loading || !reply.trim()}
-                  className="px-8 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all disabled:opacity-50 flex items-center gap-2"
-                >
-                  <Send size={18} />
-                  Reply
-                </button>
-              </div>
-            </form>
+            {!selectedChat?.isClosed && (
+              <form onSubmit={handleSendReply} className="p-4 bg-slate-950 border-t border-[#C9A96E]/10">
+                <div className="relative flex gap-3">
+                  <input 
+                    type="text"
+                    value={reply}
+                    onChange={(e) => setReply(e.target.value)}
+                    placeholder="Type your reply..."
+                    className="flex-1 bg-slate-900 border border-[#C9A96E]/10 rounded-xl py-4 px-6 text-sm text-white outline-none focus:border-[#C9A96E]/40 transition-all shadow-inner"
+                  />
+                  <button 
+                    type="submit"
+                    disabled={loading || !reply.trim()}
+                    className="px-8 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all disabled:opacity-50 flex items-center gap-2"
+                  >
+                    <Send size={18} />
+                    Reply
+                  </button>
+                </div>
+              </form>
+            )}
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-12">

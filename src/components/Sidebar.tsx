@@ -19,13 +19,26 @@ import { APP_CONFIG } from "../config";
 import { auth } from "../firebase";
 import { cn } from "../lib/utils";
 import { useTheme } from "../ThemeContext";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase";
 
 export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () => void }) => {
   const location = useLocation();
   const { isAdmin } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [unreadSupportCount, setUnreadSupportCount] = React.useState(0);
 
-  const menuItems = [
+  React.useEffect(() => {
+    if (!isAdmin || !auth.currentUser) return;
+    const q = query(collection(db, "support_chats"), where("sender", "==", "user"), where("read", "==", false));
+    const unsub = onSnapshot(q, (snap) => {
+      const uniqueUsers = new Set(snap.docs.map(d => d.data().userId));
+      setUnreadSupportCount(uniqueUsers.size);
+    });
+    return () => unsub();
+  }, [isAdmin]);
+
+  const menuItems: any[] = [
     { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
     { name: "Deposit BTC", icon: ArrowUpCircle, path: "/deposit" },
     { name: "Invest BTC", icon: TrendingUp, path: "/invest" },
@@ -37,7 +50,12 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () =>
 
   if (isAdmin) {
     menuItems.push({ name: "Admin Panel", icon: UserCog, path: "/admin" });
-    menuItems.push({ name: "Support Chats", icon: MessageSquare, path: "/admin/support" });
+    menuItems.push({ 
+      name: "Support Chats", 
+      icon: MessageSquare, 
+      path: "/admin/support",
+      badge: unreadSupportCount > 0 ? unreadSupportCount : undefined
+    });
   }
 
   return (
@@ -68,7 +86,12 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () =>
             const content = (
               <>
                 <item.icon size={20} />
-                <span className="font-medium">{item.name}</span>
+                <span className="font-medium flex-1">{item.name}</span>
+                {item.badge !== undefined && (
+                  <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                    {item.badge}
+                  </span>
+                )}
               </>
             );
             const className = cn(

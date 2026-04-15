@@ -21,6 +21,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
+              className="glass-card rounded-3xl p-6 md:p-10 shadow-2xl min-h-full"
             >
               {children}
             </motion.div>

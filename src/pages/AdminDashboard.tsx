@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { Tooltip } from "react-tooltip";
 import { 
   Users, 
   ArrowDownCircle, 
@@ -17,13 +18,14 @@ import {
   ArrowUpDown,
   Filter,
   Camera,
-  MessageSquare
+  MessageSquare,
+  Inbox
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { APP_CONFIG } from "../config";
 import { useNotifications } from "../NotificationContext";
 import { collection, query, onSnapshot, doc, updateDoc, increment, getDocs, where, getDoc, deleteDoc, writeBatch } from "firebase/firestore";
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 import { cn } from "../lib/utils";
 import { format } from "date-fns";
@@ -58,6 +60,8 @@ export const AdminDashboard = () => {
   });
 
   useEffect(() => {
+    if (!auth.currentUser) return;
+
     // Fetch users
     const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
       const u = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -92,11 +96,12 @@ export const AdminDashboard = () => {
       setPendingKyc(k);
     }, (error) => handleFirestoreError(error, OperationType.LIST, "kyc_submissions"));
 
-    // Fetch active chats count
+    // Fetch active chats count (unread)
     const unsubChats = onSnapshot(collection(db, "support_chats"), (snap) => {
-      const uniqueUsers = new Set(snap.docs.map(d => d.data().userId));
-      setStats(prev => ({ ...prev, activeChats: uniqueUsers.size }));
-    });
+      const allMsgs = snap.docs.map(d => d.data());
+      const unreadUserIds = new Set(allMsgs.filter(m => m.sender === 'user' && m.read === false).map(m => m.userId));
+      setStats(prev => ({ ...prev, activeChats: unreadUserIds.size }));
+    }, (error) => handleFirestoreError(error, OperationType.LIST, "support_chats"));
 
     // Fetch BTC Price
     const fetchBtcPrice = async () => {
@@ -380,6 +385,7 @@ export const AdminDashboard = () => {
 
   return (
     <div className="space-y-8 pb-20">
+      <Tooltip id="admin-tooltip" className="z-50" />
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 bg-[#C9A96E]/10 rounded-2xl flex items-center justify-center text-[#C9A96E]">
           <ShieldCheck size={28} />
@@ -405,7 +411,14 @@ export const AdminDashboard = () => {
         <AdminStatCard title="Total Users" value={stats.totalUsers} icon={Users} />
         <AdminStatCard title="Active Plans" value={stats.activeInvestments} icon={TrendingUp} color="green" />
         <AdminStatCard title="Pending KYC" value={pendingKyc.length} icon={ShieldCheck} color="blue" />
-        <AdminStatCard title="Support Chats" value={stats.activeChats} icon={MessageSquare} color="gold" link="/admin/support" />
+        <AdminStatCard 
+          title="Unread Chats" 
+          value={stats.activeChats} 
+          icon={MessageSquare} 
+          color="gold" 
+          link="/admin/support" 
+          badge={stats.activeChats > 0}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -417,7 +430,12 @@ export const AdminDashboard = () => {
           </h3>
           <div className="space-y-4">
             {pendingDeposits.length === 0 ? (
-              <p className="text-sm text-gray-500 py-10 text-center">No pending deposits.</p>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-16 h-16 bg-slate-950 rounded-full flex items-center justify-center text-gray-700 mb-4">
+                  <Inbox size={32} />
+                </div>
+                <p className="text-sm text-gray-500">No pending deposits.</p>
+              </div>
             ) : (
               pendingDeposits.map(tx => (
                 <div key={tx.id} className="p-4 bg-slate-950 border border-[#C9A96E]/10 rounded-xl flex items-center justify-between group">
@@ -428,12 +446,16 @@ export const AdminDashboard = () => {
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button 
                       onClick={() => setSelectedTx(tx)}
+                      data-tooltip-id="admin-tooltip"
+                      data-tooltip-content="View Deposit Details"
                       className="p-2 bg-[#C9A96E]/10 text-[#C9A96E] rounded-lg hover:bg-[#C9A96E]/20 transition-colors"
                     >
                       <Eye size={18} />
                     </button>
                     <button 
                       onClick={() => approveDeposit(tx)}
+                      data-tooltip-id="admin-tooltip"
+                      data-tooltip-content="Approve Deposit"
                       className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500/20 transition-colors"
                     >
                       <Check size={18} />
@@ -453,7 +475,12 @@ export const AdminDashboard = () => {
           </h3>
           <div className="space-y-4">
             {pendingWithdrawals.length === 0 ? (
-              <p className="text-sm text-gray-500 py-10 text-center">No pending withdrawals.</p>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-16 h-16 bg-slate-950 rounded-full flex items-center justify-center text-gray-700 mb-4">
+                  <Inbox size={32} />
+                </div>
+                <p className="text-sm text-gray-500">No pending withdrawals.</p>
+              </div>
             ) : (
               pendingWithdrawals.map(tx => (
                 <div key={tx.id} className="p-4 bg-slate-950 border border-[#C9A96E]/10 rounded-xl flex items-center justify-between group">
@@ -464,12 +491,16 @@ export const AdminDashboard = () => {
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button 
                       onClick={() => setSelectedTx(tx)}
+                      data-tooltip-id="admin-tooltip"
+                      data-tooltip-content="View Withdrawal Details"
                       className="p-2 bg-[#C9A96E]/10 text-[#C9A96E] rounded-lg hover:bg-[#C9A96E]/20 transition-colors"
                     >
                       <Eye size={18} />
                     </button>
                     <button 
                       onClick={() => approveWithdrawal(tx)}
+                      data-tooltip-id="admin-tooltip"
+                      data-tooltip-content="Approve Withdrawal"
                       className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500/20 transition-colors"
                     >
                       <Check size={18} />
@@ -491,7 +522,12 @@ export const AdminDashboard = () => {
           </h3>
           <div className="space-y-4">
             {pendingKyc.length === 0 ? (
-              <p className="text-sm text-gray-500 py-10 text-center">No pending KYC requests.</p>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-16 h-16 bg-slate-950 rounded-full flex items-center justify-center text-gray-700 mb-4">
+                  <ShieldCheck size={32} />
+                </div>
+                <p className="text-sm text-gray-500">No pending KYC requests.</p>
+              </div>
             ) : (
               pendingKyc.map(kyc => (
                 <div key={kyc.id} className="p-4 bg-slate-950 border border-[#C9A96E]/10 rounded-xl flex items-center justify-between group">
@@ -502,19 +538,24 @@ export const AdminDashboard = () => {
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button 
                       onClick={() => setSelectedKyc(kyc)}
+                      data-tooltip-id="admin-tooltip"
+                      data-tooltip-content="View KYC Details"
                       className="p-2 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500/20 transition-colors"
-                      title="View Details"
                     >
                       <Eye size={18} />
                     </button>
                     <button 
                       onClick={() => approveKyc(kyc)}
+                      data-tooltip-id="admin-tooltip"
+                      data-tooltip-content="Approve KYC"
                       className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500/20 transition-colors"
                     >
                       <Check size={18} />
                     </button>
                     <button 
                       onClick={() => initiateRejectKyc(kyc.id, kyc.userId)}
+                      data-tooltip-id="admin-tooltip"
+                      data-tooltip-content="Reject KYC"
                       className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
                     >
                       <X size={18} />
@@ -753,8 +794,21 @@ export const AdminDashboard = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#C9A96E]/5">
-              {filteredAndSortedUsers.map(u => (
-                <tr key={u.id} className="hover:bg-[#C9A96E]/5 transition-colors">
+              {filteredAndSortedUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-20">
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <div className="w-20 h-20 bg-slate-950 rounded-full flex items-center justify-center text-gray-700 mb-4">
+                        <Users size={40} />
+                      </div>
+                      <h4 className="text-lg font-bold text-white mb-1">No users found</h4>
+                      <p className="text-sm text-gray-500">Try adjusting your search or filters.</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredAndSortedUsers.map(u => (
+                  <tr key={u.id} className="hover:bg-[#C9A96E]/5 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-[#C9A96E]/10 rounded-full flex items-center justify-center text-[#C9A96E] text-xs font-bold">
@@ -787,11 +841,12 @@ export const AdminDashboard = () => {
                       </span>
                       <button 
                         onClick={() => toggleUserStatus(u.id, u.status || 'active')}
+                        data-tooltip-id="admin-tooltip"
+                        data-tooltip-content={u.status === 'restricted' ? "Activate User" : "Restrict User"}
                         className={cn(
                           "p-1 rounded-md transition-colors",
                           u.status === 'restricted' ? "text-green-500 hover:bg-green-500/10" : "text-red-500 hover:bg-red-500/10"
                         )}
-                        title={u.status === 'restricted' ? "Activate User" : "Restrict User"}
                       >
                         {u.status === 'restricted' ? <Shield size={14} /> : <ShieldAlert size={14} />}
                       </button>
@@ -832,7 +887,7 @@ export const AdminDashboard = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>
@@ -950,12 +1005,15 @@ export const AdminDashboard = () => {
   );
 };
 
-const AdminStatCard = ({ title, value, icon: Icon, color, link }: any) => {
+const AdminStatCard = ({ title, value, icon: Icon, color, link, badge }: any) => {
   const content = (
     <>
-      <div>
+      <div className="relative">
         <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">{title}</p>
         <h4 className="text-2xl font-bold text-white tracking-tight">{value}</h4>
+        {badge && (
+          <span className="absolute -top-1 -right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+        )}
       </div>
       <div className={cn(
         "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110",
