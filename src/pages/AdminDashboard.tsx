@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { useNotifications } from "../NotificationContext";
-import { collection, query, onSnapshot, doc, updateDoc, increment, getDocs, where, getDoc } from "firebase/firestore";
+import { collection, query, onSnapshot, doc, updateDoc, increment, getDocs, where, getDoc, deleteDoc, writeBatch } from "firebase/firestore";
 import { db } from "../firebase";
 import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 import { cn } from "../lib/utils";
@@ -46,6 +46,7 @@ export const AdminDashboard = () => {
   const [rejectReason, setRejectReason] = useState("");
   const [rejectingKyc, setRejectingKyc] = useState<{ id: string, userId: string } | null>(null);
   const [rejectingTx, setRejectingTx] = useState<{ id: string, userId: string, type: string, amount: number } | null>(null);
+  const [isResetting, setIsResetting] = useState(false);
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalDeposits: 0,
@@ -292,6 +293,75 @@ export const AdminDashboard = () => {
     }
   };
 
+  const resetSystemData = async () => {
+    if (!window.confirm("CRITICAL: This will reset ALL user balances to 0 and delete ALL transactions, investments, and KYC submissions. This action cannot be undone. Are you absolutely sure?")) {
+      return;
+    }
+
+    setIsResetting(true);
+    try {
+      console.log("Starting system reset...");
+      
+      const collectionsToClear = ["transactions", "investments", "kyc_submissions", "notifications"];
+      let totalDeleted = 0;
+
+      // 1. Reset all user balances (using batches of 500)
+      const usersSnap = await getDocs(collection(db, "users"));
+      console.log(`Found ${usersSnap.size} users to reset.`);
+      
+      let batch = writeBatch(db);
+      let count = 0;
+
+      for (const userDoc of usersSnap.docs) {
+        batch.update(doc(db, "users", userDoc.id), {
+          btcBalance: 0,
+          usdBalance: 0,
+          tradingBalanceBtc: 0,
+          totalDeposited: 0,
+          totalDepositedUsd: 0,
+          referralBonusEarned: 0,
+          kycStatus: "not_submitted"
+        });
+        count++;
+        if (count === 500) {
+          await batch.commit();
+          batch = writeBatch(db);
+          count = 0;
+        }
+      }
+      if (count > 0) await batch.commit();
+      console.log("User balances reset.");
+
+      // 2. Delete other collections
+      for (const colName of collectionsToClear) {
+        const snap = await getDocs(collection(db, colName));
+        console.log(`Deleting ${snap.size} documents from ${colName}...`);
+        
+        batch = writeBatch(db);
+        count = 0;
+        for (const d of snap.docs) {
+          batch.delete(doc(db, colName, d.id));
+          count++;
+          totalDeleted++;
+          if (count === 500) {
+            await batch.commit();
+            batch = writeBatch(db);
+            count = 0;
+          }
+        }
+        if (count > 0) await batch.commit();
+      }
+
+      console.log(`System reset complete. Total documents deleted: ${totalDeleted}`);
+      alert("System data has been successfully reset.");
+    } catch (error: any) {
+      console.error("Reset error:", error);
+      alert("Failed to reset system data: " + (error.code ? `[${error.code}] ` : "") + error.message);
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   return (
     <div className="space-y-8 pb-20">
       <div className="flex items-center gap-4">
@@ -301,6 +371,16 @@ export const AdminDashboard = () => {
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Admin Control Panel</h1>
           <p className="text-gray-400">Manage users, deposits, and KYC verifications.</p>
+        </div>
+        <div className="ml-auto">
+          <button 
+            onClick={resetSystemData}
+            disabled={isResetting}
+            className="px-4 py-2 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl text-sm font-bold hover:bg-red-500/20 transition-all flex items-center gap-2 disabled:opacity-50"
+          >
+            <ShieldAlert size={18} />
+            {isResetting ? "Resetting..." : "Reset System Data"}
+          </button>
         </div>
       </div>
 

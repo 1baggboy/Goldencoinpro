@@ -6,9 +6,9 @@ import { motion } from "motion/react";
 const LegalLayout = ({ title, icon: Icon, children }: any) => (
   <div className="bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-950 dark:text-white font-sans selection:bg-[#C9A96E] selection:text-slate-950 transition-colors duration-300">
     <nav className="h-20 border-b border-[#C9A96E]/10 px-6 md:px-12 flex items-center justify-between sticky top-0 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md z-50">
-      <Link to="/" className="flex items-center gap-3">
-        <img src="/logo.webp" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
-      </Link>
+      <div className="flex items-center gap-3">
+        <img src="/Logo.png" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
+      </div>
       <Link to="/" className="text-sm font-semibold hover:text-[#C9A96E] transition-colors flex items-center gap-2">
         <ArrowLeft size={16} /> Back to Home
       </Link>

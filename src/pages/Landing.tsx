@@ -20,9 +20,9 @@ export const Landing = () => {
     <div className="min-h-screen font-sans transition-colors duration-300 bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white">
       {/* Navigation */}
       <nav className="h-20 border-b px-6 md:px-12 flex items-center justify-between sticky top-0 backdrop-blur-md z-50 border-[#C9A96E]/20 bg-slate-50/80 dark:border-[#C9A96E]/10 dark:bg-slate-950/80">
-        <Link to="/" className="flex items-center gap-3">
-          <img src="/logo.webp" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
-        </Link>
+        <div className="flex items-center gap-3">
+          <img src="/Logo.png" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
+        </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600 dark:text-gray-400">
           <a href="#features" className="hover:text-[#C9A96E] transition-colors">Features</a>
           <a href="#security" className="hover:text-[#C9A96E] transition-colors">Security</a>
@@ -159,7 +159,7 @@ export const Landing = () => {
             </Link>
           </div>
           <div className="absolute top-0 right-0 p-8 opacity-10">
-            <img src="/logo.webp" alt="" className="w-64 h-auto" referrerPolicy="no-referrer" />
+            <img src="/Logo.png" alt="" className="w-64 h-auto" referrerPolicy="no-referrer" />
           </div>
         </div>
       </section>
@@ -168,9 +168,9 @@ export const Landing = () => {
       <footer className="py-20 px-6 border-t border-[#C9A96E]/10">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="col-span-1 md:col-span-2">
-            <Link to="/" className="flex items-center gap-3 mb-6">
-              <img src="/logo.webp" alt="GOLDENCOIN" className="h-8 w-auto" referrerPolicy="no-referrer" />
-            </Link>
+            <div className="flex items-center gap-3 mb-6">
+              <img src="/Logo.png" alt="GOLDENCOIN" className="h-8 w-auto" referrerPolicy="no-referrer" />
+            </div>
             <p className="text-gray-500 max-w-sm mb-8">
               Goldencoin Limited is a leading digital asset management platform providing secure and transparent Bitcoin solutions.
             </p>

@@ -96,7 +96,7 @@ service cloud.firestore {
       allow read: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidTransaction(request.resource.data) && (request.resource.data.status == 'pending' || request.resource.data.status == 'confirmed');
       allow update: if isAdmin();
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
 
     // KYC Submissions Collection
@@ -104,7 +104,7 @@ service cloud.firestore {
       allow read: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidKYC(request.resource.data) && request.resource.data.status == 'pending';
       allow update: if isAdmin();
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
 
     // Investments Collection
@@ -112,7 +112,7 @@ service cloud.firestore {
       allow read: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && request.resource.data.status == 'active';
       allow update: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid && request.resource.data.status == 'completed' && resource.data.status == 'active');
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
 
     // Notifications Collection
@@ -130,7 +130,10 @@ service cloud.firestore {
 
     // Support Chats Collection
     match /support_chats/{chatId} {
-      allow read, write: if true;
+      allow read: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow delete: if isAdmin();
     }
   }
 }

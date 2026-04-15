@@ -124,7 +124,17 @@ export const Register = () => {
 
       navigate("/dashboard");
     } catch (err: any) {
-      setError(err.message || "Failed to register");
+      console.error("Registration error:", err);
+      let message = err.message || "Failed to register";
+      if (err.code) {
+        message = `[${err.code}] ${message}`;
+        if (err.code === "auth/unauthorized-domain") {
+          message = "This domain is not authorized in Firebase. Please add this domain to your Authorized Domains in the Firebase Console.";
+        } else if (err.code === "auth/operation-not-allowed") {
+          message = "Email/Password authentication is not enabled in Firebase. Please enable it in the Firebase Console.";
+        }
+      }
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -142,9 +152,9 @@ export const Register = () => {
         className="w-full max-w-md border rounded-3xl p-8 md:p-12 shadow-2xl relative z-10 transition-colors duration-300 bg-white border-slate-200 dark:bg-slate-900 dark:border-[#C9A96E]/10"
       >
         <div className="text-center mb-10">
-          <Link to="/" className="inline-flex items-center gap-3 mb-6">
-            <img src="/logo.webp" alt="GOLDENCOIN" className="h-16 w-auto" referrerPolicy="no-referrer" />
-          </Link>
+          <div className="inline-flex items-center gap-3 mb-6">
+            <img src="/Logo.png" alt="GOLDENCOIN" className="h-16 w-auto" referrerPolicy="no-referrer" />
+          </div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-950 dark:text-white">Create Account</h2>
           <p className="text-slate-500 mt-2">Join Goldencoin and start managing your assets.</p>
         </div>
