@@ -312,6 +312,80 @@ export const AdminDashboard = () => {
         <AdminStatCard title="Support Chats" value={stats.activeChats} icon={MessageSquare} color="gold" link="/admin/support" />
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Pending Deposits */}
+        <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
+          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <ArrowDownCircle size={20} className="text-yellow-500" />
+            Pending Deposits
+          </h3>
+          <div className="space-y-4">
+            {pendingDeposits.length === 0 ? (
+              <p className="text-sm text-gray-500 py-10 text-center">No pending deposits.</p>
+            ) : (
+              pendingDeposits.map(tx => (
+                <div key={tx.id} className="p-4 bg-slate-950 border border-[#C9A96E]/10 rounded-xl flex items-center justify-between group">
+                  <div>
+                    <p className="text-sm font-bold text-white">{tx.amountBtc || tx.amount} BTC</p>
+                    <p className="text-[10px] text-gray-500 mt-1">From: {tx.userId.slice(0, 8)}...</p>
+                  </div>
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                      onClick={() => setSelectedTx(tx)}
+                      className="p-2 bg-[#C9A96E]/10 text-[#C9A96E] rounded-lg hover:bg-[#C9A96E]/20 transition-colors"
+                    >
+                      <Eye size={18} />
+                    </button>
+                    <button 
+                      onClick={() => approveDeposit(tx)}
+                      className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500/20 transition-colors"
+                    >
+                      <Check size={18} />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Pending Withdrawals */}
+        <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
+          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <ArrowUpCircle size={20} className="text-red-500" />
+            Pending Withdrawals
+          </h3>
+          <div className="space-y-4">
+            {pendingWithdrawals.length === 0 ? (
+              <p className="text-sm text-gray-500 py-10 text-center">No pending withdrawals.</p>
+            ) : (
+              pendingWithdrawals.map(tx => (
+                <div key={tx.id} className="p-4 bg-slate-950 border border-[#C9A96E]/10 rounded-xl flex items-center justify-between group">
+                  <div>
+                    <p className="text-sm font-bold text-white">{tx.amountBtc || tx.amount} BTC</p>
+                    <p className="text-[10px] text-gray-500 mt-1">To: {tx.walletAddress?.slice(0, 8)}...</p>
+                  </div>
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                      onClick={() => setSelectedTx(tx)}
+                      className="p-2 bg-[#C9A96E]/10 text-[#C9A96E] rounded-lg hover:bg-[#C9A96E]/20 transition-colors"
+                    >
+                      <Eye size={18} />
+                    </button>
+                    <button 
+                      onClick={() => approveWithdrawal(tx)}
+                      className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500/20 transition-colors"
+                    >
+                      <Check size={18} />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
         {/* Pending KYC */}
         <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">

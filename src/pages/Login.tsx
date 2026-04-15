@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
+import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 import { verify } from "otplib";
 import { Mail, Lock, ArrowRight, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -29,8 +30,13 @@ export const Login = () => {
     setError("");
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
-      const userData = userDoc.data();
+      let userData;
+      try {
+        const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
+        userData = userDoc.data();
+      } catch (err: any) {
+        handleFirestoreError(err, OperationType.GET, `users/${userCredential.user.uid}`);
+      }
 
       if (userData?.twoFactorEnabled) {
         setTempUser({ uid: userCredential.user.uid, secret: userData.twoFactorSecret });
@@ -145,29 +151,6 @@ export const Login = () => {
                 >
                   {loading ? "Signing in..." : "Sign In"} <ArrowRight size={20} />
                 </button>
-
-                <div className="pt-6 border-t border-slate-200 dark:border-[#C9A96E]/10 space-y-4">
-                  <div className="text-center">
-                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Default Admin Access</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEmail("lookuptoadams@gmail.com");
-                      setPassword("Admin@123");
-                    }}
-                    className="w-full py-4 bg-slate-100 dark:bg-slate-800 text-slate-950 dark:text-white font-bold rounded-xl border border-[#C9A96E]/20 hover:border-[#C9A96E]/50 transition-all flex items-center justify-center gap-3 group"
-                  >
-                    <div className="w-8 h-8 bg-[#C9A96E]/10 rounded-lg flex items-center justify-center text-[#C9A96E] group-hover:scale-110 transition-transform">
-                      <ShieldCheck size={18} />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-bold">Login as Admin</p>
-                      <p className="text-[10px] text-slate-500 font-medium">lookuptoadams@gmail.com</p>
-                    </div>
-                    <ArrowRight size={16} className="ml-auto text-slate-400 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                </div>
               </form>
             </motion.div>
           ) : (

@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc, getDocs, query, collection, where, updateDoc, increment, addDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 import { Mail, Lock, User, ArrowRight, ShieldCheck, Check, X, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useTheme } from "../ThemeContext";
@@ -71,7 +72,7 @@ export const Register = () => {
               console.warn("Invalid referral code.");
             }
           } catch (err) {
-            console.error("Error checking referral code:", err);
+            handleFirestoreError(err, OperationType.GET, "users (referral check)");
           }
         }
       }
@@ -79,38 +80,46 @@ export const Register = () => {
       await updateProfile(user, { displayName: name });
 
       const isAdminEmail = user.email === "lookuptoadams@gmail.com";
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
-        email: user.email,
-        displayName: name,
-        role: isAdminEmail ? "admin" : "user",
-        usdBalance: 0,
-        btcBalance: 0,
-        tradingBalanceBtc: 0,
-        totalDepositedUsd: 0,
-        referralCode: generateReferralCode(),
-        referredBy: referredByUid,
-        referralBonusEarned: 0,
-        hasTraded: false,
-        kycStatus: "not_submitted",
-        status: "active",
-        createdAt: new Date().toISOString(),
-      });
+      try {
+        await setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
+          email: user.email,
+          displayName: name,
+          role: isAdminEmail ? "admin" : "user",
+          usdBalance: 0,
+          btcBalance: 0,
+          tradingBalanceBtc: 0,
+          totalDepositedUsd: 0,
+          referralCode: generateReferralCode(),
+          referredBy: referredByUid,
+          referralBonusEarned: 0,
+          hasTraded: false,
+          kycStatus: "not_submitted",
+          status: "active",
+          createdAt: new Date().toISOString(),
+        });
+      } catch (err: any) {
+        handleFirestoreError(err, OperationType.CREATE, `users/${user.uid}`);
+      }
 
       if (referredByUid) {
-        await updateDoc(doc(db, "users", referredByUid), {
-          usdBalance: increment(10),
-          referralBonusEarned: increment(10),
-        });
-        
-        await addDoc(collection(db, "notifications"), {
-          userId: referredByUid,
-          title: "Referral Bonus Received",
-          message: `You've earned a $10.00 cash bonus for referring ${name}!`,
-          type: "success",
-          read: false,
-          timestamp: new Date().toISOString(),
-        });
+        try {
+          await updateDoc(doc(db, "users", referredByUid), {
+            usdBalance: increment(10),
+            referralBonusEarned: increment(10),
+          });
+          
+          await addDoc(collection(db, "notifications"), {
+            userId: referredByUid,
+            title: "Referral Bonus Received",
+            message: `You've earned a $10.00 cash bonus for referring ${name}!`,
+            type: "success",
+            read: false,
+            timestamp: new Date().toISOString(),
+          });
+        } catch (err: any) {
+          handleFirestoreError(err, OperationType.WRITE, "referral bonus/notification");
+        }
       }
 
       navigate("/dashboard");
