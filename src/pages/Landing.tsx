@@ -13,6 +13,7 @@ import { motion } from "motion/react";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { useTheme } from "../ThemeContext";
 import { cn } from "../lib/utils";
+import logo from "../assets/logo.png";
 
 export const Landing = () => {
   const { theme } = useTheme();
@@ -21,13 +22,13 @@ export const Landing = () => {
       {/* Navigation */}
       <nav className="h-20 border-b px-6 md:px-12 flex items-center justify-between sticky top-0 backdrop-blur-md z-50 border-[#C9A96E]/20 bg-slate-50/80 dark:border-[#C9A96E]/10 dark:bg-slate-950/80">
         <div className="flex items-center gap-3">
-          <img src="/Logo.png" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
+          <img src={logo} alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600 dark:text-gray-400">
-          <a href="#features" className="hover:text-[#C9A96E] transition-colors">Features</a>
-          <a href="#security" className="hover:text-[#C9A96E] transition-colors">Security</a>
+          <Link to="/features" className="hover:text-[#C9A96E] transition-colors">Features</Link>
+          <Link to="/security" className="hover:text-[#C9A96E] transition-colors">Security</Link>
           <Link to="/faq" className="hover:text-[#C9A96E] transition-colors">FAQ</Link>
-          <a href="#about" className="hover:text-[#C9A96E] transition-colors">About</a>
+          <Link to="/about" className="hover:text-[#C9A96E] transition-colors">About</Link>
         </div>
         <div className="flex items-center gap-4">
           <ThemeToggle />
@@ -60,7 +61,7 @@ export const Landing = () => {
               <Link to="/register" className="w-full sm:w-auto px-8 py-4 bg-[#C9A96E] text-slate-950 font-bold rounded-xl hover:bg-[#D4B985] transition-all flex items-center justify-center gap-2 text-lg">
                 Start Your Journey <ArrowRight size={20} />
               </Link>
-              <Link to="/about" className="w-full sm:w-auto px-8 py-4 bg-slate-200 dark:bg-slate-900 text-slate-950 dark:text-white font-bold rounded-xl border border-[#C9A96E]/20 hover:bg-slate-300 dark:hover:bg-slate-800 transition-all text-lg">
+              <Link to="/about" className="w-full sm:w-auto px-8 py-4 bg-slate-200 dark:bg-slate-900 text-slate-950 dark:text-white font-bold rounded-xl border border-[#C9A96E]/20 hover:bg-slate-300 dark:hover:bg-slate-800 transition-all text-lg text-center">
                 Learn More
               </Link>
             </div>
@@ -99,7 +100,7 @@ export const Landing = () => {
       </section>
 
       {/* Referral Announcement Section */}
-      <section className="py-32 px-6 relative overflow-hidden">
+      <section id="about" className="py-32 px-6 relative overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="bg-slate-100 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-950 border border-[#C9A96E]/20 rounded-[40px] p-8 md:p-16 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#C9A96E]/10 rounded-full blur-[80px] -mr-32 -mt-32"></div>
@@ -149,7 +150,7 @@ export const Landing = () => {
       </section>
 
       {/* Trust Section */}
-      <section className="py-32 px-6">
+      <section id="security" className="py-32 px-6">
         <div className="max-w-5xl mx-auto bg-slate-100 dark:bg-slate-900 border border-[#C9A96E]/10 rounded-3xl p-12 md:p-20 text-center relative overflow-hidden">
           <div className="relative z-10">
             <h2 className="text-4xl font-bold mb-8 text-slate-950 dark:text-white">Ready to take control of your crypto?</h2>
@@ -159,7 +160,7 @@ export const Landing = () => {
             </Link>
           </div>
           <div className="absolute top-0 right-0 p-8 opacity-10">
-            <img src="/Logo.png" alt="" className="w-64 h-auto" referrerPolicy="no-referrer" />
+            <img src={logo} alt="" className="w-64 h-auto" referrerPolicy="no-referrer" />
           </div>
         </div>
       </section>
@@ -169,7 +170,7 @@ export const Landing = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-3 mb-6">
-              <img src="/Logo.png" alt="GOLDENCOIN" className="h-8 w-auto" referrerPolicy="no-referrer" />
+              <img src={logo} alt="GOLDENCOIN" className="h-8 w-auto" referrerPolicy="no-referrer" />
             </div>
             <p className="text-gray-500 max-w-sm mb-8">
               Goldencoin Limited is a leading digital asset management platform providing secure and transparent Bitcoin solutions.

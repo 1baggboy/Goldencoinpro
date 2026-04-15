@@ -21,6 +21,7 @@ import { cn } from "../lib/utils";
 import { useTheme } from "../ThemeContext";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
+import logo from "../assets/logo.png";
 
 export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () => void }) => {
   const location = useLocation();
@@ -74,7 +75,7 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () =>
       )}>
         <div className="p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/Logo.png" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
+            <img src={logo} alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
           </div>
           <button onClick={onClose} className="p-2 text-gray-500 hover:text-gray-900 dark:hover:text-white md:hidden">
             <X size={24} />

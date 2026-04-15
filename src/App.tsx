@@ -22,6 +22,9 @@ import { FAQ } from "./pages/FAQ";
 import { TwoFactorSetup } from "./pages/TwoFactorSetup";
 import { ForgotPassword } from "./pages/ForgotPassword";
 import { PrivacyPolicy, TermsOfService, RiskDisclaimer } from "./pages/Legal";
+import { About } from "./pages/About";
+import { Features } from "./pages/Features";
+import { Security } from "./pages/Security";
 import { SupportWidget } from "./components/SupportWidget";
 import { Toaster } from "sonner";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -63,6 +66,9 @@ export default function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/faq" element={<FAQ />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/security" element={<Security />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/risk-disclaimer" element={<RiskDisclaimer />} />

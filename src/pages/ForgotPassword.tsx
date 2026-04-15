@@ -6,6 +6,7 @@ import { Mail, ArrowRight, ArrowLeft, AlertCircle, CheckCircle2, Loader2 } from 
 import { motion } from "motion/react";
 import { useTheme } from "../ThemeContext";
 import { cn } from "../lib/utils";
+import logo from "../assets/logo.png";
 
 export const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -44,7 +45,7 @@ export const ForgotPassword = () => {
       >
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-3 mb-6">
-            <img src="/Logo.png" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
+            <img src={logo} alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-950 dark:text-white">Reset Password</h2>
           <p className="text-slate-500 mt-2">Enter your email to receive a password reset link.</p>

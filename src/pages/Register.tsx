@@ -9,6 +9,7 @@ import { Mail, Lock, User, ArrowRight, ShieldCheck, Check, X, AlertCircle } from
 import { motion, AnimatePresence } from "motion/react";
 import { useTheme } from "../ThemeContext";
 import { cn } from "../lib/utils";
+import logo from "../assets/logo.png";
 
 export const Register = () => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -154,7 +155,7 @@ export const Register = () => {
       >
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-3 mb-6">
-            <img src="/Logo.png" alt="GOLDENCOIN" className="h-16 w-auto" referrerPolicy="no-referrer" />
+            <img src={logo} alt="GOLDENCOIN" className="h-16 w-auto" referrerPolicy="no-referrer" />
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-950 dark:text-white">Create Account</h2>
           <p className="text-slate-500 mt-2">Join Goldencoin and start managing your assets.</p>
@@ -258,8 +259,8 @@ export const Register = () => {
               onChange={(e) => setAcceptedTerms(e.target.checked)}
               className="mt-1 accent-[#C9A96E]"
             />
-            <label htmlFor="terms" className="text-xs text-slate-500 leading-relaxed cursor-pointer">
-              I agree to the <a href="/terms" className="text-[#C9A96E] hover:underline">Terms of Service</a> and <a href="/privacy" className="text-[#C9A96E] hover:underline">Privacy Policy</a>.
+            <label htmlFor="terms" className="text-xs text-slate-500 dark:text-gray-400 leading-relaxed cursor-pointer select-none">
+              I agree to the <Link to="/terms-of-service" className="text-[#C9A96E] hover:text-[#D4B985] hover:underline transition-colors">Terms of Service</Link> and <Link to="/privacy-policy" className="text-[#C9A96E] hover:text-[#D4B985] hover:underline transition-colors">Privacy Policy</Link>.
             </label>
           </div>
 
