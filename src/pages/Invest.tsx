@@ -18,7 +18,7 @@ import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, increment
 import { db } from "../firebase";
 import { APP_CONFIG } from "../config";
 import { motion, AnimatePresence } from "motion/react";
-import { cn } from "../lib/utils";
+import { cn, fetchBtcPrice as fetchBtcPriceUtil } from "../lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
@@ -77,8 +77,7 @@ export const Invest = () => {
 
     // Fetch BTC price
     const fetchBtcPrice = () => {
-      fetch("/api/market/btc-price")
-        .then(res => res.json())
+      fetchBtcPriceUtil()
         .then(data => setBtcPrice(data.usd))
         .catch(console.error);
     };

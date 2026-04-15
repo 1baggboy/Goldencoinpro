@@ -32,8 +32,7 @@ export const Deposit = () => {
   useEffect(() => {
     const fetchBtcPrice = async () => {
       try {
-        const res = await fetch("/api/market/btc-price");
-        const data = await res.json();
+        const data = await fetchBtcPriceUtil();
         if (data.usd) setBtcPrice(data.usd);
       } catch (err) {
         console.error("Failed to fetch BTC price:", err);

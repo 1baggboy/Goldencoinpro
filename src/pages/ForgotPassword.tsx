@@ -6,7 +6,7 @@ import { Mail, ArrowRight, ArrowLeft, AlertCircle, CheckCircle2, Loader2 } from 
 import { motion } from "motion/react";
 import { useTheme } from "./ThemeContext";
 import { cn } from "../lib/utils";
-import logo from "../assets/logo.png";
+const logo = "/Logo.png";
 
 export const ForgotPassword = () => {
   const [email, setEmail] = useState("");

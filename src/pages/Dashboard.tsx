@@ -28,7 +28,7 @@ import { useAuth } from "../AuthContext";
 import { APP_CONFIG } from "../config";
 import { motion } from "motion/react";
 import { Link, useNavigate } from "react-router-dom";
-import { cn } from "../lib/utils";
+import { cn, fetchCryptoPrices } from "../lib/utils";
 import { collection, query, where, onSnapshot, orderBy, limit } from "firebase/firestore";
 import { db } from "../firebase";
 import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
@@ -54,9 +54,7 @@ export const Dashboard = () => {
   useEffect(() => {
     const fetchPrices = async () => {
       try {
-        const res = await fetch("/api/market/prices");
-        const data = await res.json();
-        setPrices(data);
+        const data = await fetchCryptoPrices(); setPrices(data);
       } catch (e) {
         console.error("Price fetch error:", e);
       }

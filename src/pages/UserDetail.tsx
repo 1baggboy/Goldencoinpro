@@ -37,7 +37,7 @@ import {
   Tooltip, 
   ResponsiveContainer 
 } from "recharts";
-import { cn } from "../lib/utils";
+import { cn, fetchBtcPrice as fetchBtcPriceUtil } from "../lib/utils";
 import { format } from "date-fns";
 
 const chartData = [
@@ -119,8 +119,7 @@ export const UserDetail = () => {
     });
 
     // Fetch BTC price
-    fetch("/api/market/btc-price")
-      .then(res => res.json())
+    fetchBtcPriceUtil()
       .then(data => setBtcPrice(data.usd))
       .catch(console.error);
 

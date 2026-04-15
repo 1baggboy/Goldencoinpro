@@ -2,7 +2,7 @@ import React from "react";
 import { Shield, Lock, Eye, FileText, Scale, AlertTriangle, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
-import logo from "../assets/logo.png";
+const logo = "/Logo.png";
 
 export const LegalLayout = ({ title, icon: Icon, children }: any) => (
   <div className="bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-950 dark:text-white font-sans selection:bg-[#C9A96E] selection:text-slate-950 transition-colors duration-300">

@@ -13,7 +13,7 @@ import { useNotifications } from "../NotificationContext";
 import { collection, addDoc, query, where, getDocs, onSnapshot, doc, updateDoc, increment } from "firebase/firestore";
 import { db } from "../firebase";
 import { motion } from "motion/react";
-import { cn } from "../lib/utils";
+import { cn, fetchBtcPrice as fetchBtcPriceUtil } from "../lib/utils";
 
 export const Withdraw = () => {
   const { user, profile } = useAuth();
@@ -29,8 +29,7 @@ export const Withdraw = () => {
   useEffect(() => {
     const fetchBtcPrice = async () => {
       try {
-        const res = await fetch("/api/market/btc-price");
-        const data = await res.json();
+        const data = await fetchBtcPriceUtil();
         if (data.usd) setBtcPrice(data.usd);
       } catch (err) {
         console.error("Failed to fetch BTC price:", err);

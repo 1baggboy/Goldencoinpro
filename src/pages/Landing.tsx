@@ -13,7 +13,7 @@ import { motion } from "motion/react";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { useTheme } from "./ThemeContext";
 import { cn } from "../lib/utils";
-import logo from "../assets/logo.png";
+const logo = "/Logo.png";
 
 export const Landing = () => {
   const { theme } = useTheme();

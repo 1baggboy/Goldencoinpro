@@ -21,7 +21,7 @@ import { cn } from "../lib/utils";
 import { useTheme } from "../pages/ThemeContext";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
-import logo from "../assets/logo.png";
+const logo = "/Logo.png";
 
 export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () => void }) => {
   const location = useLocation();

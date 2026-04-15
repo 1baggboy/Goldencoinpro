@@ -6,7 +6,7 @@ import { APP_CONFIG } from "../config";
 import { useNotifications } from "../NotificationContext";
 import { ThemeToggle } from "./ThemeToggle";
 import { NotificationDropdown } from "../pages/NotificationDropdown";
-import logo from "../assets/logo.png";
+const logo = "/Logo.png";
 
 export const Navbar = ({ onMenuClick }: { onMenuClick?: () => void }) => {
   const { profile } = useAuth();

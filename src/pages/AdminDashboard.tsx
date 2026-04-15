@@ -27,7 +27,7 @@ import { useNotifications } from "../NotificationContext";
 import { collection, query, onSnapshot, doc, updateDoc, increment, getDocs, where, getDoc, deleteDoc, writeBatch } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
-import { cn } from "../lib/utils";
+import { cn, fetchBtcPrice as fetchBtcPriceUtil } from "../lib/utils";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
 
@@ -106,9 +106,7 @@ export const AdminDashboard = () => {
     // Fetch BTC Price
     const fetchBtcPrice = async () => {
       try {
-        const res = await fetch("/api/market/btc-price");
-        const data = await res.json();
-        setBtcPrice(data.usd);
+        const data = await fetchBtcPriceUtil(); setBtcPrice(data.usd);
       } catch (e) {
         console.error("BTC price fetch error:", e);
       }
