@@ -55,7 +55,7 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () =>
       )}>
         <div className="p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/logo.svg" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
+            <img src="/Goldencoinpro (1).webp" alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
           </div>
           <button onClick={onClose} className="p-2 text-gray-500 hover:text-gray-900 dark:hover:text-white md:hidden">
             <X size={24} />
