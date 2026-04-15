@@ -17,6 +17,7 @@ export const SupportWidget = () => {
   const [loading, setLoading] = useState(false);
   const [chatUserId, setChatUserId] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isAnonDisabled, setIsAnonDisabled] = useState(false);
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -33,8 +34,10 @@ export const SupportWidget = () => {
           try {
             const cred = await signInAnonymously(auth);
             setChatUserId(cred.user.uid);
+            setIsAnonDisabled(false);
           } catch (error: any) {
             if (error.code === 'auth/admin-restricted-operation') {
+              setIsAnonDisabled(true);
               console.error("Anonymous authentication is disabled in Firebase Console. Please enable it to allow guest support chat.");
             } else {
               console.error("Anonymous auth error:", error);
@@ -178,6 +181,12 @@ export const SupportWidget = () => {
               ref={scrollRef}
               className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide"
             >
+              {isAnonDisabled && !authUser && (
+                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-center space-y-2">
+                  <p className="text-xs text-red-400 font-medium">Guest chat is currently unavailable.</p>
+                  <p className="text-[10px] text-gray-500">Please sign in to your account to contact support, or wait for the administrator to enable guest access.</p>
+                </div>
+              )}
               {messages.length === 0 ? (
                 <div className="text-center py-10 space-y-4">
                   <div className="w-16 h-16 bg-[#C9A96E]/10 rounded-full flex items-center justify-center mx-auto text-[#C9A96E]">
