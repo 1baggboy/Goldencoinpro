@@ -7,7 +7,7 @@ import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandle
 import { verify } from "otplib";
 import { Mail, Lock, ArrowRight, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { useTheme } from "../ThemeContext";
+import { useTheme } from "./ThemeContext";
 import { cn } from "../lib/utils";
 import logo from "../assets/logo.png";
 

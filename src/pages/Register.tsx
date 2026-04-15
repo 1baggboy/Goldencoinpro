@@ -7,7 +7,7 @@ import { APP_CONFIG } from "../config";
 import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 import { Mail, Lock, User, ArrowRight, ShieldCheck, Check, X, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { useTheme } from "../ThemeContext";
+import { useTheme } from "./ThemeContext";
 import { cn } from "../lib/utils";
 import logo from "../assets/logo.png";
 

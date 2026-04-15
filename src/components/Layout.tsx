@@ -2,7 +2,7 @@ import React from "react";
 import { Sidebar } from "./Sidebar";
 import { Navbar } from "./Navbar";
 import { motion, AnimatePresence } from "motion/react";
-import { useTheme } from "../ThemeContext";
+import { useTheme } from "../pages/ThemeContext";
 import { cn } from "../lib/utils";
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {

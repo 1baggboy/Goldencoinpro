@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { User, Mail, ShieldCheck, Save, Camera, AlertCircle, Phone, Users, Lock, ShieldAlert, Trash2, Moon, Sun } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { useNotifications } from "../NotificationContext";
-import { useTheme } from "../ThemeContext";
+import { useTheme } from "./ThemeContext";
 import { doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { deleteUser } from "firebase/auth";

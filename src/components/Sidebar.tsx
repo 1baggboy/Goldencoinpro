@@ -18,7 +18,7 @@ import { useAuth } from "../AuthContext";
 import { APP_CONFIG } from "../config";
 import { auth } from "../firebase";
 import { cn } from "../lib/utils";
-import { useTheme } from "../ThemeContext";
+import { useTheme } from "../pages/ThemeContext";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import logo from "../assets/logo.png";

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./AuthContext";
 import { NotificationProvider } from "./NotificationContext";
-import { ThemeProvider } from "./ThemeContext";
+import { ThemeProvider } from "./pages/ThemeContext";
 import { Layout } from "./components/Layout";
 import { Dashboard } from "./pages/Dashboard";
 import { Login } from "./pages/Login";

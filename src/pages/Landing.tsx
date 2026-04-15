@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { ThemeToggle } from "../components/ThemeToggle";
-import { useTheme } from "../ThemeContext";
+import { useTheme } from "./ThemeContext";
 import { cn } from "../lib/utils";
 import logo from "../assets/logo.png";
 
