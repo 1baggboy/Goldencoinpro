@@ -47,14 +47,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       return;
     }
 
-    const q = isAdmin 
-      ? query(collection(db, "notifications"), orderBy("timestamp", "desc"), limit(20))
-      : query(
-          collection(db, "notifications"),
-          where("userId", "==", user.uid),
-          orderBy("timestamp", "desc"),
-          limit(20)
-        );
+    const q = query(
+      collection(db, "notifications"),
+      where("userId", "==", user.uid),
+      orderBy("timestamp", "desc"),
+      limit(20)
+    );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedNotifications = snapshot.docs.map((doc) => ({
@@ -67,7 +65,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }, (error) => handleFirestoreError(error, OperationType.LIST, "notifications"));
 
     return () => unsubscribe();
-  }, [user, isAdmin]);
+  }, [user]);
 
   const markAsRead = async (id: string) => {
     try {

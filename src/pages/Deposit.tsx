@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { useNotifications } from "../NotificationContext";
-import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, increment } from "firebase/firestore";
+import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, increment, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 import { motion } from "motion/react";
 import { fetchBtcPrice as fetchBtcPriceUtil } from "../lib/utils";
@@ -28,7 +28,7 @@ export const Deposit = () => {
   const [dailyDeposited, setDailyDeposited] = useState(0);
 
   // In a real app, this would be generated uniquely per user
-  const walletAddress = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
+  const walletAddress = "bc1qnamqyfnm96vxkrftcztmtzuztrute0xcjny4gr";
 
   useEffect(() => {
     const fetchBtcPrice = async () => {
@@ -128,6 +128,19 @@ export const Deposit = () => {
       });
 
       await addNotification(user.uid, "Deposit Confirmed", `Your deposit of $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC) has been confirmed and added to your balance.`, "success");
+      
+      // Notify admins
+      try {
+        const adminQuery = query(collection(db, "users"), where("role", "==", "admin"));
+        const adminDocs = await getDocs(adminQuery);
+        const adminPromises = adminDocs.docs.map(adminDoc => 
+          addNotification(adminDoc.id, "New Deposit Received", `User ${profile?.displayName || user.email} has successfully deposited $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC).`, "info")
+        );
+        await Promise.all(adminPromises);
+      } catch (adminErr) {
+        console.error("Failed to notify admins:", adminErr);
+      }
+
       setSuccess(true);
       setAmountUsd("");
       setTxHash("");
