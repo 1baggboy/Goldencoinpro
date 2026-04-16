@@ -2,6 +2,7 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Playfair Display", serif;
 }
 
 @variant dark (&:where(.dark, .dark *));
@@ -16,8 +17,12 @@
 }
 
 @layer utilities {
+  .container-desktop {
+    @apply max-w-[1600px] mx-auto;
+  }
+
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
     @apply bg-transparent;
@@ -27,7 +32,11 @@
   }
 
   .glass-card {
-    @apply bg-[#121212]/80 backdrop-blur-xl border border-[#C9A96E]/10;
+    @apply bg-white/70 dark:bg-slate-900/80 backdrop-blur-2xl border border-[#C9A96E]/10;
+  }
+
+  .gold-gradient {
+    @apply bg-gradient-to-br from-[#C9A96E] via-[#D4B985] to-[#B89255];
   }
 
   .animate-marquee {

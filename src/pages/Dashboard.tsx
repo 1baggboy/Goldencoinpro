@@ -123,33 +123,33 @@ export const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-8 text-[#0B0B0B] dark:text-white">
+    <div className="space-y-12 text-[#0B0B0B] dark:text-white pb-12 font-sans">
       <ReactTooltip id="dashboard-tooltip" className="z-50" />
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight">Welcome back, {profile?.displayName?.split(' ')[0]}!</h1>
-            <span className="px-2 py-0.5 bg-[#C9A96E]/10 text-[#C9A96E] text-[10px] font-bold rounded-full uppercase tracking-widest border border-[#C9A96E]/20">
+          <div className="flex items-center gap-4">
+            <h1 className="text-4xl font-bold tracking-tight lg:text-5xl font-display">Welcome back, {profile?.displayName?.split(' ')[0]}!</h1>
+            <span className="px-3 py-1 bg-[#C9A96E]/10 text-[#C9A96E] text-[10px] font-bold rounded-full uppercase tracking-[0.2em] border border-[#C9A96E]/20">
               Member
             </span>
           </div>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Here's what's happening with your portfolio today.</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-2 text-lg">Here's what's happening with your portfolio today.</p>
         </div>
-        <div className="flex gap-3">
-          <Link to="/deposit" className="px-6 py-3 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all flex items-center gap-2">
-            <ArrowDownCircle size={18} />
-            Deposit
+        <div className="flex items-center gap-4">
+          <Link to="/deposit" className="px-8 py-4 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-2xl hover:bg-[#D4B985] transition-all flex items-center gap-2 shadow-lg shadow-[#C9A96E]/20">
+            <ArrowDownCircle size={20} />
+            Deposit BTC
           </Link>
-          <Link to="/withdraw" className="px-6 py-3 bg-slate-200 dark:bg-slate-900 text-[#0B0B0B] dark:text-white font-bold rounded-xl border border-[#C9A96E]/20 hover:bg-slate-300 dark:hover:bg-slate-800 transition-all flex items-center gap-2">
-            <ArrowUpCircle size={18} />
+          <Link to="/withdraw" className="px-8 py-4 bg-slate-200 dark:bg-slate-900 text-[#0B0B0B] dark:text-white font-bold rounded-2xl border border-[#C9A96E]/20 hover:bg-slate-300 dark:hover:bg-slate-800 transition-all flex items-center gap-2">
+            <ArrowUpCircle size={20} />
             Withdraw
           </Link>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-6 xl:gap-8">
         <StatCard 
           title="Account Balance" 
           value={`$${usdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 

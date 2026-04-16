@@ -40,29 +40,29 @@ export const Landing = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-20 pb-32 px-6 overflow-hidden">
-        <div className="max-w-7xl mx-auto text-center relative z-10">
+      <section className="relative pt-24 pb-48 px-6 overflow-hidden">
+        <div className="max-w-[1400px] mx-auto text-center relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <span className="inline-block px-4 py-1.5 bg-[#C9A96E]/10 text-[#C9A96E] text-xs font-bold rounded-full border border-[#C9A96E]/20 mb-6 uppercase tracking-widest">
+            <span className="inline-block px-6 py-2 bg-[#C9A96E]/10 text-[#C9A96E] text-[10px] font-black rounded-full border border-[#C9A96E]/20 mb-10 uppercase tracking-[0.3em]">
               Institutional Grade Crypto Management
             </span>
-            <h1 className="text-5xl md:text-8xl font-bold tracking-tight mb-8 leading-[1.1]">
+            <h1 className="text-6xl sm:text-7xl lg:text-[10rem] font-display font-black tracking-tight mb-12 sm:mb-16 leading-[0.9] lg:leading-[0.8] text-slate-900 dark:text-white uppercase">
               Secure. Simple. <br />
-              <span className="text-[#C9A96E]">Smart Crypto</span> Management
+              <span className="text-[#C9A96E]">Smart Crypto</span>
             </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-12 leading-relaxed">
-              Manage your Bitcoin with confidence and transparency. Our platform provides the tools you need to track, deposit, and grow your digital assets securely.
+            <p className="text-xl lg:text-3xl text-gray-600 dark:text-gray-400 max-w-4xl mx-auto mb-16 leading-relaxed lg:leading-[1.6] opacity-80 font-medium">
+              Manage your Bitcoin with absolute confidence and elite institutional transparency. Our platform provides the elite tools you need to track, deposit, and grow your digital fortune securely.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/register" className="w-full sm:w-auto px-8 py-4 bg-[#C9A96E] text-slate-950 font-bold rounded-xl hover:bg-[#D4B985] transition-all flex items-center justify-center gap-2 text-lg">
-                Start Your Journey <ArrowRight size={20} />
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+              <Link to="/register" className="w-full sm:w-auto px-12 py-6 bg-[#C9A96E] text-slate-950 font-black rounded-2xl hover:bg-[#D4B985] transition-all flex items-center justify-center gap-3 text-xl shadow-2xl shadow-[#C9A96E]/30 uppercase tracking-widest">
+                Start Your Journey <ArrowRight size={24} />
               </Link>
-              <Link to="/about" className="w-full sm:w-auto px-8 py-4 bg-slate-200 dark:bg-slate-900 text-slate-950 dark:text-white font-bold rounded-xl border border-[#C9A96E]/20 hover:bg-slate-300 dark:hover:bg-slate-800 transition-all text-lg text-center">
-                Learn More
+              <Link to="/about" className="w-full sm:w-auto px-12 py-6 bg-slate-200 dark:bg-slate-900 text-slate-950 dark:text-white font-black rounded-2xl border border-[#C9A96E]/30 hover:bg-slate-300 dark:hover:bg-slate-800 transition-all text-xl text-center uppercase tracking-widest">
+                Explore Wealth
               </Link>
             </div>
           </motion.div>
@@ -166,43 +166,44 @@ export const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-20 px-6 border-t border-[#C9A96E]/10">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+      <footer className="py-24 px-6 border-t border-[#C9A96E]/10 bg-slate-100 dark:bg-slate-900/50">
+        <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-16">
           <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center gap-3 mb-6">
-              <img src={logo} alt="GOLDENCOIN" className="h-8 w-auto" referrerPolicy="no-referrer" />
+            <div className="flex items-center gap-4 mb-8">
+              <img src={logo} alt="GOLDENCOIN" className="h-12 w-auto" referrerPolicy="no-referrer" />
+              <span className="text-2xl font-display font-black tracking-tight uppercase">Goldencoin</span>
             </div>
-            <p className="text-gray-500 max-w-sm mb-8">
-              Goldencoin Limited is a leading digital asset management platform providing secure and transparent Bitcoin solutions.
+            <p className="text-gray-600 dark:text-gray-400 max-w-md mb-10 text-lg leading-relaxed">
+              Goldencoin Limited is a leading digital asset management platform providing secure and transparent Bitcoin solutions. Established to bring institutional-grade tools to everyone.
             </p>
-            <div className="flex gap-4">
-              <div className="w-10 h-10 bg-gray-200 dark:bg-slate-900 rounded-full border border-[#C9A96E]/10 flex items-center justify-center hover:border-[#C9A96E]/40 cursor-pointer transition-all">
-                <Globe size={18} className="text-gray-600 dark:text-gray-400" />
+            <div className="flex gap-6">
+              <div className="w-12 h-12 bg-white dark:bg-slate-950 rounded-2xl border border-[#C9A96E]/20 flex items-center justify-center hover:border-[#C9A96E] cursor-pointer transition-all shadow-lg">
+                <Globe size={24} className="text-[#C9A96E]" />
               </div>
             </div>
           </div>
           <div>
-            <h4 className="font-bold mb-6 text-[#C9A96E]">Platform</h4>
-            <ul className="space-y-4 text-sm text-gray-600 dark:text-gray-500">
-              <li><Link to="/dashboard" className="hover:text-slate-950 dark:hover:text-white transition-colors">Dashboard</Link></li>
-              <li><Link to="/deposit" className="hover:text-slate-950 dark:hover:text-white transition-colors">Deposit BTC</Link></li>
-              <li><Link to="/kyc" className="hover:text-slate-950 dark:hover:text-white transition-colors">KYC Verification</Link></li>
-              <li><Link to="/faq" className="hover:text-slate-950 dark:hover:text-white transition-colors">FAQ</Link></li>
+            <h4 className="font-bold mb-8 text-[#C9A96E] uppercase tracking-widest text-sm">Platform</h4>
+            <ul className="space-y-6 text-base text-gray-600 dark:text-gray-400 font-medium">
+              <li><Link to="/dashboard" className="hover:text-[#C9A96E] transition-colors">Client Dashboard</Link></li>
+              <li><Link to="/deposit" className="hover:text-[#C9A96E] transition-colors">Secure Deposit</Link></li>
+              <li><Link to="/kyc" className="hover:text-[#C9A96E] transition-colors">KYC Verification</Link></li>
+              <li><Link to="/faq" className="hover:text-[#C9A96E] transition-colors">Help Center</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-bold mb-6 text-[#C9A96E]">Legal</h4>
-            <ul className="space-y-4 text-sm text-gray-600 dark:text-gray-500">
-              <li><Link to="/privacy-policy" className="hover:text-slate-950 dark:hover:text-white transition-colors">Privacy Policy</Link></li>
-              <li><Link to="/terms-of-service" className="hover:text-slate-950 dark:hover:text-white transition-colors">Terms of Service</Link></li>
-              <li><Link to="/risk-disclaimer" className="hover:text-slate-950 dark:hover:text-white transition-colors">Risk Disclaimer</Link></li>
+            <h4 className="font-bold mb-8 text-[#C9A96E] uppercase tracking-widest text-sm">Legal Excellence</h4>
+            <ul className="space-y-6 text-base text-gray-600 dark:text-gray-400 font-medium">
+              <li><Link to="/privacy-policy" className="hover:text-[#C9A96E] transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/terms-of-service" className="hover:text-[#C9A96E] transition-colors">Service Terms</Link></li>
+              <li><Link to="/risk-disclaimer" className="hover:text-[#C9A96E] transition-colors">Risk Governance</Link></li>
             </ul>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-[#C9A96E]/5 text-center text-xs text-gray-600 dark:text-gray-600">
-          <p className="mb-4">© 2026 Goldencoin Limited. All rights reserved.</p>
-          <p className="max-w-3xl mx-auto leading-relaxed">
-            Cryptocurrency is volatile and carries risk. Goldencoin Limited does not guarantee profits. Users are responsible for their financial decisions. Please trade responsibly.
+        <div className="max-w-[1400px] mx-auto mt-24 pt-10 border-t border-[#C9A96E]/10 text-center text-xs text-gray-500 font-medium tracking-wide">
+          <p className="mb-6">© 2026 Goldencoin Limited. Institutional Grade License No. GC-77821-LTD.</p>
+          <p className="max-w-4xl mx-auto leading-loose opacity-60">
+            Cryptocurrency is highly volatile and carries significant financial risk. Goldencoin Limited does not guarantee specific yields or profits. All financial decisions remain the sole responsibility of the user. Please consult with a qualified financial advisor before participating in digital asset markets.
           </p>
         </div>
       </footer>

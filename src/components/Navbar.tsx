@@ -14,8 +14,8 @@ export const Navbar = ({ onMenuClick }: { onMenuClick?: () => void }) => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   return (
-    <header className="h-20 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-[#C9A96E]/10 px-4 md:px-8 flex items-center justify-between sticky top-0 z-50">
-      <div className="flex items-center gap-4 md:hidden">
+    <header className="h-24 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-[#C9A96E]/10 px-6 md:px-12 flex items-center justify-between sticky top-0 z-50">
+      <div className="flex items-center gap-6 md:hidden">
         <button 
           type="button"
           onClick={(e) => {
@@ -23,30 +23,29 @@ export const Navbar = ({ onMenuClick }: { onMenuClick?: () => void }) => {
             e.stopPropagation();
             onMenuClick?.();
           }} 
-          className="p-2 text-[#C9A96E] hover:bg-[#C9A96E]/10 rounded-lg transition-colors relative z-[60]"
+          className="p-3 text-[#C9A96E] hover:bg-[#C9A96E]/10 rounded-xl transition-colors relative z-[60]"
         >
-          <Menu size={24} />
+          <Menu size={28} />
         </button>
         <div className="flex items-center gap-2 relative z-50">
-          <img src={logo} alt="GOLDENCOIN" className="h-8 w-auto" referrerPolicy="no-referrer" />
+          <img src={logo} alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
         </div>
       </div>
 
-      <div className="hidden md:flex items-center gap-4 bg-gray-100 dark:bg-slate-900 px-4 py-2 rounded-xl border border-[#C9A96E]/10 w-96">
-        <Search className="text-gray-500" size={18} />
+      <div className="hidden lg:flex items-center gap-6 bg-gray-100 dark:bg-slate-900 px-6 py-3 rounded-2xl border border-[#C9A96E]/10 w-[500px] transition-all focus-within:w-[600px] focus-within:border-[#C9A96E]/40 shadow-sm">
+        <Search className="text-gray-500" size={20} />
         <input
           type="text"
-          placeholder="Search transactions, assets..."
-          className="bg-transparent border-none outline-none text-sm w-full text-gray-900 dark:text-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-600"
+          placeholder="Search transactions, assets, or help..."
+          className="bg-transparent border-none outline-none text-base w-full text-gray-900 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-600 font-medium"
         />
       </div>
 
-      <div className="flex items-center gap-4 md:gap-6">
+      <div className="flex items-center gap-6 md:gap-10">
         <ThemeToggle />
-        <div className="hidden lg:flex items-center gap-6 mr-4">
-          <Link to="/faq" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-[#C9A96E] transition-colors">FAQ</Link>
-          <a href={`mailto:${APP_CONFIG.supportEmail}`} className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-[#C9A96E] transition-colors">Support</a>
-          <Link to="/dashboard" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-[#C9A96E] transition-colors">Dashboard</Link>
+        <div className="hidden xl:flex items-center gap-10">
+          <Link to="/faq" className="text-sm font-bold uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:text-[#C9A96E] transition-colors">FAQ</Link>
+          <a href={`mailto:${APP_CONFIG.supportEmail}`} className="text-sm font-bold uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:text-[#C9A96E] transition-colors">Support</a>
         </div>
 
         <div className="relative">
