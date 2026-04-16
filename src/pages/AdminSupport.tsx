@@ -8,8 +8,10 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
-  ChevronRight
+  ChevronRight,
+  X
 } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { collection, query, onSnapshot, orderBy, addDoc, serverTimestamp, where, doc, updateDoc, getDocs } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { useAuth } from "../AuthContext";
@@ -27,6 +29,7 @@ export const AdminSupport = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<"active" | "closed">("active");
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Fetch all unique chat users
@@ -115,6 +118,16 @@ export const AdminSupport = () => {
     }
   }, [messages]);
 
+  const handleChatSelect = (userId: string) => {
+    setSelectedChatId(userId);
+    setIsChatModalOpen(true);
+  };
+
+  const handleCloseChatModal = () => {
+    setIsChatModalOpen(false);
+    setSelectedChatId(null);
+  };
+
   // Mark messages as read when admin views chat
   useEffect(() => {
     if (selectedChatId && isAdmin) {
@@ -194,192 +207,230 @@ export const AdminSupport = () => {
   const selectedChat = chats.find(c => c.userId === selectedChatId);
 
   return (
-    <div className="h-[calc(100vh-160px)] flex gap-6">
-      {/* Chat List */}
-      <div className="w-80 bg-slate-900 border border-[#C9A96E]/10 rounded-2xl flex flex-col overflow-hidden">
-        <div className="p-4 border-b border-[#C9A96E]/10">
-          <h3 className="font-bold text-white mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <MessageSquare size={18} className="text-[#C9A96E]" />
-              Support Chats
-            </div>
-            <div className="flex bg-slate-950 rounded-lg p-1">
-              <button 
-                onClick={() => setFilter("active")}
-                className={cn(
-                  "px-2 py-1 text-[10px] font-bold rounded-md transition-all",
-                  filter === "active" ? "bg-[#C9A96E] text-[#0B0B0B]" : "text-gray-500 hover:text-white"
-                )}
-              >
-                ACTIVE
-              </button>
-              <button 
-                onClick={() => setFilter("closed")}
-                className={cn(
-                  "px-2 py-1 text-[10px] font-bold rounded-md transition-all",
-                  filter === "closed" ? "bg-[#C9A96E] text-[#0B0B0B]" : "text-gray-500 hover:text-white"
-                )}
-              >
-                CLOSED
-              </button>
-            </div>
-          </h3>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
+    <div className="space-y-8 pb-20">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-[#C9A96E]/10 rounded-2xl flex items-center justify-center text-[#C9A96E]">
+            <MessageSquare size={28} />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Support Chats</h1>
+            <p className="text-gray-400 text-sm">Manage user inquiries and live support.</p>
+          </div>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
             <input 
               type="text"
               placeholder="Search users..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-950 border border-[#C9A96E]/10 rounded-lg py-2 pl-9 pr-4 text-xs text-white outline-none focus:border-[#C9A96E]/40"
+              className="w-full bg-slate-900 border border-[#C9A96E]/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white outline-none focus:border-[#C9A96E]/40 transition-all font-sans"
             />
           </div>
+          <div className="flex bg-slate-900 border border-[#C9A96E]/10 rounded-xl p-1 shrink-0">
+            <button 
+              onClick={() => setFilter("active")}
+              className={cn(
+                "px-4 py-2 text-xs font-bold rounded-lg transition-all flex-1 sm:flex-none",
+                filter === "active" ? "bg-[#C9A96E] text-[#0B0B0B] shadow-md shadow-[#C9A96E]/10" : "text-gray-400 hover:text-white hover:bg-slate-800"
+              )}
+            >
+              ACTIVE
+            </button>
+            <button 
+              onClick={() => setFilter("closed")}
+              className={cn(
+                "px-4 py-2 text-xs font-bold rounded-lg transition-all flex-1 sm:flex-none",
+                filter === "closed" ? "bg-[#C9A96E] text-[#0B0B0B] shadow-md shadow-[#C9A96E]/10" : "text-gray-400 hover:text-white hover:bg-slate-800"
+              )}
+            >
+              CLOSED
+            </button>
+          </div>
         </div>
+      </div>
 
-        <div className="flex-1 overflow-y-auto">
-          {filteredChats.length === 0 ? (
-            <div className="p-8 text-center text-gray-500 text-xs">
-              No active chats found.
+      {/* Chat Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+        {filteredChats.length === 0 ? (
+          <div className="col-span-full py-20 text-center flex flex-col items-center">
+            <div className="w-20 h-20 bg-slate-900 rounded-full flex items-center justify-center text-gray-600 mb-6">
+              <MessageSquare size={40} />
             </div>
-          ) : (
-            filteredChats.map((chat) => (
-              <button
-                key={chat.userId}
-                onClick={() => setSelectedChatId(chat.userId)}
-                className={cn(
-                  "w-full p-4 flex items-start gap-3 border-b border-[#C9A96E]/5 transition-colors text-left",
-                  selectedChatId === chat.userId ? "bg-[#C9A96E]/10" : "hover:bg-[#C9A96E]/5"
-                )}
-              >
-                <div className="w-10 h-10 bg-[#C9A96E]/10 rounded-full flex items-center justify-center text-[#C9A96E] shrink-0">
-                  <User size={20} />
+            <h3 className="text-xl font-bold text-white mb-2">No {filter} chats found</h3>
+            <p className="text-gray-500 max-w-sm mx-auto">There are currently no support conversations matching your search criteria.</p>
+          </div>
+        ) : (
+          filteredChats.map((chat) => (
+            <button
+              key={chat.userId}
+              onClick={() => handleChatSelect(chat.userId)}
+              className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6 text-left hover:border-[#C9A96E]/40 hover:shadow-lg hover:shadow-[#C9A96E]/5 transition-all group flex flex-col h-full"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-[#C9A96E]/10 rounded-2xl flex items-center justify-center text-[#C9A96E]">
+                    <User size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white group-hover:text-[#C9A96E] transition-colors">{chat.userName || "Guest User"}</h3>
+                    <p className="text-[10px] text-gray-500 font-mono mt-0.5">{chat.userId.slice(0, 8)}...</p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-center mb-1">
-                    <p className="text-sm font-bold text-white truncate">{chat.userName || "Guest"}</p>
-                    {chat.lastTimestamp && (
-                      <span className="text-[10px] text-gray-500">
-                        {formatDistanceToNow(chat.lastTimestamp.toDate ? chat.lastTimestamp.toDate() : new Date())}
+                {chat.unread && !chat.isClosed && (
+                  <div className="w-3 h-3 bg-red-500 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.5)] animate-pulse"></div>
+                )}
+              </div>
+              
+              <div className="flex-1 mt-2">
+                <p className="text-sm text-gray-400 line-clamp-2 leading-relaxed">{chat.lastMessage}</p>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-[#C9A96E]/10 flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                  <Clock size={12} />
+                  {chat.lastTimestamp ? formatDistanceToNow(chat.lastTimestamp.toDate ? chat.lastTimestamp.toDate() : new Date(), { addSuffix: true }) : ''}
+                </div>
+                <div className="w-8 h-8 rounded-full bg-slate-950 flex items-center justify-center text-[#C9A96E] group-hover:bg-[#C9A96E] group-hover:text-[#0B0B0B] transition-colors">
+                  <ChevronRight size={16} />
+                </div>
+              </div>
+            </button>
+          ))
+        )}
+      </div>
+
+      {/* Chat Modal */}
+      <AnimatePresence>
+        {isChatModalOpen && selectedChatId && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center sm:p-6 lg:p-8 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-4xl h-[100dvh] sm:h-[85vh] sm:max-h-[800px] flex flex-col bg-slate-900 border-x-0 sm:border border-[#C9A96E]/20 sm:rounded-3xl overflow-hidden shadow-2xl flex-shrink-0"
+            >
+              {/* Modal Header */}
+              <div className="px-4 sm:px-6 py-4 bg-slate-950 border-b border-[#C9A96E]/10 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-[#C9A96E]/10 rounded-2xl flex items-center justify-center text-[#C9A96E]">
+                    <User size={20} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-lg">{selectedChat?.userName || "Guest User"}</h3>
+                    <p className="text-xs text-gray-500 font-mono">{selectedChatId}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {selectedChat?.isClosed ? (
+                    <span className="hidden sm:inline-block px-3 py-1 bg-gray-500/10 text-gray-500 text-[10px] font-bold rounded-full border border-gray-500/20">
+                      CLOSED SESSION
+                    </span>
+                  ) : (
+                    <>
+                      <span className="hidden sm:inline-block px-3 py-1 bg-green-500/10 text-green-500 text-[10px] font-bold rounded-full border border-green-500/20">
+                        ACTIVE STREAM
+                      </span>
+                      <button 
+                        onClick={handleCloseChat}
+                        disabled={loading}
+                        className="hidden sm:flex px-4 py-2 bg-red-500/10 text-red-500 text-xs font-bold rounded-xl border border-red-500/20 hover:bg-red-500/20 transition-all items-center gap-2"
+                      >
+                        Close Ticket
+                      </button>
+                    </>
+                  )}
+                  <button 
+                    onClick={handleCloseChatModal}
+                    className="w-10 h-10 bg-slate-900 hover:bg-slate-800 rounded-xl flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Messages Area */}
+              <div 
+                ref={scrollRef}
+                className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 bg-slate-950/30"
+              >
+                {messages.map((msg) => (
+                  <div 
+                    key={msg.id}
+                    className={cn(
+                      "flex flex-col w-full max-w-[85%] sm:max-w-[70%]",
+                      msg.sender === 'admin' ? "ml-auto items-end" : 
+                      msg.sender === 'system' ? "mx-auto items-center max-w-full w-full" :
+                      "mr-auto items-start"
+                    )}
+                  >
+                    <div className={cn(
+                      "p-4 sm:p-5 rounded-2xl text-sm sm:text-base leading-relaxed shadow-sm",
+                      msg.sender === 'admin' 
+                        ? "bg-[#C9A96E] text-[#0B0B0B] rounded-tr-[4px]" 
+                        : msg.sender === 'system'
+                          ? "bg-slate-800/50 text-gray-400 italic text-center w-full rounded-2xl border border-[#C9A96E]/10"
+                          : "bg-slate-800 text-white border border-[#C9A96E]/10 rounded-tl-[4px]"
+                    )}>
+                      {msg.text}
+                    </div>
+                    {msg.sender !== 'system' && (
+                      <span className="text-[10px] sm:text-xs text-gray-500 mt-2 px-1 font-medium">
+                        {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Sending...'}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 truncate">{chat.lastMessage}</p>
-                </div>
-                {chat.unread && !chat.isClosed && (
-                  <div className="w-2 h-2 bg-[#C9A96E] rounded-full mt-2"></div>
-                )}
-              </button>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Chat Window */}
-      <div className="flex-1 bg-slate-900 border border-[#C9A96E]/10 rounded-2xl flex flex-col overflow-hidden">
-        {selectedChatId ? (
-          <>
-            {/* Header */}
-            <div className="p-4 bg-slate-950 border-b border-[#C9A96E]/10 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#C9A96E]/10 rounded-full flex items-center justify-center text-[#C9A96E]">
-                  <User size={20} />
-                </div>
-                <div>
-                  <h3 className="font-bold text-white">{selectedChat?.userName || "Guest User"}</h3>
-                  <p className="text-[10px] text-gray-500 font-mono">{selectedChatId}</p>
-                </div>
+                ))}
               </div>
-              <div className="flex items-center gap-3">
-                {selectedChat?.isClosed ? (
-                  <span className="px-2 py-1 bg-gray-500/10 text-gray-500 text-[10px] font-bold rounded-full border border-gray-500/20">
-                    CLOSED SESSION
-                  </span>
-                ) : (
-                  <>
-                    <span className="px-2 py-1 bg-green-500/10 text-green-500 text-[10px] font-bold rounded-full border border-green-500/20">
-                      ACTIVE SESSION
-                    </span>
-                    <button 
-                      onClick={handleCloseChat}
-                      disabled={loading}
-                      className="px-3 py-1 bg-red-500/10 text-red-500 text-[10px] font-bold rounded-full border border-red-500/20 hover:bg-red-500/20 transition-all"
-                    >
-                      CLOSE CHAT
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
 
-            {/* Messages */}
-            <div 
-              ref={scrollRef}
-              className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide bg-slate-950/30"
-            >
-              {messages.map((msg) => (
-                <div 
-                  key={msg.id}
-                  className={cn(
-                    "flex flex-col max-w-[70%]",
-                    msg.sender === 'admin' ? "ml-auto items-end" : 
-                    msg.sender === 'system' ? "mx-auto items-center max-w-full w-full" :
-                    "mr-auto items-start"
-                  )}
-                >
-                  <div className={cn(
-                    "p-4 rounded-2xl text-sm leading-relaxed shadow-sm",
-                    msg.sender === 'admin' 
-                      ? "bg-[#C9A96E] text-[#0B0B0B] rounded-tr-none" 
-                      : msg.sender === 'system'
-                        ? "bg-slate-800/50 text-gray-400 italic text-center w-full rounded-none border-none shadow-none"
-                        : "bg-slate-800 text-white border border-[#C9A96E]/10 rounded-tl-none"
-                  )}>
-                    {msg.text}
+              {/* Input Area */}
+              {!selectedChat?.isClosed && (
+                <div className="p-4 sm:p-6 bg-slate-950 border-t border-[#C9A96E]/10 shrink-0">
+                  <div className="flex sm:hidden justify-between items-center mb-4">
+                     <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[10px] font-bold rounded-full border border-green-500/20">
+                        ACTIVE STREAM
+                      </span>
+                      <button 
+                        onClick={handleCloseChat}
+                        disabled={loading}
+                        className="px-4 py-2 bg-red-500/10 text-red-500 text-[10px] font-bold rounded-xl border border-red-500/20 hover:bg-red-500/20 transition-all flex items-center gap-2"
+                      >
+                        Close Ticket
+                      </button>
                   </div>
-                  {msg.sender !== 'system' && (
-                    <span className="text-[10px] text-gray-500 mt-1 px-1">
-                      {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleString() : 'Sending...'}
-                    </span>
-                  )}
+                  <form onSubmit={handleSendReply} className="relative flex items-end gap-3">
+                    <textarea 
+                      value={reply}
+                      onChange={(e) => setReply(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendReply(e);
+                        }
+                      }}
+                      placeholder="Type your reply... (Press Enter to send)"
+                      className="flex-1 bg-slate-900 border border-[#C9A96E]/20 hover:border-[#C9A96E]/40 focus:border-[#C9A96E] rounded-2xl py-4 sm:py-5 px-6 text-sm sm:text-base text-white outline-none transition-all shadow-inner resize-none min-h-[60px] max-h-[160px]"
+                      rows={1}
+                    />
+                    <button 
+                      type="submit"
+                      disabled={loading || !reply.trim()}
+                      className="h-[60px] px-6 sm:px-10 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-2xl hover:bg-[#D4B985] hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center shrink-0"
+                    >
+                      <Send size={24} className="sm:hidden" />
+                      <span className="hidden sm:inline">Send Reply</span>
+                    </button>
+                  </form>
                 </div>
-              ))}
-            </div>
-
-            {/* Input */}
-            {!selectedChat?.isClosed && (
-              <form onSubmit={handleSendReply} className="p-4 bg-slate-950 border-t border-[#C9A96E]/10">
-                <div className="relative flex gap-3">
-                  <input 
-                    type="text"
-                    value={reply}
-                    onChange={(e) => setReply(e.target.value)}
-                    placeholder="Type your reply..."
-                    className="flex-1 bg-slate-900 border border-[#C9A96E]/10 rounded-xl py-4 px-6 text-sm text-white outline-none focus:border-[#C9A96E]/40 transition-all shadow-inner"
-                  />
-                  <button 
-                    type="submit"
-                    disabled={loading || !reply.trim()}
-                    className="px-8 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all disabled:opacity-50 flex items-center gap-2"
-                  >
-                    <Send size={18} />
-                    Reply
-                  </button>
-                </div>
-              </form>
-            )}
-          </>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-12">
-            <div className="w-24 h-24 bg-[#C9A96E]/5 rounded-full flex items-center justify-center text-[#C9A96E] mb-6">
-              <MessageSquare size={48} />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">No Chat Selected</h3>
-            <p className="text-gray-500 max-w-xs">
-              Select a conversation from the sidebar to start communicating with members.
-            </p>
+              )}
+            </motion.div>
           </div>
         )}
-      </div>
+      </AnimatePresence>
     </div>
   );
 };

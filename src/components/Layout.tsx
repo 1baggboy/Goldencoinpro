@@ -14,7 +14,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="flex-1 flex flex-col relative overflow-hidden">
         <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-10 custom-scrollbar lg:bg-slate-100/30 dark:lg:bg-transparent content-center">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-10 custom-scrollbar lg:bg-slate-100/30 dark:lg:bg-transparent content-center">
           <AnimatePresence mode="wait">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -23,7 +23,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               transition={{ duration: 0.3 }}
               className="max-w-[1440px] mx-auto w-full min-h-fit"
             >
-              <div className="glass-card rounded-[2rem] lg:rounded-[3rem] p-6 lg:p-10 shadow-2xl border-[#C9A96E]/20">
+              <div className="glass-card rounded-3xl md:rounded-[2rem] lg:rounded-[3rem] p-4 sm:p-6 lg:p-10 shadow-2xl border-[#C9A96E]/20">
                 {children}
               </div>
             </motion.div>
