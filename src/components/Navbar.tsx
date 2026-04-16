@@ -14,8 +14,8 @@ export const Navbar = ({ onMenuClick }: { onMenuClick?: () => void }) => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   return (
-    <header className="h-24 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-[#C9A96E]/10 px-6 md:px-12 flex items-center justify-between sticky top-0 z-50">
-      <div className="flex items-center gap-6 md:hidden">
+    <header className="h-20 lg:h-24 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-[#C9A96E]/10 px-4 lg:px-12 flex items-center justify-between sticky top-0 z-50">
+      <div className="flex items-center gap-4 lg:hidden">
         <button 
           type="button"
           onClick={(e) => {
@@ -23,16 +23,16 @@ export const Navbar = ({ onMenuClick }: { onMenuClick?: () => void }) => {
             e.stopPropagation();
             onMenuClick?.();
           }} 
-          className="p-3 text-[#C9A96E] hover:bg-[#C9A96E]/10 rounded-xl transition-colors relative z-[60]"
+          className="p-2 lg:p-3 text-[#C9A96E] hover:bg-[#C9A96E]/10 rounded-xl transition-colors relative z-[60]"
         >
-          <Menu size={28} />
+          <Menu size={24} />
         </button>
         <div className="flex items-center gap-2 relative z-50">
-          <img src={logo} alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
+          <img src={logo} alt="GOLDENCOIN" className="h-8 lg:h-10 w-auto" referrerPolicy="no-referrer" />
         </div>
       </div>
 
-      <div className="hidden lg:flex items-center gap-6 bg-gray-100 dark:bg-slate-900 px-6 py-3 rounded-2xl border border-[#C9A96E]/10 w-[500px] transition-all focus-within:w-[600px] focus-within:border-[#C9A96E]/40 shadow-sm">
+      <div className="hidden lg:flex items-center gap-6 bg-gray-100 dark:bg-slate-900 px-6 py-3 rounded-2xl border border-[#C9A96E]/10 w-[400px] xl:w-[500px] transition-all focus-within:w-[500px] xl:focus-within:w-[600px] focus-within:border-[#C9A96E]/40 shadow-sm">
         <Search className="text-gray-500" size={20} />
         <input
           type="text"

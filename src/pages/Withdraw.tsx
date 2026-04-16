@@ -212,7 +212,7 @@ export const Withdraw = () => {
 
         {/* Right: Form */}
         <div className="md:col-span-2">
-          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-8">
+          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6 lg:p-8">
             {success ? (
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }}

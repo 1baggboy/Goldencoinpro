@@ -236,7 +236,7 @@ export const Invest = () => {
           </div>
 
           {/* Investment Form */}
-          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-8">
+          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6 lg:p-8">
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-xl font-bold text-white">Start Investment</h3>
               <div className="text-right">

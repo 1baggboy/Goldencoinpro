@@ -40,28 +40,28 @@ export const Landing = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-24 pb-48 px-6 overflow-hidden">
-        <div className="max-w-[1400px] mx-auto text-center relative z-10">
+      <section className="relative pt-20 lg:pt-28 pb-32 lg:pb-48 px-6 overflow-hidden">
+        <div className="max-w-[1440px] mx-auto text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <span className="inline-block px-6 py-2 bg-[#C9A96E]/10 text-[#C9A96E] text-[10px] font-black rounded-full border border-[#C9A96E]/20 mb-10 uppercase tracking-[0.3em]">
+            <span className="inline-block px-6 py-2 bg-[#C9A96E]/10 text-[#C9A96E] text-[10px] font-black rounded-full border border-[#C9A96E]/20 mb-8 lg:mb-12 uppercase tracking-[0.3em]">
               Institutional Grade Crypto Management
             </span>
-            <h1 className="text-6xl sm:text-7xl lg:text-[10rem] font-display font-black tracking-tight mb-12 sm:mb-16 leading-[0.9] lg:leading-[0.8] text-slate-900 dark:text-white uppercase">
+            <h1 className="text-5xl sm:text-7xl lg:text-8xl xl:text-9xl font-display font-black tracking-tight mb-8 lg:mb-16 leading-[0.9] lg:leading-[0.8] text-slate-900 dark:text-white uppercase">
               Secure. Simple. <br />
               <span className="text-[#C9A96E]">Smart Crypto</span>
             </h1>
-            <p className="text-xl lg:text-3xl text-gray-600 dark:text-gray-400 max-w-4xl mx-auto mb-16 leading-relaxed lg:leading-[1.6] opacity-80 font-medium">
+            <p className="text-lg lg:text-xl xl:text-2xl text-gray-600 dark:text-gray-400 max-w-4xl mx-auto mb-12 lg:mb-16 leading-relaxed lg:leading-[1.6] opacity-80 font-medium">
               Manage your Bitcoin with absolute confidence and elite institutional transparency. Our platform provides the elite tools you need to track, deposit, and grow your digital fortune securely.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-              <Link to="/register" className="w-full sm:w-auto px-12 py-6 bg-[#C9A96E] text-slate-950 font-black rounded-2xl hover:bg-[#D4B985] transition-all flex items-center justify-center gap-3 text-xl shadow-2xl shadow-[#C9A96E]/30 uppercase tracking-widest">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 lg:gap-6">
+              <Link to="/register" className="w-full sm:w-auto px-8 lg:px-12 py-4 lg:py-6 bg-[#C9A96E] text-slate-950 font-black rounded-2xl hover:bg-[#D4B985] transition-all flex items-center justify-center gap-3 text-lg lg:text-xl shadow-2xl shadow-[#C9A96E]/30 uppercase tracking-widest">
                 Start Your Journey <ArrowRight size={24} />
               </Link>
-              <Link to="/about" className="w-full sm:w-auto px-12 py-6 bg-slate-200 dark:bg-slate-900 text-slate-950 dark:text-white font-black rounded-2xl border border-[#C9A96E]/30 hover:bg-slate-300 dark:hover:bg-slate-800 transition-all text-xl text-center uppercase tracking-widest">
+              <Link to="/about" className="w-full sm:w-auto px-8 lg:px-12 py-4 lg:py-6 bg-slate-200 dark:bg-slate-900 text-slate-950 dark:text-white font-black rounded-2xl border border-[#C9A96E]/30 hover:bg-slate-300 dark:hover:bg-slate-800 transition-all text-lg lg:text-xl text-center uppercase tracking-widest">
                 Explore Wealth
               </Link>
             </div>

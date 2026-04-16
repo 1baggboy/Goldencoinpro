@@ -405,7 +405,7 @@ export const AdminDashboard = () => {
       </div>
 
       {/* Admin Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4 lg:gap-6">
         <AdminStatCard title="Total Users" value={stats.totalUsers} icon={Users} />
         <AdminStatCard title="Active Plans" value={stats.activeInvestments} icon={TrendingUp} color="green" />
         <AdminStatCard title="Pending KYC" value={pendingKyc.length} icon={ShieldCheck} color="blue" />
@@ -419,7 +419,7 @@ export const AdminDashboard = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
         {/* Pending Deposits */}
         <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
           <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">

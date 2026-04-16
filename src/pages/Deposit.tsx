@@ -166,17 +166,17 @@ export const Deposit = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Wallet Address Section */}
-        <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-8 space-y-8">
+        <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6 lg:p-8 space-y-6 lg:space-y-8">
           <div className="flex justify-center">
             <div className="p-4 bg-white rounded-2xl">
-              <QrCode size={180} className="text-slate-950" />
+              <QrCode size={160} className="lg:size-[180px] text-slate-950" />
             </div>
           </div>
-
+          
           <div className="space-y-4">
             <label className="text-sm font-medium text-gray-500">Your BTC Deposit Address</label>
-            <div className="flex items-center gap-2 p-4 bg-slate-950 border border-[#C9A96E]/20 rounded-xl">
-              <span className="text-sm font-mono text-gray-300 break-all flex-1">{walletAddress}</span>
+            <div className="flex items-center gap-2 p-3 lg:p-4 bg-slate-950 border border-[#C9A96E]/20 rounded-xl">
+              <span className="text-xs lg:text-sm font-mono text-gray-300 break-all flex-1">{walletAddress}</span>
               <button 
                 onClick={handleCopy}
                 className="p-2 text-[#C9A96E] hover:bg-[#C9A96E]/10 rounded-lg transition-colors shrink-0"

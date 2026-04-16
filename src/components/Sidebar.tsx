@@ -70,13 +70,13 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () =>
       )}
 
       <aside className={cn(
-        "fixed md:static inset-y-0 left-0 w-80 bg-white dark:bg-slate-950 border-r border-[#C9A96E]/20 flex flex-col z-[70] transition-transform duration-300 md:translate-x-0",
+        "fixed md:static inset-y-0 left-0 w-72 bg-white dark:bg-slate-950 border-r border-[#C9A96E]/20 flex flex-col z-[70] transition-transform duration-300 md:translate-x-0",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="p-8 flex items-center justify-between">
+        <div className="p-6 lg:p-8 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <img src={logo} alt="GOLDENCOIN" className="h-12 w-auto" referrerPolicy="no-referrer" />
-            <span className="text-xl font-display font-black tracking-tight text-[#0B0B0B] dark:text-white uppercase tracking-widest hidden lg:block">
+            <img src={logo} alt="GOLDENCOIN" className="h-10 lg:h-12 w-auto" referrerPolicy="no-referrer" />
+            <span className="text-lg lg:text-xl font-display font-black tracking-tight text-[#0B0B0B] dark:text-white uppercase tracking-widest hidden md:block">
               Goldencoin
             </span>
           </Link>
@@ -85,7 +85,7 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () =>
           </button>
         </div>
 
-        <nav className="flex-1 px-6 py-10 space-y-4 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 px-4 lg:px-6 py-6 lg:py-10 space-y-2 lg:space-y-4 overflow-y-auto custom-scrollbar">
           {menuItems.map((item: any) => {
             const content = (
               <>
