@@ -9,7 +9,7 @@ import { Mail, Lock, User, ArrowRight, ShieldCheck, Check, X, AlertCircle } from
 import { motion, AnimatePresence } from "motion/react";
 import { useTheme } from "./ThemeContext";
 import { cn } from "../lib/utils";
-const logo = "/Logo.png";
+import logo from "../assets/logo.png";
 
 export const Register = () => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);

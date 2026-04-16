@@ -9,7 +9,7 @@ import { Mail, Lock, ArrowRight, ShieldCheck, AlertCircle, Loader2 } from "lucid
 import { motion, AnimatePresence } from "motion/react";
 import { useTheme } from "./ThemeContext";
 import { cn } from "../lib/utils";
-const logo = "/Logo.png";
+import logo from "../assets/logo.png";
 
 export const Login = () => {
   const [email, setEmail] = useState("");

@@ -13,6 +13,7 @@ import { useNotifications } from "../NotificationContext";
 import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, increment } from "firebase/firestore";
 import { db } from "../firebase";
 import { motion } from "motion/react";
+import { fetchBtcPrice as fetchBtcPriceUtil } from "../lib/utils";
 
 export const Deposit = () => {
   const { user, profile } = useAuth();

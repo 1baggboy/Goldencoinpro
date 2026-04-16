@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
-import { SpeedInsights } from "@vercel/speed-insights/react";
 import { AuthProvider, useAuth } from "./AuthContext";
 import { NotificationProvider } from "./NotificationContext";
 import { ThemeProvider } from "./pages/ThemeContext";
@@ -166,7 +165,6 @@ export default function App() {
             </Routes>
             <SupportWidget />
             <Toaster richColors position="top-right" />
-            <SpeedInsights />
           </Router>
           </ThemeProvider>
         </NotificationProvider>
