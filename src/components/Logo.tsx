@@ -22,6 +22,8 @@ export const Logo: React.FC<LogoProps> = ({ className, size = "md" }) => {
       alt="GOLDENCOIN" 
       className={cn(sizeClasses[size], className)} 
       referrerPolicy="no-referrer"
+      loading="eager"
+      {...({ fetchPriority: "high" } as any)}
     />
   );
 };

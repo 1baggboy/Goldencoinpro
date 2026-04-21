@@ -169,9 +169,8 @@ export const Landing = () => {
       <footer className="py-24 px-6 border-t border-[#C9A96E]/10 bg-slate-100 dark:bg-slate-900/50">
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-16">
           <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center gap-4 mb-8">
+            <div className="mb-8">
               <Logo size="lg" />
-              <span className="text-2xl font-display font-black tracking-tight uppercase">Goldencoin</span>
             </div>
             <p className="text-gray-600 dark:text-gray-400 max-w-md mb-10 text-lg leading-relaxed">
               Goldencoin Limited is a leading digital asset management platform providing secure and transparent Bitcoin solutions. Established to bring institutional-grade tools to everyone.
