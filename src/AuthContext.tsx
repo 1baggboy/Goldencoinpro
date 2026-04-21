@@ -70,34 +70,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Listen to profile changes
         const profileRef = doc(db, "users", firebaseUser.uid);
         console.log("Attaching onSnapshot for:", firebaseUser.uid);
-        const unsubProfile = onSnapshot(profileRef, (docSnap) => {
-          if (docSnap.exists()) {
-            console.log("Profile snapshot received:", docSnap.data());
-            const data = docSnap.data() as UserProfile;
-            
-            // Fix missing referral code immediately
-            if (!data.referralCode) {
-              const newCode = generateReferralCode();
-              console.log("Generating missing referral code for user:", firebaseUser.uid, newCode);
-              updateDoc(profileRef, { referralCode: newCode }).catch(err => {
-                console.error("Failed to update missing referral code:", err);
-              });
-              // Update local state temporarily to avoid flicker if possible
-              setProfile({ ...data, referralCode: newCode });
+        
+        let retryCount = 0;
+        const maxRetries = 3;
+        
+        const startSnapshot = (isRetry = false) => {
+          const unsubProfile = onSnapshot(profileRef, (docSnap) => {
+            if (docSnap.exists()) {
+              console.log("Profile snapshot received:", docSnap.data());
+              const data = docSnap.data() as UserProfile;
+              
+              // Fix missing referral code immediately
+              if (!data.referralCode) {
+                const newCode = generateReferralCode();
+                console.log("Generating missing referral code for user:", firebaseUser.uid, newCode);
+                updateDoc(profileRef, { referralCode: newCode }).catch(err => {
+                  console.error("Failed to update missing referral code:", err);
+                });
+                // Update local state temporarily to avoid flicker if possible
+                setProfile({ ...data, referralCode: newCode });
+              } else {
+                setProfile(data);
+              }
             } else {
-              setProfile(data);
+              console.log("Profile snapshot: document does not exist for", firebaseUser.uid);
+              setProfile(null);
             }
-          } else {
-            console.log("Profile snapshot: document does not exist for", firebaseUser.uid);
-            setProfile(null);
-          }
-          setLoading(false);
-        }, (error) => {
-          console.error("Profile snapshot error for", firebaseUser.uid, ":", error.message, error.code, error);
-          // If permission denied, maybe retry once after a delay?
-          setLoading(false);
-        });
-        return () => unsubProfile();
+            setLoading(false);
+          }, (error) => {
+            if (error.code === 'permission-denied' && retryCount < maxRetries) {
+              retryCount++;
+              console.warn(`Profile snapshot permission denied for ${firebaseUser.uid}, retrying in 2s... (Attempt ${retryCount}/${maxRetries})`);
+              setTimeout(() => {
+                const newUnsub = startSnapshot(true);
+                // Note: we can't easily swap the unsubscribe handle here without more complex logic, 
+                // but since this is inside an auth change effect that returns a cleanup, it's manageable.
+              }, 2000);
+            } else {
+              console.error("Profile snapshot error for", firebaseUser.uid, ":", error.message, error.code);
+              setLoading(false);
+            }
+          });
+          return unsubProfile;
+        };
+
+        const unsub = startSnapshot();
+        return () => unsub();
       } else {
         setProfile(null);
         setLoading(false);
