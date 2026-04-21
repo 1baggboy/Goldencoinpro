@@ -76,9 +76,6 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () =>
         <div className="p-6 lg:p-8 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
             <Logo size="lg" />
-            <span className="text-lg lg:text-xl font-display font-black tracking-tight text-[#0B0B0B] dark:text-white uppercase tracking-widest hidden md:block">
-              Goldencoin
-            </span>
           </Link>
           <button onClick={onClose} className="p-2 text-gray-500 hover:text-gray-900 dark:hover:text-white md:hidden">
             <X size={24} />
