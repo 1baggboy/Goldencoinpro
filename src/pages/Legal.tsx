@@ -2,13 +2,13 @@ import React from "react";
 import { Shield, Lock, Eye, FileText, Scale, AlertTriangle, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
-import logo from "../assets/logo.png";
+import { Logo } from "../components/Logo";
 
 export const LegalLayout = ({ title, icon: Icon, children }: any) => (
   <div className="bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-950 dark:text-white font-sans selection:bg-[#C9A96E] selection:text-slate-950 transition-colors duration-300">
     <nav className="h-20 border-b border-[#C9A96E]/10 px-6 md:px-12 flex items-center justify-between sticky top-0 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md z-50">
       <div className="flex items-center gap-3">
-        <img src={logo} alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
+        <Logo size="md" />
       </div>
       <Link to="/" className="text-sm font-semibold hover:text-[#C9A96E] transition-colors flex items-center gap-2">
         <ArrowLeft size={16} /> Back to Home

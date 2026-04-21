@@ -14,17 +14,20 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="flex-1 flex flex-col relative overflow-hidden">
         <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-10 custom-scrollbar lg:bg-slate-100/30 dark:lg:bg-transparent content-center">
+        <main className="flex-1 overflow-y-auto px-2 sm:px-6 lg:px-10 py-6 sm:py-8 lg:py-12 custom-scrollbar transition-all duration-300">
           <AnimatePresence mode="wait">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
-              className="max-w-[1440px] mx-auto w-full min-h-fit"
+              className="max-w-[1600px] mx-auto w-full"
             >
-              <div className="glass-card rounded-3xl md:rounded-[2rem] lg:rounded-[3rem] p-4 sm:p-6 lg:p-10 shadow-2xl border-[#C9A96E]/20">
-                {children}
+              <div className="glass-card shadow-2xl relative overflow-hidden rounded-[1.5rem] md:rounded-[2.5rem] lg:rounded-[3.5rem] border border-[#C9A96E]/20">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#C9A96E]/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+                <div className="p-4 sm:p-8 lg:p-12">
+                  {children}
+                </div>
               </div>
             </motion.div>
           </AnimatePresence>

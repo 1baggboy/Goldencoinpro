@@ -6,7 +6,7 @@ import { APP_CONFIG } from "../config";
 import { useNotifications } from "../NotificationContext";
 import { ThemeToggle } from "./ThemeToggle";
 import { NotificationDropdown } from "../pages/NotificationDropdown";
-import logo from "../assets/logo.png";
+import { Logo } from "./Logo";
 
 export const Navbar = ({ onMenuClick }: { onMenuClick?: () => void }) => {
   const { profile } = useAuth();
@@ -28,7 +28,7 @@ export const Navbar = ({ onMenuClick }: { onMenuClick?: () => void }) => {
           <Menu size={24} />
         </button>
         <div className="flex items-center gap-2 relative z-50">
-          <img src={logo} alt="GOLDENCOIN" className="h-8 lg:h-10 w-auto" referrerPolicy="no-referrer" />
+          <Logo size="sm" className="lg:h-10" />
         </div>
       </div>
 

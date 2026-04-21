@@ -13,7 +13,7 @@ import { motion } from "motion/react";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { useTheme } from "./ThemeContext";
 import { cn } from "../lib/utils";
-import logo from "../assets/logo.png";
+import { Logo } from "../components/Logo";
 
 export const Landing = () => {
   const { theme } = useTheme();
@@ -22,7 +22,7 @@ export const Landing = () => {
       {/* Navigation */}
       <nav className="h-20 border-b px-6 md:px-12 flex items-center justify-between sticky top-0 backdrop-blur-md z-50 border-[#C9A96E]/20 bg-slate-50/80 dark:border-[#C9A96E]/10 dark:bg-slate-950/80">
         <div className="flex items-center gap-3">
-          <img src={logo} alt="GOLDENCOIN" className="h-10 w-auto" referrerPolicy="no-referrer" />
+          <Logo size="md" />
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600 dark:text-gray-400">
           <Link to="/features" className="hover:text-[#C9A96E] transition-colors">Features</Link>
@@ -73,13 +73,13 @@ export const Landing = () => {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-32 px-6 bg-slate-100 dark:bg-slate-900">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl font-bold mb-4">Why Choose Goldencoin?</h2>
-            <p className="text-gray-600 dark:text-gray-500 max-w-xl mx-auto">We've built a platform that prioritizes security, speed, and user experience above all else.</p>
+      <section id="features" className="py-32 px-6 bg-slate-100 dark:bg-slate-900 transition-all">
+        <div className="max-w-[1440px] mx-auto xl:max-w-[1600px]">
+          <div className="text-center mb-24 transition-all">
+            <h2 className="text-4xl lg:text-5xl xl:text-6xl font-bold mb-6 font-display uppercase tracking-tight">Why Choose Goldencoin?</h2>
+            <p className="text-gray-600 dark:text-gray-500 max-w-2xl mx-auto text-lg lg:text-xl opacity-80">We've built a platform that prioritizes security, speed, and user experience above all else.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
             <FeatureCard 
               icon={Shield} 
               title="Military-Grade Security" 
@@ -101,47 +101,47 @@ export const Landing = () => {
 
       {/* Referral Announcement Section */}
       <section id="about" className="py-32 px-6 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-slate-100 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-950 border border-[#C9A96E]/20 rounded-[40px] p-8 md:p-16 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#C9A96E]/10 rounded-full blur-[80px] -mr-32 -mt-32"></div>
-            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <span className="inline-block px-4 py-1.5 bg-[#C9A96E]/10 text-[#C9A96E] text-xs font-bold rounded-full border border-[#C9A96E]/20 mb-6 uppercase tracking-widest">
+        <div className="max-w-[1440px] mx-auto xl:max-w-[1600px]">
+          <div className="bg-slate-100 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-950 border border-[#C9A96E]/20 rounded-[40px] p-8 md:p-16 lg:p-24 relative overflow-hidden transition-all shadow-2xl">
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#C9A96E]/5 rounded-full blur-[120px] -mr-64 -mt-64"></div>
+            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              <div className="space-y-8">
+                <span className="inline-block px-4 py-1.5 bg-[#C9A96E]/10 text-[#C9A96E] text-xs font-bold rounded-full border border-[#C9A96E]/20 uppercase tracking-widest">
                   Limited Time Offer
                 </span>
-                <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight text-slate-950 dark:text-white">
+                <h2 className="text-5xl md:text-7xl font-bold leading-tight text-slate-950 dark:text-white font-display uppercase italic">
                   Refer and Earn <br />
-                  <span className="text-[#C9A96E]">$10 Cash</span> Bonus
+                  <span className="text-[#C9A96E] font-black">$10 Cash</span> Bonus
                 </h2>
-                <p className="text-xl text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
+                <p className="text-xl lg:text-2xl text-gray-600 dark:text-gray-400 leading-relaxed opacity-90">
                   Invite your friends and family to join Goldencoin. When they sign up and make their first deposit, you'll receive a $10 cash bonus credited directly to your account.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Link to="/register" className="px-8 py-4 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all flex items-center justify-center gap-2 text-lg">
-                    Join Now & Refer <ArrowRight size={20} />
+                <div className="flex flex-col sm:flex-row gap-6">
+                  <Link to="/register" className="px-10 py-5 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-2xl hover:bg-[#D4B985] transition-all flex items-center justify-center gap-2 text-xl shadow-xl shadow-[#C9A96E]/20">
+                    Join Now & Refer <ArrowRight size={24} />
                   </Link>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-6 bg-slate-200 dark:bg-slate-950 border border-[#C9A96E]/10 rounded-3xl">
-                  <div className="text-3xl font-bold text-[#C9A96E] mb-2">01</div>
-                  <h4 className="font-bold mb-2 text-slate-950 dark:text-white">Share Link</h4>
-                  <p className="text-xs text-gray-600 dark:text-gray-500">Copy your unique referral link from your dashboard.</p>
+              <div className="grid grid-cols-2 gap-4 lg:gap-6">
+                <div className="p-8 bg-slate-200 dark:bg-slate-950 border border-[#C9A96E]/10 rounded-[2rem] hover:border-[#C9A96E]/40 transition-all">
+                  <div className="text-4xl font-bold text-[#C9A96E] mb-3">01</div>
+                  <h4 className="font-bold text-lg mb-2 text-slate-950 dark:text-white uppercase">Share Link</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-500">Copy your unique referral link from your dashboard.</p>
                 </div>
-                <div className="p-6 bg-slate-200 dark:bg-slate-950 border border-[#C9A96E]/10 rounded-3xl">
-                  <div className="text-3xl font-bold text-[#C9A96E] mb-2">02</div>
-                  <h4 className="font-bold mb-2 text-slate-950 dark:text-white">Friends Join</h4>
-                  <p className="text-xs text-gray-600 dark:text-gray-500">Your friends sign up using your unique referral code.</p>
+                <div className="p-8 bg-slate-200 dark:bg-slate-950 border border-[#C9A96E]/10 rounded-[2rem] hover:border-[#C9A96E]/40 transition-all">
+                  <div className="text-4xl font-bold text-[#C9A96E] mb-3">02</div>
+                  <h4 className="font-bold text-lg mb-2 text-slate-950 dark:text-white uppercase">Friends Join</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-500">Your friends sign up using your unique referral code.</p>
                 </div>
-                <div className="p-6 bg-slate-200 dark:bg-slate-950 border border-[#C9A96E]/10 rounded-3xl">
-                  <div className="text-3xl font-bold text-[#C9A96E] mb-2">03</div>
-                  <h4 className="font-bold mb-2 text-slate-950 dark:text-white">They Deposit</h4>
-                  <p className="text-xs text-gray-600 dark:text-gray-500">Bonus is triggered once their first deposit is approved.</p>
+                <div className="p-8 bg-slate-200 dark:bg-slate-950 border border-[#C9A96E]/10 rounded-[2rem] hover:border-[#C9A96E]/40 transition-all">
+                  <div className="text-4xl font-bold text-[#C9A96E] mb-3">03</div>
+                  <h4 className="font-bold text-lg mb-2 text-slate-950 dark:text-white uppercase">They Deposit</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-500">Bonus is triggered once their first deposit is approved.</p>
                 </div>
-                <div className="p-6 bg-slate-200 dark:bg-slate-950 border border-[#C9A96E]/10 rounded-3xl">
-                  <div className="text-3xl font-bold text-[#C9A96E] mb-2">04</div>
-                  <h4 className="font-bold mb-2 text-slate-950 dark:text-white">Get Paid</h4>
-                  <p className="text-xs text-gray-600 dark:text-gray-500">$10 is instantly credited to your balance.</p>
+                <div className="p-8 bg-slate-200 dark:bg-slate-950 border border-[#C9A96E]/10 rounded-[2rem] hover:border-[#C9A96E]/40 transition-all">
+                  <div className="text-4xl font-bold text-[#C9A96E] mb-3">04</div>
+                  <h4 className="font-bold text-lg mb-2 text-slate-950 dark:text-white uppercase">Get Paid</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-500">$10 is instantly credited to your balance.</p>
                 </div>
               </div>
             </div>
@@ -151,16 +151,16 @@ export const Landing = () => {
 
       {/* Trust Section */}
       <section id="security" className="py-32 px-6">
-        <div className="max-w-5xl mx-auto bg-slate-100 dark:bg-slate-900 border border-[#C9A96E]/10 rounded-3xl p-12 md:p-20 text-center relative overflow-hidden">
+        <div className="max-w-[1200px] mx-auto bg-slate-100 dark:bg-slate-900 border border-[#C9A96E]/10 rounded-[3rem] p-12 md:p-24 text-center relative overflow-hidden transition-all shadow-3xl">
           <div className="relative z-10">
-            <h2 className="text-4xl font-bold mb-8 text-slate-950 dark:text-white">Ready to take control of your crypto?</h2>
-            <p className="text-xl text-gray-600 dark:text-gray-400 mb-12">Join thousands of users who trust Goldencoin for their digital asset management.</p>
-            <Link to="/register" className="px-10 py-4 bg-[#C9A96E] text-slate-950 font-bold rounded-xl hover:bg-[#D4B985] transition-all inline-flex items-center gap-2 text-lg">
-              Create Free Account <ArrowRight size={20} />
+            <h2 className="text-5xl lg:text-6xl font-black mb-10 text-slate-950 dark:text-white font-display uppercase tracking-tight italic">Take control <br /> of your crypto.</h2>
+            <p className="text-xl lg:text-2xl text-gray-600 dark:text-gray-400 mb-16 max-w-2xl mx-auto opacity-80">Join thousands of users who trust Goldencoin for their digital asset management.</p>
+            <Link to="/register" className="px-12 py-5 bg-[#C9A96E] text-slate-950 font-black rounded-2xl hover:bg-[#D4B985] transition-all inline-flex items-center gap-3 text-xl uppercase tracking-widest">
+              Create Free Account <ArrowRight size={24} />
             </Link>
           </div>
-          <div className="absolute top-0 right-0 p-8 opacity-10">
-            <img src={logo} alt="" className="w-64 h-auto" referrerPolicy="no-referrer" />
+          <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
+            <Logo size="custom" className="w-[400px] h-auto rotate-12" />
           </div>
         </div>
       </section>
@@ -170,7 +170,7 @@ export const Landing = () => {
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-16">
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-4 mb-8">
-              <img src={logo} alt="GOLDENCOIN" className="h-12 w-auto" referrerPolicy="no-referrer" />
+              <Logo size="lg" />
               <span className="text-2xl font-display font-black tracking-tight uppercase">Goldencoin</span>
             </div>
             <p className="text-gray-600 dark:text-gray-400 max-w-md mb-10 text-lg leading-relaxed">

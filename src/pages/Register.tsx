@@ -9,7 +9,7 @@ import { Mail, Lock, User, ArrowRight, ShieldCheck, Check, X, AlertCircle } from
 import { motion, AnimatePresence } from "motion/react";
 import { useTheme } from "./ThemeContext";
 import { cn } from "../lib/utils";
-import logo from "../assets/logo.png";
+import { Logo } from "../components/Logo";
 
 export const Register = () => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -155,7 +155,7 @@ export const Register = () => {
       >
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-3 mb-6">
-            <img src={logo} alt="GOLDENCOIN" className="h-16 w-auto" referrerPolicy="no-referrer" />
+            <Logo size="xl" />
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-950 dark:text-white">Create Account</h2>
           <p className="text-slate-500 mt-2">Join Goldencoin and start managing your assets.</p>

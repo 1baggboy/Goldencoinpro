@@ -21,7 +21,7 @@ import { cn } from "../lib/utils";
 import { useTheme } from "../pages/ThemeContext";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
-import logo from "../assets/logo.png";
+import { Logo } from "./Logo";
 
 export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () => void }) => {
   const location = useLocation();
@@ -75,7 +75,7 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () =>
       )}>
         <div className="p-6 lg:p-8 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <img src={logo} alt="GOLDENCOIN" className="h-10 lg:h-12 w-auto" referrerPolicy="no-referrer" />
+            <Logo size="lg" />
             <span className="text-lg lg:text-xl font-display font-black tracking-tight text-[#0B0B0B] dark:text-white uppercase tracking-widest hidden md:block">
               Goldencoin
             </span>

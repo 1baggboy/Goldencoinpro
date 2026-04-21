@@ -54,13 +54,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(firebaseUser);
       if (firebaseUser) {
         console.log("User authenticated:", firebaseUser.uid, firebaseUser.email);
-        try {
-          // Force token refresh to ensure Firestore has the latest auth state
-          const token = await firebaseUser.getIdToken(true);
-          console.log("Token refreshed");
-        } catch (e) {
-          console.error("Failed to refresh token:", e);
-        }
+        
+        // Refresh token in background without blocking
+        firebaseUser.getIdToken(true).then(() => {
+          console.log("Token refreshed successfully");
+        }).catch(e => {
+          if (e.code === 'auth/network-request-failed') {
+            console.warn("Token refresh failed due to network. This is expected if connectivity is spotty.");
+          } else {
+            console.error("Failed to refresh token:", e);
+          }
+        });
         
         // Listen to profile changes
         const profileRef = doc(db, "users", firebaseUser.uid);
