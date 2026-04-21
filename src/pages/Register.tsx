@@ -8,7 +8,7 @@ import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandle
 import { Mail, Lock, User, ArrowRight, ShieldCheck, Check, X, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useTheme } from "./ThemeContext";
-import { cn } from "../lib/utils";
+import { cn, generateReferralCode } from "../lib/utils";
 import { Logo } from "../components/Logo";
 
 export const Register = () => {
@@ -33,15 +33,6 @@ export const Register = () => {
   };
   const isPasswordStrong = Object.values(passwordCriteria).every(Boolean);
   const canSubmit = name.length > 2 && isEmailValid && isPasswordStrong && acceptedTerms;
-
-  const generateReferralCode = () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let result = "";
-    for (let i = 0; i < 12; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();

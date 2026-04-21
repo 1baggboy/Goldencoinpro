@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { doc, onSnapshot, getDoc } from "firebase/firestore";
+import { doc, onSnapshot, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
 import { APP_CONFIG } from "./config";
+import { generateReferralCode } from "./lib/utils";
 
 interface UserProfile {
   uid: string;
@@ -72,7 +73,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const unsubProfile = onSnapshot(profileRef, (docSnap) => {
           if (docSnap.exists()) {
             console.log("Profile snapshot received:", docSnap.data());
-            setProfile(docSnap.data() as UserProfile);
+            const data = docSnap.data() as UserProfile;
+            
+            // Fix missing referral code immediately
+            if (!data.referralCode) {
+              const newCode = generateReferralCode();
+              console.log("Generating missing referral code for user:", firebaseUser.uid, newCode);
+              updateDoc(profileRef, { referralCode: newCode }).catch(err => {
+                console.error("Failed to update missing referral code:", err);
+              });
+              // Update local state temporarily to avoid flicker if possible
+              setProfile({ ...data, referralCode: newCode });
+            } else {
+              setProfile(data);
+            }
           } else {
             console.log("Profile snapshot: document does not exist for", firebaseUser.uid);
             setProfile(null);

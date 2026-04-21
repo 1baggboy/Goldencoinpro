@@ -299,7 +299,11 @@ export const AdminDashboard = () => {
       let comparison = 0;
       if (sortBy === "name") comparison = (a.displayName || "").localeCompare(b.displayName || "");
       if (sortBy === "balance") comparison = (a.btcBalance || 0) - (b.btcBalance || 0);
-      if (sortBy === "joined") comparison = (a.createdAt || 0) - (b.createdAt || 0);
+      if (sortBy === "joined") {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        comparison = dateA - dateB;
+      }
       return sortOrder === "asc" ? comparison : -comparison;
     });
 

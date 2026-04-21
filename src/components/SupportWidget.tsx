@@ -148,14 +148,14 @@ export const SupportWidget = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100]">
+    <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[100] flex flex-col items-end">
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="absolute bottom-20 right-0 w-[350px] md:w-[400px] h-[500px] bg-slate-900 border border-[#C9A96E]/20 rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+            className="absolute bottom-20 right-0 w-[calc(100vw-32px)] md:w-[400px] h-[calc(100vh-120px)] md:h-[500px] max-h-[600px] bg-slate-900 border border-[#C9A96E]/20 rounded-3xl shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="p-4 bg-[#C9A96E] flex items-center justify-between">
@@ -272,9 +272,17 @@ export const SupportWidget = () => {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 bg-[#C9A96E] text-[#0B0B0B] rounded-full shadow-2xl flex items-center justify-center hover:bg-[#D4B985] transition-all relative"
+        className={cn(
+          "bg-[#C9A96E] text-[#0B0B0B] shadow-2xl flex items-center justify-center hover:bg-[#D4B985] transition-all relative",
+          isOpen ? "w-14 h-14 rounded-full" : "h-14 md:w-14 px-5 md:px-0 rounded-full md:rounded-full gap-2"
+        )}
       >
-        {isOpen ? <X size={24} /> : <MessageSquare size={24} />}
+        {isOpen ? <X size={24} /> : (
+          <>
+            <MessageSquare size={24} />
+            <span className="md:hidden font-bold text-sm">Chat with us</span>
+          </>
+        )}
         {!isOpen && unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-slate-950 animate-bounce">
             {unreadCount}

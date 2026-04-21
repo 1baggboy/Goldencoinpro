@@ -40,3 +40,12 @@ export async function fetchBtcPrice() {
     return { usd: 65000 + Math.random() * 1000 };
   }
 }
+
+export const generateReferralCode = () => {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result = "";
+  for (let i = 0; i < 12; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+};

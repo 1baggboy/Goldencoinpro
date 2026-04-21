@@ -366,6 +366,74 @@ export const UserDetail = () => {
               </button>
             </div>
           </div>
+
+          {/* KYC Verification Card */}
+          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
+            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <ShieldCheck size={20} className="text-[#C9A96E]" />
+              KYC Verification
+            </h3>
+            
+            {kycSubmission ? (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="p-4 bg-slate-950 rounded-xl border border-[#C9A96E]/5">
+                    <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Full Name</p>
+                    <p className="text-sm font-bold text-white">{kycSubmission.fullName}</p>
+                  </div>
+                  <div className="p-4 bg-slate-950 rounded-xl border border-[#C9A96E]/5">
+                    <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">ID Type</p>
+                    <p className="text-sm font-bold text-white capitalize">{kycSubmission.idType?.replace('_', ' ')}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <p className="text-[10px] text-gray-500 uppercase font-bold flex items-center gap-1">
+                      <FileText size={10} /> ID Document
+                    </p>
+                    <div className="aspect-video bg-slate-950 rounded-xl overflow-hidden border border-[#C9A96E]/10">
+                      {kycSubmission.idImage ? (
+                        <img src={kycSubmission.idImage} alt="ID" className="w-full h-full object-contain" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-700">No image</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {kycSubmission.status === 'pending' && (
+                  <div className="flex gap-3 pt-4">
+                    <button 
+                      onClick={handleApproveKyc}
+                      className="flex-1 bg-green-500 text-[#0B0B0B] font-bold py-3 rounded-xl hover:bg-green-400 transition-all flex items-center justify-center gap-2"
+                    >
+                      <Check size={18} />
+                      Approve
+                    </button>
+                    <button 
+                      onClick={() => setShowRejectModal(true)}
+                      className="flex-1 bg-red-500 text-white font-bold py-3 rounded-xl hover:bg-red-400 transition-all flex items-center justify-center gap-2"
+                    >
+                      <X size={18} />
+                      Reject
+                    </button>
+                  </div>
+                )}
+
+                {kycSubmission.status === 'rejected' && (
+                  <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+                    <p className="text-xs font-bold text-red-500 uppercase mb-1">Rejection Reason</p>
+                    <p className="text-sm text-gray-300 italic">"{kycSubmission.rejectionReason || 'No reason provided.'}"</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="py-10 text-center text-gray-500 italic">
+                No KYC submission found for this user.
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right Column: Stats & History */}
@@ -386,14 +454,17 @@ export const UserDetail = () => {
               icon={Zap}
               color="gold"
             />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <StatCard 
               title="Total Deposited" 
-              value={`${userProfile.totalDeposited?.toFixed(4)} BTC`} 
-              subValue="Lifetime volume"
-              icon={TrendingUp}
+              value={`${userProfile.totalDeposited?.toFixed(4) || "0.0000"} BTC`} 
+              subValue="Lifetime BTC volume"
+              icon={ArrowDownCircle}
               color="green"
             />
-            <StatCard 
+             <StatCard 
               title="Referral Bonus" 
               value={`$${(userProfile.referralBonusEarned || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
               subValue={`Code: ${userProfile.referralCode || 'N/A'}`}
@@ -402,199 +473,100 @@ export const UserDetail = () => {
             />
           </div>
 
-          {/* Performance Chart */}
-          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
-            <h3 className="text-xl font-bold text-white mb-8">User Portfolio Performance</h3>
-            <div className="h-[250px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#C9A96E" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#C9A96E" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1A1A1A" vertical={false} />
-                  <XAxis dataKey="name" stroke="#4B5563" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#4B5563" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val}`} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(201, 169, 110, 0.2)', borderRadius: '12px' }}
-                    itemStyle={{ color: '#C9A96E' }}
-                  />
-                  <Area type="monotone" dataKey="value" stroke="#C9A96E" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
-                </AreaChart>
-              </ResponsiveContainer>
+          {/* User Investments Table */}
+          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl overflow-hidden">
+            <div className="p-6 border-b border-[#C9A96E]/10">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <TrendingUp size={20} className="text-[#C9A96E]" />
+                Investment History
+              </h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-950/50 border-b border-[#C9A96E]/10">
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Plan</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Amount</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Expected Return</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#C9A96E]/5">
+                  {investments.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-10 text-center text-sm text-gray-500">No investments found</td>
+                    </tr>
+                  ) : (
+                    investments.map(inv => (
+                      <tr key={inv.id} className="hover:bg-[#C9A96E]/5 transition-colors">
+                        <td className="px-6 py-4">
+                          <p className="text-sm font-bold text-white">{inv.planName}</p>
+                          <p className="text-[10px] text-gray-500">{inv.createdAt ? format(new Date(inv.createdAt), "MMM dd, yyyy") : "---"}</p>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-white font-mono">{inv.amountBtc} BTC</td>
+                        <td className="px-6 py-4 text-sm text-[#C9A96E] font-mono">{inv.expectedReturnBtc?.toFixed(4)} BTC</td>
+                        <td className="px-6 py-4">
+                          <span className={cn(
+                            "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                            inv.status === 'active' ? "bg-blue-500/10 text-blue-500" : "bg-green-500/10 text-green-500"
+                          )}>
+                            {inv.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
 
-          {/* Recent Activity */}
-          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
-            <h3 className="text-xl font-bold text-white mb-6">Recent Activity</h3>
-            <div className="space-y-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-              {activities.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-10">No recent activity found.</p>
-              ) : (
-                activities.map(act => (
-                  <div key={act.id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center",
-                        act.type === 'transaction' ? (act.txType === 'deposit' ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500") :
-                        act.type === 'investment' ? "bg-blue-500/10 text-blue-500" :
-                        "bg-yellow-500/10 text-yellow-500"
-                      )}>
-                        {act.type === 'transaction' ? (act.txType === 'deposit' ? <ArrowDownCircle size={14} /> : <ArrowUpCircle size={14} />) :
-                         act.type === 'investment' ? <TrendingUp size={14} /> :
-                         <ShieldCheck size={14} />}
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-white capitalize">
-                          {act.type === 'transaction' ? act.txType : act.type}
-                        </p>
-                        <p className="text-[10px] text-gray-500">{act.timestamp ? format(new Date(act.timestamp), "MMM dd, HH:mm") : "---"}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      {act.type === 'transaction' && (
-                        <p className={cn("text-xs font-bold", act.txType === 'deposit' ? "text-green-500" : "text-red-500")}>
-                          {act.txType === 'deposit' ? '+' : '-'}{act.amountBtc || act.amount || 0} BTC
-                        </p>
-                      )}
-                      {act.type === 'investment' && (
-                        <p className="text-xs font-bold text-[#C9A96E]">
-                          {act.amountBtc} BTC
-                        </p>
-                      )}
-                      <p className={cn(
-                        "text-[8px] uppercase font-bold",
-                        act.status === 'confirmed' || act.status === 'approved' || act.status === 'active' ? "text-green-500" : 
-                        act.status === 'pending' ? "text-yellow-500" : "text-red-500"
-                      )}>
-                        {act.status}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              )}
+          {/* Deposit History Table */}
+          <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl overflow-hidden">
+            <div className="p-6 border-b border-[#C9A96E]/10">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <ArrowDownCircle size={20} className="text-green-500" />
+                Deposit History
+              </h3>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* User Investments */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <ShieldCheck size={20} className="text-[#C9A96E]" />
-            KYC Verification
-          </h3>
-          
-          {kycSubmission ? (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-slate-950 rounded-xl border border-[#C9A96E]/5">
-                  <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Full Name</p>
-                  <p className="text-sm font-bold text-white">{kycSubmission.fullName}</p>
-                </div>
-                <div className="p-4 bg-slate-950 rounded-xl border border-[#C9A96E]/5">
-                  <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">ID Type</p>
-                  <p className="text-sm font-bold text-white capitalize">{kycSubmission.idType?.replace('_', ' ')}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <p className="text-[10px] text-gray-500 uppercase font-bold flex items-center gap-1">
-                    <FileText size={10} /> ID Document
-                  </p>
-                  <div className="aspect-[4/3] bg-slate-950 rounded-xl overflow-hidden border border-[#C9A96E]/10">
-                    {kycSubmission.idImage ? (
-                      <img src={kycSubmission.idImage} alt="ID" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-700">No image</div>
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-[10px] text-gray-500 uppercase font-bold flex items-center gap-1">
-                    <Camera size={10} /> Selfie
-                  </p>
-                  <div className="aspect-[4/3] bg-slate-950 rounded-xl overflow-hidden border border-[#C9A96E]/10">
-                    {kycSubmission.selfieImage ? (
-                      <img src={kycSubmission.selfieImage} alt="Selfie" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-700">No image</div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {kycSubmission.status === 'pending' && (
-                <div className="flex gap-3 pt-4">
-                  <button 
-                    onClick={handleApproveKyc}
-                    className="flex-1 bg-green-500 text-[#0B0B0B] font-bold py-3 rounded-xl hover:bg-green-400 transition-all flex items-center justify-center gap-2"
-                  >
-                    <Check size={18} />
-                    Approve
-                  </button>
-                  <button 
-                    onClick={() => setShowRejectModal(true)}
-                    className="flex-1 bg-red-500 text-white font-bold py-3 rounded-xl hover:bg-red-400 transition-all flex items-center justify-center gap-2"
-                  >
-                    <X size={18} />
-                    Reject
-                  </button>
-                </div>
-              )}
-
-              {kycSubmission.status === 'rejected' && (
-                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
-                  <p className="text-xs font-bold text-red-500 uppercase mb-1">Rejection Reason</p>
-                  <p className="text-sm text-gray-300 italic">"{kycSubmission.rejectionReason || 'No reason provided.'}"</p>
-                </div>
-              )}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-950/50 border-b border-[#C9A96E]/10">
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Date</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Amount</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#C9A96E]/5">
+                  {transactions.filter(t => t.txType === 'deposit').length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="px-6 py-10 text-center text-sm text-gray-500">No deposits found</td>
+                    </tr>
+                  ) : (
+                    transactions.filter(t => t.txType === 'deposit').map(tx => (
+                      <tr key={tx.id} className="hover:bg-[#C9A96E]/5 transition-colors">
+                        <td className="px-6 py-4 text-sm text-gray-400">
+                          {tx.timestamp ? format(new Date(tx.timestamp), "MMM dd, yyyy HH:mm") : "---"}
+                        </td>
+                        <td className="px-6 py-4 text-sm font-bold text-white font-mono">
+                          {tx.amountBtc || tx.amount} BTC
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={cn(
+                            "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                            tx.status === 'confirmed' ? "bg-green-500/10 text-green-500" : 
+                            tx.status === 'pending' ? "bg-yellow-500/10 text-yellow-500" : "bg-red-500/10 text-red-500"
+                          )}>
+                            {tx.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-          ) : (
-            <div className="py-10 text-center text-gray-500 italic">
-              No KYC submission found for this user.
-            </div>
-          )}
-        </div>
-
-        <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-white mb-6">User Investments</h3>
-          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-            {investments.length === 0 ? (
-              <div className="py-10 text-center text-gray-500">No investments found.</div>
-            ) : (
-              investments.map(inv => (
-                <div key={inv.id} className="p-4 bg-slate-950 border border-[#C9A96E]/10 rounded-xl">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <p className="text-sm font-bold text-white">{inv.planName}</p>
-                      <p className="text-[10px] text-gray-500">{inv.createdAt ? format(new Date(inv.createdAt), "MMM dd, yyyy") : "---"}</p>
-                    </div>
-                    <span className={cn(
-                      "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                      inv.status === 'active' ? "bg-blue-500/10 text-blue-500" : "bg-green-500/10 text-green-500"
-                    )}>
-                      {inv.status}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-[10px] text-gray-500 uppercase font-bold">Invested</p>
-                      <p className="text-sm font-bold text-white">{inv.amountBtc} BTC</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-gray-500 uppercase font-bold">Expected</p>
-                      <p className="text-sm font-bold text-[#C9A96E]">{inv.expectedReturnBtc?.toFixed(4)} BTC</p>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
           </div>
         </div>
       </div>
