@@ -22,13 +22,8 @@ export async function fetchCryptoPrices(retries = 2) {
       await new Promise(resolve => setTimeout(resolve, 1000));
       return fetchCryptoPrices(retries - 1);
     }
-    console.warn("Using fallback crypto prices due to fetch error:", error instanceof Error ? error.message : error);
-    return {
-      btc: { usd: 68420.50 + Math.random() * 500, change: 1.25 },
-      eth: { usd: 3450.20 + Math.random() * 50, change: -0.42 },
-      sol: { usd: 145.75 + Math.random() * 5, change: 3.12 },
-      ada: { usd: 0.48 + Math.random() * 0.02, change: 0.15 }
-    };
+    console.error("Failed to fetch crypto prices:", error instanceof Error ? error.message : error);
+    throw error;
   }
 }
 
@@ -44,8 +39,8 @@ export async function fetchBtcPrice(retries = 2) {
       await new Promise(resolve => setTimeout(resolve, 1000));
       return fetchBtcPrice(retries - 1);
     }
-    console.warn("Using fallback BTC price due to fetch error:", error instanceof Error ? error.message : error);
-    return { usd: 68420.50 + Math.random() * 500 };
+    console.error("Failed to fetch BTC price:", error instanceof Error ? error.message : error);
+    throw error;
   }
 }
 

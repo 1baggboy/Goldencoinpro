@@ -67,6 +67,7 @@ export const UserDetail = () => {
   const [editTradingBalance, setEditTradingBalance] = useState<string>("");
   const [editWallet, setEditWallet] = useState<string>("");
   const [updating, setUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   // KYC Rejection Modal
@@ -87,6 +88,10 @@ export const UserDetail = () => {
         setEditWallet(data.btcWalletAddress || "");
       }
       setLoading(false);
+    }, (err) => {
+      console.error(err);
+      setError("Failed to stream user profile updates.");
+      setLoading(false);
     });
 
     // Fetch user transactions
@@ -97,6 +102,9 @@ export const UserDetail = () => {
         return { id: d.id, ...data, txType: data.type, type: 'transaction' };
       });
       setTransactions(txs.sort((a: any, b: any) => (b.timestamp || 0) - (a.timestamp || 0)));
+    }, (err) => {
+      console.error(err);
+      setError("Failed to fetch user transactions.");
     });
 
     // Fetch user investments
@@ -104,6 +112,9 @@ export const UserDetail = () => {
     const unsubInv = onSnapshot(qInv, (snap) => {
       const invs = snap.docs.map(d => ({ id: d.id, ...d.data(), type: 'investment' }));
       setInvestments(invs.sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0)));
+    }, (err) => {
+      console.error(err);
+      setError("Failed to fetch user investments.");
     });
 
     // Fetch user KYC submission
@@ -116,6 +127,9 @@ export const UserDetail = () => {
       } else {
         setKycSubmission(null);
       }
+    }, (err) => {
+      console.error(err);
+      setError("Failed to fetch user KYC data.");
     });
 
     // Fetch BTC price
@@ -268,6 +282,13 @@ export const UserDetail = () => {
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-500 text-sm font-medium">
+          <AlertCircle size={18} />
+          {error}
+        </div>
+      )}
 
       {message && (
         <div className={cn(

@@ -61,6 +61,9 @@ export const Withdraw = () => {
           }
         });
         setDailyWithdrawn(total);
+      }, (err) => {
+        console.error("Daily withdrawals fetch error:", err);
+        setError("Unable to calculate daily limits. Please refresh the page.");
       });
 
       return () => {

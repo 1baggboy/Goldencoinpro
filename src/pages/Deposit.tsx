@@ -65,6 +65,9 @@ export const Deposit = () => {
           }
         });
         setDailyDeposited(total);
+      }, (err) => {
+        console.error("Daily deposits fetch error:", err);
+        setError("Unable to calculate daily limits. Please refresh the page.");
       });
 
       return () => {
@@ -242,7 +245,11 @@ export const Deposit = () => {
                     ≈ { (parseFloat(amountUsd || "0") / btcPrice).toFixed(8) } BTC
                   </div>
                 </div>
-                <p className="text-[10px] text-gray-500 px-1">Daily used: ${(dailyDeposited * btcPrice).toLocaleString()} / $50,000</p>
+                <p className="text-[10px] text-gray-500 px-1">
+                  Daily used: ${(dailyDeposited * btcPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / $50,000
+                  <br/>
+                  Remaining: ${(50000 - (dailyDeposited * btcPrice)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
               </div>
 
               <div className="space-y-2">

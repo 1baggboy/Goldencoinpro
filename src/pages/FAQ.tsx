@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { APP_CONFIG } from "../config";
 import { cn } from "../lib/utils";
 import { Link } from "react-router-dom";
+import { Footer } from "../components/Footer";
 
 const faqs = [
   {
@@ -111,19 +112,36 @@ export const FAQ = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-      <div className="max-w-4xl mx-auto space-y-12 py-10 px-4">
-      <div className="text-center space-y-4">
+      <div className="max-w-6xl mx-auto space-y-12 py-10 px-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
+        <div className="text-left space-y-6">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-16 h-16 bg-[#C9A96E]/10 rounded-2xl flex items-center justify-center text-[#C9A96E]"
+          >
+            <HelpCircle size={32} />
+          </motion.div>
+          <div className="space-y-4">
+            <h1 className="text-4xl lg:text-6xl font-bold text-slate-950 dark:text-white tracking-tight uppercase font-display italic">Help Center</h1>
+            <p className="text-slate-600 dark:text-gray-400 max-w-xl text-lg leading-relaxed">
+              Find answers to common questions about GoldenCoin Limited, our platform, and how to manage your digital assets. We are here to guide you through your wealth growth journey.
+            </p>
+          </div>
+        </div>
         <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-16 h-16 bg-[#C9A96E]/10 rounded-2xl flex items-center justify-center text-[#C9A96E] mx-auto"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="relative h-[300px] lg:h-[400px] rounded-[3rem] overflow-hidden border border-[#C9A96E]/20 shadow-2xl"
         >
-          <HelpCircle size={32} />
+          <img 
+            src="https://images.unsplash.com/photo-1557597774-9d273605dfa9?auto=format&fit=crop&q=80&w=800" 
+            alt="Support Desk" 
+            className="w-full h-full object-cover grayscale dark:opacity-60"
+            referrerPolicy="no-referrer"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-50/20 dark:from-slate-950/20 to-transparent pointer-events-none"></div>
         </motion.div>
-        <h1 className="text-4xl font-bold text-slate-950 dark:text-white tracking-tight">Frequently Asked Questions</h1>
-        <p className="text-slate-600 dark:text-gray-400 max-w-xl mx-auto">
-          Find answers to common questions about GoldenCoin Limited, our platform, and how to manage your digital assets.
-        </p>
       </div>
 
       {/* Search Bar */}
@@ -212,6 +230,7 @@ export const FAQ = () => {
         </a>
       </div>
       </div>
+      <Footer />
     </div>
   );
 };

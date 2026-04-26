@@ -1,6 +1,7 @@
 import React from "react";
 import { Sidebar } from "./Sidebar";
 import { Navbar } from "./Navbar";
+import { Footer } from "./Footer";
 import { motion, AnimatePresence } from "motion/react";
 import { useTheme } from "../pages/ThemeContext";
 import { cn } from "../lib/utils";

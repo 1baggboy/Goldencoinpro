@@ -7,10 +7,20 @@ export const Security = () => (
     <section className="space-y-4">
       <h2 className="text-2xl font-bold text-slate-950 dark:text-white flex items-center gap-3">
         <div className="w-1.5 h-8 bg-[#C9A96E] rounded-full"></div>
-        Military-Grade Security
+        Institutional-Grade Asset Protection
       </h2>
       <p>
-        Your assets are protected by multi-signature wallets and institutional-grade encryption protocols. We employ the highest standards of security to ensure your funds and personal information remain safe.
+        Your digital assets are secured using enterprise-grade encryption and multi-signature (Multi-Sig) logic. 100% of client treasury funds are stored in air-gapped cold storage facilities, ensuring they are disconnected from the network and protected from unauthorized access.
+      </p>
+    </section>
+
+    <section className="space-y-4">
+      <h2 className="text-2xl font-bold text-slate-950 dark:text-white flex items-center gap-3">
+        <div className="w-1.5 h-8 bg-[#C9A96E] rounded-full"></div>
+        Security Audits & Compliance
+      </h2>
+      <p>
+        Goldencoin Limited adheres to ISO 27001 compliant security management procedures. We conduct regular external security audits and stress tests on our infrastructure to maintain the highest levels of platform integrity and resilience against emerging cyber threats.
       </p>
     </section>
     

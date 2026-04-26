@@ -3,6 +3,7 @@ import { Shield, Lock, Eye, FileText, Scale, AlertTriangle, ArrowLeft } from "lu
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { Logo } from "../components/Logo";
+import { Footer } from "../components/Footer";
 
 export const LegalLayout = ({ title, icon: Icon, children }: any) => (
   <div className="bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-950 dark:text-white font-sans selection:bg-[#C9A96E] selection:text-slate-950 transition-colors duration-300">
@@ -37,9 +38,7 @@ export const LegalLayout = ({ title, icon: Icon, children }: any) => (
       </motion.div>
     </div>
 
-    <footer className="py-20 px-6 border-t border-[#C9A96E]/10 text-center text-xs text-slate-500">
-      <p>© 2026 Goldencoin Limited. All rights reserved.</p>
-    </footer>
+    <Footer />
   </div>
 );
 
@@ -170,6 +169,40 @@ export const RiskDisclaimer = () => (
       </h2>
       <p>
         The regulatory environment for digital assets is evolving. Changes in laws or regulations may impact the operation of our platform or the value of your assets.
+      </p>
+    </section>
+  </LegalLayout>
+);
+
+export const AMLPolicy = () => (
+  <LegalLayout title="AML & KYC Policy" icon={Shield}>
+    <section className="space-y-4">
+      <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+        <div className="w-1.5 h-8 bg-[#C9A96E] rounded-full"></div>
+        1. Overview
+      </h2>
+      <p>
+        Goldencoin Limited is committed to the highest standards of Anti-Money Laundering (AML) compliance and requires management and employees to adhere to these standards to prevent use of our products and services for money laundering purposes.
+      </p>
+    </section>
+
+    <section className="space-y-4">
+      <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+        <div className="w-1.5 h-8 bg-[#C9A96E] rounded-full"></div>
+        2. Know Your Customer (KYC)
+      </h2>
+      <p>
+        We utilize robust KYC protocols to identify users. All users must provide valid government-issued identification and proof of address before conducting significant transactions. Enhanced Due Diligence (EDD) may be performed on higher-risk accounts.
+      </p>
+    </section>
+
+    <section className="space-y-4">
+      <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+        <div className="w-1.5 h-8 bg-[#C9A96E] rounded-full"></div>
+        3. Transaction Monitoring
+      </h2>
+      <p>
+        Our systems actively monitor transactions for suspicious activity. Any transactions exceeding certain thresholds or exhibiting unusual patterns may be delayed, suspended, or reported to the relevant authorities strictly in accordance with international AML regulations.
       </p>
     </section>
   </LegalLayout>

@@ -24,32 +24,32 @@ import { toast } from "sonner";
 
 const INVESTMENT_PLANS = [
   {
-    id: "basic",
+    id: "starter",
     name: "Starter Plan",
-    return: 1.25, // 25% gain
-    duration: 60, // 60 minutes
+    return: 1.25, // +25%
+    duration: 60, // 1 Hour
     minAmount: 100, // USD
-    description: "Perfect for beginners. Exact +25% profit in just 1 hour. Minimum investment $100.",
+    description: "Ideal for short-term growth. Target up to 25% return over a 1-hour cycle. Minimum deposit $100.",
     icon: Zap,
     color: "blue"
   },
   {
-    id: "pro",
+    id: "professional",
     name: "Professional Plan",
-    return: 1.5, // 50% gain
-    duration: 360, // 6 hours
-    minAmount: 200, // USD
-    description: "Higher returns for serious investors. 6-hour cycle. Exact +50% profit. Minimum investment $200.",
+    return: 1.50, // +50%
+    duration: 360, // 6 Hours
+    minAmount: 500, // USD
+    description: "Professional grade returns. Target up to 50% return over a 6-hour cycle. Minimum deposit $500.",
     icon: TrendingUp,
     color: "gold"
   },
   {
     id: "elite",
     name: "Elite Plan",
-    return: 2.0, // 100% gain
-    duration: 1440, // 24 hours
-    minAmount: 500, // USD
-    description: "Maximize your wealth. Double your investment in 24 hours. Exact +100% profit. Minimum investment $500.",
+    return: 2.0, // +100%
+    duration: 1440, // 24 Hours
+    minAmount: 1000, // USD
+    description: "Maximum yield potential. Target up to 100% return over a 24-hour cycle. Minimum deposit $1000.",
     icon: ShieldCheck,
     color: "green"
   }
@@ -73,6 +73,9 @@ export const Invest = () => {
     const unsub = onSnapshot(q, (snap) => {
       const invs = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
       setActiveInvestments(invs.sort((a, b) => b.startTime - a.startTime));
+    }, (err) => {
+      console.error("Investments fetch error:", err);
+      setMessage({ type: 'error', text: "Unable to load active investments. Please try again later." });
     });
 
     // Fetch BTC price
@@ -176,7 +179,7 @@ export const Invest = () => {
         tradingBalanceBtc: increment(inv.expectedReturnBtc)
       });
 
-      await addNotification(user.uid, "Investment Claimed", `You have successfully claimed your profit of ${inv.expectedReturnBtc.toFixed(6)} BTC from the ${inv.planName}.`, "success");
+      await addNotification(user.uid, "Investment Claimed", `You have successfully claimed your return of ${inv.expectedReturnBtc.toFixed(6)} BTC from the ${inv.planName}.`, "success");
       setMessage({ type: 'success', text: `Claimed ${inv.expectedReturnBtc.toFixed(4)} BTC successfully!` });
     } catch (error) {
       console.error("Claim error:", error);
@@ -224,7 +227,7 @@ export const Invest = () => {
                 <p className="text-2xl font-black text-[#C9A96E] mb-2">+{((plan.return - 1) * 100)}%</p>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <Clock size={12} />
-                  {plan.duration >= 60 ? `${plan.duration / 60} Hours` : `${plan.duration} Minutes`}
+                  {plan.duration >= 1440 ? `${plan.duration / 1440} Days` : plan.duration >= 60 ? `${plan.duration / 60} Hours` : `${plan.duration} Minutes`}
                 </div>
                 {selectedPlan.id === plan.id && (
                   <div className="absolute top-2 right-2">
@@ -273,7 +276,7 @@ export const Invest = () => {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Duration</span>
-                  <span className="text-white font-bold">{selectedPlan.duration >= 60 ? `${selectedPlan.duration / 60} Hours` : `${selectedPlan.duration} Minutes`}</span>
+                  <span className="text-white font-bold">{selectedPlan.duration >= 1440 ? `${selectedPlan.duration / 1440} Days` : selectedPlan.duration >= 60 ? `${selectedPlan.duration / 60} Hours` : `${selectedPlan.duration} Minutes`}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Expected Return</span>
@@ -361,7 +364,7 @@ export const Invest = () => {
                           onClick={() => claimInvestment(inv)}
                           className="w-full py-2 bg-green-500 text-white text-xs font-bold rounded-lg hover:bg-green-600 transition-colors"
                         >
-                          Claim Profit
+                          Claim Return
                         </button>
                       ) : (
                         <p className="text-[10px] text-center text-gray-500 italic">

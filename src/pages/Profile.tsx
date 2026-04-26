@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { User, Mail, ShieldCheck, Save, Camera, AlertCircle, Phone, Users, Lock, ShieldAlert, Trash2, Moon, Sun } from "lucide-react";
+import { User, Mail, ShieldCheck, Save, Camera, AlertCircle, Phone, Users, Lock, ShieldAlert, Trash2, Moon, Sun, ArrowDownCircle, ArrowUpCircle, TrendingUp, ShieldQuestion, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { useNotifications } from "../NotificationContext";
 import { useTheme } from "./ThemeContext";
-import { doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { doc, updateDoc, deleteDoc, collection, query, where, onSnapshot } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { deleteUser } from "firebase/auth";
 import { motion } from "motion/react";
@@ -25,6 +25,13 @@ export const Profile = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  // Activities feed state
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [investments, setInvestments] = useState<any[]>([]);
+  const [kycSubmission, setKycSubmission] = useState<any>(null);
+  const [activities, setActivities] = useState<any[]>([]);
+  const [loadingActivities, setLoadingActivities] = useState(true);
+
   // Update local state when profile loads
   useEffect(() => {
     if (profile) {
@@ -34,6 +41,53 @@ export const Profile = () => {
       setPhotoURL(profile.photoURL || "");
     }
   }, [profile]);
+
+  // Fetch activities
+  useEffect(() => {
+    if (!user) return;
+
+    const qTx = query(collection(db, "transactions"), where("userId", "==", user.uid));
+    const unsubTx = onSnapshot(qTx, (snap) => {
+      const txs = snap.docs.map(d => {
+        const data = d.data();
+        return { id: d.id, ...data, txType: data.type, type: 'transaction' };
+      });
+      setTransactions(txs);
+    });
+
+    const qInv = query(collection(db, "investments"), where("userId", "==", user.uid));
+    const unsubInv = onSnapshot(qInv, (snap) => {
+      const invs = snap.docs.map(d => ({ id: d.id, ...d.data(), type: 'investment' }));
+      setInvestments(invs);
+    });
+
+    const qKyc = query(collection(db, "kyc_submissions"), where("userId", "==", user.uid));
+    const unsubKyc = onSnapshot(qKyc, (snap) => {
+      if (!snap.empty) {
+        const docs = snap.docs.map(d => ({ id: d.id, ...d.data(), type: 'kyc' }));
+        setKycSubmission(docs.sort((a: any, b: any) => (b.submittedAt || 0) - (a.submittedAt || 0))[0]);
+      } else {
+        setKycSubmission(null);
+      }
+    });
+
+    return () => {
+      unsubTx();
+      unsubInv();
+      unsubKyc();
+    };
+  }, [user]);
+
+  useEffect(() => {
+    const allActivities = [
+      ...transactions.map(t => ({ ...t, timestamp: t.timestamp })),
+      ...investments.map(i => ({ ...i, timestamp: i.createdAt || i.startTime })),
+      ...(kycSubmission ? [{ ...kycSubmission, timestamp: kycSubmission.submittedAt }] : [])
+    ].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+    .slice(0, 50); // Keep last 50
+    setActivities(allActivities);
+    setLoadingActivities(false);
+  }, [transactions, investments, kycSubmission]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -334,6 +388,74 @@ export const Profile = () => {
             </form>
           </div>
         </div>
+      </div>
+
+      {/* Recent Activity Feed */}
+      <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6 lg:p-8">
+        <h3 className="text-xl font-bold text-white mb-8 flex items-center gap-2">
+          <Clock size={20} className="text-[#C9A96E]" />
+          Recent Activity
+        </h3>
+
+        {loadingActivities ? (
+          <div className="text-center py-12 text-gray-500">Loading activities...</div>
+        ) : activities.length === 0 ? (
+          <div className="text-center py-12 text-gray-500">No recent activity.</div>
+        ) : (
+          <div className="space-y-4">
+            {activities.map((act, index) => {
+              let icon = <Clock size={20} />;
+              let title = "Activity";
+              let desc = "";
+              let statusColor = "text-gray-500";
+              let bdColor = "border-gray-500/20";
+              const timeStr = act.timestamp ? new Date(act.timestamp).toLocaleString() : "Unknown date";
+              
+              if (act.type === 'transaction') {
+                icon = act.txType === 'deposit' ? <ArrowDownCircle size={20} className="text-green-500" /> : <ArrowUpCircle size={20} className="text-red-500" />;
+                title = act.txType === 'deposit' ? "Deposit" : "Withdrawal";
+                desc = `${act.amountBtc ? act.amountBtc.toFixed(6) : '0'} BTC`;
+                statusColor = act.status === 'confirmed' ? "text-green-500" : act.status === 'pending' ? "text-yellow-500" : "text-red-500";
+                bdColor = act.txType === 'deposit' ? "border-green-500/20" : "border-red-500/20";
+              } else if (act.type === 'investment') {
+                icon = <TrendingUp size={20} className="text-[#C9A96E]" />;
+                title = `Investment: ${act.planName}`;
+                desc = `${act.amountBtc ? act.amountBtc.toFixed(6) : "0"} BTC`;
+                statusColor = act.status === 'active' ? "text-blue-500" : "text-green-500";
+                bdColor = "border-[#C9A96E]/20";
+              } else if (act.type === 'kyc') {
+                icon = <ShieldQuestion size={20} className="text-blue-500" />;
+                title = "KYC Registration";
+                desc = `${act.documentType || 'ID'} Submission`;
+                if (act.status === 'rejected' && act.rejectionReason) {
+                  desc += `: ${act.rejectionReason}`;
+                }
+                statusColor = act.status === 'verified' ? "text-green-500" : act.status === 'pending' ? "text-yellow-500" : "text-red-500";
+                bdColor = "border-blue-500/20";
+              }
+
+              return (
+                <div key={act.id || index} className={`p-4 bg-slate-950 border ${bdColor} rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4`}>
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0">
+                      {icon}
+                    </div>
+                    <div>
+                      <p className="font-bold text-white text-sm">{title}</p>
+                      <p className="text-xs text-gray-500">{desc}</p>
+                    </div>
+                  </div>
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 w-full sm:w-auto">
+                    <span className={cn("text-xs font-bold uppercase tracking-wider", statusColor)}>
+                      {act.status}
+                    </span>
+                    <span className="text-[10px] text-gray-600">{timeStr}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Delete Account Section */}

@@ -47,6 +47,7 @@ export const Dashboard = () => {
   const navigate = useNavigate();
   const { profile, user, isRestricted } = useAuth();
   const [prices, setPrices] = useState<any>(null);
+  const [priceError, setPriceError] = useState<string | null>(null);
   const [activeInvestmentsCount, setActiveInvestmentsCount] = useState(0);
   const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
   const [copied, setCopied] = useState(false);
@@ -54,9 +55,11 @@ export const Dashboard = () => {
   useEffect(() => {
     const fetchPrices = async () => {
       try {
-        const data = await fetchCryptoPrices(); setPrices(data);
+        const data = await fetchCryptoPrices(); 
+        setPrices(data);
+        setPriceError(null);
       } catch (e) {
-        console.error("Price fetch error:", e);
+        setPriceError("Unable to load live market data. Some balances may be estimations.");
       }
     };
     fetchPrices();
@@ -147,6 +150,13 @@ export const Dashboard = () => {
           </Link>
         </div>
       </div>
+
+      {priceError && (
+        <div className="bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 p-4 rounded-xl flex items-center gap-3 text-sm">
+          <AlertCircle size={18} />
+          {priceError}
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6 gap-4 lg:gap-6 xl:gap-8">

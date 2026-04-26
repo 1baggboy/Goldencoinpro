@@ -7,10 +7,10 @@ export const Features = () => (
     <section className="space-y-4">
       <h2 className="text-2xl font-bold text-slate-950 dark:text-white flex items-center gap-3">
         <div className="w-1.5 h-8 bg-[#C9A96E] rounded-full"></div>
-        Instant Deposits & Withdrawals
+        Streamlined Asset Settlement
       </h2>
       <p>
-        Experience lightning-fast transactions. Our automated monitoring system ensures your BTC deposits are credited after minimal network confirmations, and withdrawals are processed securely and swiftly.
+        Experience efficient transaction handling. Our systemized monitoring ensures your BTC deposits are recognized after industry-standard network confirmations, with withdrawal requests processed through secondary security reviews.
       </p>
     </section>
     

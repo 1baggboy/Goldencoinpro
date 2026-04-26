@@ -27,6 +27,7 @@ export const Transactions = () => {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedTx, setSelectedTx] = useState<any | null>(null);
 
   useEffect(() => {
@@ -41,9 +42,11 @@ export const Transactions = () => {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const txs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setTransactions(txs);
+      setError(null);
       setLoading(false);
-    }, (error) => {
-      console.error("Transactions fetch error:", error);
+    }, (err) => {
+      console.error("Transactions fetch error:", err);
+      setError("Unable to load transaction history. Please try again later.");
       setLoading(false);
     });
 
@@ -95,6 +98,24 @@ export const Transactions = () => {
               {loading ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-20 text-center text-gray-500">Loading transactions...</td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-20">
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center text-red-500 mb-4">
+                        <AlertCircle size={32} />
+                      </div>
+                      <h4 className="text-lg font-bold text-white mb-1">Execution Failed</h4>
+                      <p className="text-sm text-gray-500 max-w-xs mx-auto">{error}</p>
+                      <button 
+                        onClick={() => window.location.reload()}
+                        className="mt-6 px-6 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-all text-sm font-semibold"
+                      >
+                        Retry Connection
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ) : transactions.length === 0 ? (
                 <tr>

@@ -18,7 +18,7 @@ export const Navbar = ({ onMenuClick }: { onMenuClick?: () => void }) => {
 
   return (
     <header className="h-20 lg:h-24 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-[#C9A96E]/10 px-4 lg:px-12 flex items-center justify-between sticky top-0 z-50">
-      <div className="flex items-center gap-4 lg:hidden">
+      <div className="flex items-center gap-4">
         <button 
           type="button"
           onClick={(e) => {
@@ -26,13 +26,13 @@ export const Navbar = ({ onMenuClick }: { onMenuClick?: () => void }) => {
             e.stopPropagation();
             onMenuClick?.();
           }} 
-          className="p-2 lg:p-3 text-[#C9A96E] hover:bg-[#C9A96E]/10 rounded-xl transition-colors relative z-[60]"
+          className="p-2 lg:p-3 text-[#C9A96E] hover:bg-[#C9A96E]/10 rounded-xl transition-colors relative z-[60] md:hidden"
         >
           <Menu size={24} />
         </button>
-        <div className="flex items-center gap-2 relative z-50">
+        <Link to="/" className="flex items-center gap-2 relative z-50">
           <Logo size="sm" className="lg:h-10" />
-        </div>
+        </Link>
       </div>
 
       <div className="hidden lg:flex items-center relative gap-4">

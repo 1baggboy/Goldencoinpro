@@ -29,11 +29,19 @@ import { db, auth } from "../firebase";
 import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 import { cn, fetchBtcPrice as fetchBtcPriceUtil } from "../lib/utils";
 import { format } from "date-fns";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export const AdminDashboard = () => {
+  const { isAdmin } = useAuth();
+  const navigate = useNavigate();
   const { addNotification } = useNotifications();
   const [users, setUsers] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!isAdmin) {
+      navigate('/restricted');
+    }
+  }, [isAdmin, navigate]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("joined");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -60,7 +68,7 @@ export const AdminDashboard = () => {
   });
 
   useEffect(() => {
-    if (!auth.currentUser) return;
+    if (!auth.currentUser || !isAdmin) return;
 
     // Fetch users
     const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
@@ -123,7 +131,7 @@ export const AdminDashboard = () => {
       unsubChats();
       clearInterval(priceInterval);
     };
-  }, []);
+  }, [isAdmin]);
 
   const approveDeposit = async (tx: any) => {
     try {
@@ -919,10 +927,21 @@ export const AdminDashboard = () => {
               <p className="text-gray-400 text-sm mb-6">Please provide a reason for rejecting this KYC submission. The user will be notified.</p>
               
               <div className="space-y-4">
+                <select 
+                  className="w-full bg-slate-950 border border-[#C9A96E]/10 rounded-xl p-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all"
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  defaultValue=""
+                >
+                  <option value="" disabled>Select a reason (optional)</option>
+                  <option value="Blurry or illegible ID image">Blurry or illegible ID image</option>
+                  <option value="ID document has expired">ID document has expired</option>
+                  <option value="Document does not match user details">Document does not match user details</option>
+                  <option value="Insufficient information provided">Insufficient information provided</option>
+                </select>
                 <textarea 
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder="e.g. ID image is blurry, document expired..."
+                  placeholder="Or type custom reason..."
                   className="w-full h-32 bg-slate-950 border border-[#C9A96E]/10 rounded-xl p-4 text-white outline-none focus:border-red-500/40 transition-all resize-none"
                 />
                 

@@ -21,8 +21,8 @@ import { Restricted } from "./pages/Restricted";
 import { FAQ } from "./pages/FAQ";
 import { TwoFactorSetup } from "./pages/TwoFactorSetup";
 import { ForgotPassword } from "./pages/ForgotPassword";
-import { PrivacyPolicy, TermsOfService, RiskDisclaimer } from "./pages/Legal";
-import { About } from "./pages/About";
+import { PrivacyPolicy, TermsOfService, RiskDisclaimer, AMLPolicy } from "./pages/Legal";
+import { About } from "./components/About";
 import { Features } from "./pages/Features";
 import { Security } from "./pages/Security";
 import { SupportWidget } from "./components/SupportWidget";
@@ -72,6 +72,7 @@ export default function App() {
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/risk-disclaimer" element={<RiskDisclaimer />} />
+              <Route path="/aml-policy" element={<AMLPolicy />} />
               <Route path="/2fa/setup" element={
                 <ProtectedRoute>
                   <TwoFactorSetup />
