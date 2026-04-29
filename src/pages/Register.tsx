@@ -5,7 +5,8 @@ import { doc, setDoc, getDocs, getDoc, query, collection, where, updateDoc, incr
 import { auth, db } from "../firebase";
 import { APP_CONFIG } from "../config";
 import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
-import { Mail, Lock, User, ArrowRight, ShieldCheck, Check, X, AlertCircle } from "lucide-react";
+import { PasswordStrengthIndicator } from "../components/PasswordStrengthIndicator";
+import { Mail, Lock, User, ArrowRight, ShieldCheck, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useTheme } from "./ThemeContext";
 import { cn, generateReferralCode } from "../lib/utils";
@@ -269,12 +270,7 @@ export const Register = () => {
               </div>
               
               {password && (
-                <div className="grid grid-cols-2 gap-2 mt-2 ml-1">
-                  <PasswordCriterion met={passwordCriteria.length} text="8+ characters" />
-                  <PasswordCriterion met={passwordCriteria.uppercase} text="Uppercase" />
-                  <PasswordCriterion met={passwordCriteria.number} text="Number" />
-                  <PasswordCriterion met={passwordCriteria.special} text="Special char" />
-                </div>
+                <PasswordStrengthIndicator password={password} />
               )}
             </div>
 
@@ -326,12 +322,3 @@ export const Register = () => {
   );
 };
 
-const PasswordCriterion = ({ met, text }: { met: boolean; text: string }) => (
-  <div className={cn(
-    "flex items-center gap-1.5 text-[10px] font-medium transition-colors",
-    met ? "text-green-500" : "text-slate-600 dark:text-gray-600"
-  )}>
-    {met ? <Check size={10} /> : <X size={10} />}
-    {text}
-  </div>
-);
