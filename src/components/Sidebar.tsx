@@ -132,7 +132,10 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () =>
           <span className="font-medium">{theme === 'light' ? "Dark Mode" : "Light Mode"}</span>
         </button>
         <button
-          onClick={() => auth.signOut()}
+          onClick={async () => {
+            await auth.signOut();
+            window.location.replace('/login');
+          }}
           className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-red-400 hover:bg-red-400/10 transition-all duration-200"
         >
           <LogOut size={20} />

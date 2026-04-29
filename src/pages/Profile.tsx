@@ -3,7 +3,7 @@ import { User, Mail, ShieldCheck, Save, Camera, AlertCircle, Phone, Users, Lock,
 import { useAuth } from "../AuthContext";
 import { useNotifications } from "../NotificationContext";
 import { useTheme } from "./ThemeContext";
-import { doc, updateDoc, deleteDoc, collection, query, where, onSnapshot } from "firebase/firestore";
+import { doc, updateDoc, deleteDoc, collection, query, where, onSnapshot, setDoc } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { deleteUser } from "firebase/auth";
 import { motion } from "motion/react";
@@ -156,6 +156,16 @@ export const Profile = () => {
 
     setDeleting(true);
     try {
+      // Add to deletedAccounts to prevent registration/login for 60 days
+      if (user.email) {
+        const emailDocId = user.email.toLowerCase().replace(/[@.]/g, '_');
+        const deletedRef = doc(db, "deletedAccounts", emailDocId);
+        await setDoc(deletedRef, {
+          email: user.email,
+          deletedAt: new Date().toISOString()
+        });
+      }
+
       // Delete user document from Firestore
       await deleteDoc(doc(db, "users", user.uid));
       
@@ -163,7 +173,7 @@ export const Profile = () => {
       await deleteUser(user);
       
       // Redirect to home
-      navigate("/");
+      window.location.replace("/");
     } catch (error: any) {
       console.error("Delete account error:", error);
       if (error.code === 'auth/requires-recent-login') {

@@ -20,10 +20,9 @@ import { formatDistanceToNow } from "date-fns";
 
 export const AdminSupport = () => {
   const { user, isAdmin } = useAuth();
-  const [searchParams] = useSearchParams();
-  const initialUserId = searchParams.get("user");
+  const [searchParams, setSearchParams] = useSearchParams();
   const [chats, setChats] = useState<any[]>([]);
-  const [selectedChatId, setSelectedChatId] = useState<string | null>(initialUserId);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [reply, setReply] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,6 +30,16 @@ export const AdminSupport = () => {
   const [filter, setFilter] = useState<"active" | "closed">("active");
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const userParam = searchParams.get("user");
+    if (userParam) {
+      setSelectedChatId(userParam);
+      setIsChatModalOpen(true);
+      // Clean up the URL so it doesn't reopen on refresh necessarily, or keep it depending on preference.
+      // Keeping it is fine as it's state driven via URL.
+    }
+  }, [searchParams]);
 
   // Fetch all unique chat users
   useEffect(() => {
@@ -126,6 +135,11 @@ export const AdminSupport = () => {
   const handleCloseChatModal = () => {
     setIsChatModalOpen(false);
     setSelectedChatId(null);
+    if (searchParams.has("user")) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("user");
+      setSearchParams(newParams);
+    }
   };
 
   // Mark messages as read when admin views chat
@@ -203,6 +217,33 @@ export const AdminSupport = () => {
     const matchesFilter = filter === "active" ? !c.isClosed : c.isClosed;
     return matchesSearch && matchesFilter;
   });
+
+  const [selectedUserDetails, setSelectedUserDetails] = useState<{name: string, isGuest: boolean} | null>(null);
+
+  useEffect(() => {
+    if (selectedChatId) {
+      const existing = chats.find(c => c.userId === selectedChatId);
+      if (existing) {
+        setSelectedUserDetails({ name: existing.userName, isGuest: false });
+      } else {
+        // Fetch from users collection
+        if (selectedChatId.length > 20) { // rough check for firebase auth uid
+          getDocs(query(collection(db, "users"), where("id", "==", selectedChatId))).then(snap => {
+            if (!snap.empty) {
+              const u = snap.docs[0].data();
+              setSelectedUserDetails({ name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || 'User', isGuest: false });
+            } else {
+              setSelectedUserDetails({ name: "Guest User", isGuest: true });
+            }
+          }).catch(() => setSelectedUserDetails({ name: "Guest User", isGuest: true }));
+        } else {
+          setSelectedUserDetails({ name: "Guest User", isGuest: true });
+        }
+      }
+    } else {
+      setSelectedUserDetails(null);
+    }
+  }, [selectedChatId, chats]);
 
   const selectedChat = chats.find(c => c.userId === selectedChatId);
 
@@ -321,7 +362,7 @@ export const AdminSupport = () => {
                     <User size={20} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-white text-lg">{selectedChat?.userName || "Guest User"}</h3>
+                    <h3 className="font-bold text-white text-lg">{selectedUserDetails?.name || "Guest User"}</h3>
                     <p className="text-xs text-gray-500 font-mono">{selectedChatId}</p>
                   </div>
                 </div>

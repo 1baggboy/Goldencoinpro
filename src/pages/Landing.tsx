@@ -16,18 +16,24 @@ import { useTheme } from "./ThemeContext";
 import { cn } from "../lib/utils";
 import { Logo } from "../components/Logo";
 import { Footer } from "../components/Footer";
-import { collection, onSnapshot, query } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
-import createAccountImg from "../assets/NoteGPT_Image_20260425233608-removebg-preview.png";
-import secureDepositImg from "../assets/modern-design-illustration-of-secure-vault-vector-removebg-preview.png";
-import startGrowthImg from "../assets/Screenshot_20260425_233726_Gallery-removebg-preview.png";
+
+import createAccountImg from "../assets/step1.png";
+import secureDepositImg from "../assets/step2.png";
+import startGrowthImg from "../assets/step3.png";
 
 export const Landing = () => {
   const { theme } = useTheme();
-  const [userCount, setUserCount] = React.useState<number>(0);
+  const [userCount, setUserCount] = React.useState<number>(1420);
 
   React.useEffect(() => {
-    // setUserCount(1420); // Removed insecure listener
+    const unsub = onSnapshot(doc(db, "system", "stats"), (docSnap) => {
+      if (docSnap.exists() && docSnap.data().totalUsers) {
+        setUserCount(docSnap.data().totalUsers);
+      }
+    });
+    return () => unsub();
   }, []);
 
   return (

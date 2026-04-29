@@ -31,18 +31,29 @@ export const SupportWidget = () => {
         if (user) {
           setChatUserId(user.uid);
         } else {
-          try {
-            const cred = await signInAnonymously(auth);
-            setChatUserId(cred.user.uid);
-            setIsAnonDisabled(false);
-          } catch (error: any) {
-            if (error.code === 'auth/admin-restricted-operation') {
-              setIsAnonDisabled(true);
-              console.error("Anonymous authentication is disabled in Firebase Console. Please enable it to allow guest support chat.");
-            } else {
-              console.error("Anonymous auth error:", error);
+          const attemptSignIn = async (retries = 3) => {
+            for (let i = 0; i < retries; i++) {
+              try {
+                const cred = await signInAnonymously(auth);
+                setChatUserId(cred.user.uid);
+                setIsAnonDisabled(false);
+                return;
+              } catch (error: any) {
+                if (error.code === 'auth/admin-restricted-operation') {
+                  setIsAnonDisabled(true);
+                  console.warn("Anonymous authentication is disabled in Firebase Console. Please enable it to allow guest support chat.");
+                  return;
+                }
+                if (i < retries - 1) {
+                  await new Promise(r => setTimeout(r, 2000));
+                  continue;
+                }
+                setIsAnonDisabled(true);
+                console.warn("Guest chat currently unavailable:", error.message);
+              }
             }
-          }
+          };
+          attemptSignIn();
         }
       });
       return () => unsub();
@@ -50,11 +61,11 @@ export const SupportWidget = () => {
   }, [authUser]);
 
   useEffect(() => {
-    if (!chatUserId || !isOpen || !auth.currentUser) return;
+    if (!isOpen || !auth.currentUser) return;
 
     const q = query(
       collection(db, "support_chats"),
-      where("userId", "==", chatUserId),
+      where("userId", "==", auth.currentUser.uid),
       orderBy("createdAt", "asc")
     );
 
@@ -65,15 +76,15 @@ export const SupportWidget = () => {
     });
 
     return () => unsub();
-  }, [chatUserId, isOpen]);
+  }, [auth.currentUser, isOpen, chatUserId]);
 
   // Listen for unread messages from admin
   useEffect(() => {
-    if (!chatUserId || !auth.currentUser) return;
+    if (!auth.currentUser) return;
 
     const q = query(
       collection(db, "support_chats"),
-      where("userId", "==", chatUserId),
+      where("userId", "==", auth.currentUser.uid),
       where("sender", "==", "admin"),
       where("read", "==", false)
     );
@@ -82,18 +93,17 @@ export const SupportWidget = () => {
       setUnreadCount(snap.docs.length);
     }, (error) => {
       // Silent fail for unread count if permissions are tricky
-      console.error("Unread count error:", error);
     });
 
     return () => unsub();
-  }, [chatUserId]);
+  }, [auth.currentUser, chatUserId]);
 
   // Mark as read when opened
   useEffect(() => {
-    if (isOpen && unreadCount > 0 && chatUserId) {
+    if (isOpen && unreadCount > 0 && auth.currentUser) {
       const q = query(
         collection(db, "support_chats"),
-        where("userId", "==", chatUserId),
+        where("userId", "==", auth.currentUser.uid),
         where("sender", "==", "admin"),
         where("read", "==", false)
       );
@@ -104,7 +114,7 @@ export const SupportWidget = () => {
         });
       }).catch(err => console.error("Error marking as read:", err));
     }
-  }, [isOpen, unreadCount, chatUserId]);
+  }, [isOpen, unreadCount, auth.currentUser, chatUserId]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -114,13 +124,13 @@ export const SupportWidget = () => {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || !chatUserId) return;
+    if (!message.trim() || !auth.currentUser) return;
     if (!authUser && (!guestName.trim() || !guestEmail.trim())) return;
 
     setLoading(true);
     try {
       await addDoc(collection(db, "support_chats"), {
-        userId: chatUserId,
+        userId: auth.currentUser.uid,
         userName: authUser ? profile?.displayName : guestName,
         userEmail: authUser ? authUser.email : guestEmail,
         text: message,

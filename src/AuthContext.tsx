@@ -51,23 +51,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let unsubProfile: (() => void) | undefined;
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      // Clean up previous profile listener if any
+      if (unsubProfile) {
+        unsubProfile();
+        unsubProfile = undefined;
+      }
+
       setUser(firebaseUser);
       if (firebaseUser) {
-        console.log("User authenticated:", firebaseUser.uid, firebaseUser.email);
+        console.log("User authenticated:", firebaseUser.uid, firebaseUser.email, "isAnonymous:", firebaseUser.isAnonymous);
         
         // Refresh token in background without blocking
-        firebaseUser.getIdToken(true).then(() => {
-          console.log("Token refreshed successfully");
-        }).catch(e => {
-          if (e.code === 'auth/network-request-failed') {
-            console.warn("Token refresh failed due to network. This is expected if connectivity is spotty.");
-          } else {
-            console.error("Failed to refresh token:", e);
-          }
-        });
+        if (!firebaseUser.isAnonymous) {
+          firebaseUser.getIdToken(true).then(() => {
+            console.log("Token refreshed successfully");
+          }).catch(e => {
+            if (e.code === 'auth/network-request-failed') {
+              console.warn("Token refresh failed due to network. This is expected if connectivity is spotty.");
+            } else {
+              console.error("Failed to refresh token:", e);
+            }
+          });
+        }
         
-        // Listen to profile changes
+        // Listen to profile changes for non-anonymous users
+        if (firebaseUser.isAnonymous) {
+          console.log("User is anonymous, skipping profile fetch");
+          setProfile(null);
+          setLoading(false);
+          return;
+        }
+
         const profileRef = doc(db, "users", firebaseUser.uid);
         console.log("Attaching onSnapshot for:", firebaseUser.uid);
         
@@ -75,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const maxRetries = 3;
         
         const startSnapshot = (isRetry = false) => {
-          const unsubProfile = onSnapshot(profileRef, (docSnap) => {
+          const unsub = onSnapshot(profileRef, (docSnap) => {
             if (docSnap.exists()) {
               console.log("Profile snapshot received:", docSnap.data());
               const data = docSnap.data() as UserProfile;
@@ -102,27 +119,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               retryCount++;
               console.warn(`Profile snapshot permission denied for ${firebaseUser.uid}, retrying in 2s... (Attempt ${retryCount}/${maxRetries})`);
               setTimeout(() => {
-                const newUnsub = startSnapshot(true);
-                // Note: we can't easily swap the unsubscribe handle here without more complex logic, 
-                // but since this is inside an auth change effect that returns a cleanup, it's manageable.
+                if (unsubProfile) {
+                  unsubProfile();
+                }
+                unsubProfile = startSnapshot(true);
               }, 2000);
             } else {
               console.error("Profile snapshot error for", firebaseUser.uid, ":", error.message, error.code);
               setLoading(false);
             }
           });
-          return unsubProfile;
+          return unsub;
         };
 
-        const unsub = startSnapshot();
-        return () => unsub();
+        unsubProfile = startSnapshot();
       } else {
         setProfile(null);
         setLoading(false);
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if (unsubProfile) unsubProfile();
+    };
   }, []);
 
   const isAdmin = profile?.role === "admin" || (user?.email ? APP_CONFIG.adminEmails.includes(user.email) : false);

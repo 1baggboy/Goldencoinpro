@@ -31,6 +31,26 @@ export const Login = () => {
     setLoading(true);
     setError("");
     try {
+      // Check for 60 days deletion cooldown
+      try {
+        const emailDocId = email.toLowerCase().replace(/[@.]/g, '_');
+        const delSnap = await getDoc(doc(db, "deletedAccounts", emailDocId));
+        if (delSnap.exists()) {
+          const data = delSnap.data();
+          const lastDeletedAt = new Date(data.deletedAt).getTime();
+          const now = Date.now();
+          const diffDays = (now - lastDeletedAt) / (1000 * 60 * 60 * 24);
+          
+          if (diffDays < 60) {
+            setError(`This account is scheduled for deletion or was recently deleted. You cannot access it for 60 days.`);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (err: any) {
+        console.warn("Could not check deleted accounts:", err);
+      }
+
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       let userData;
       try {

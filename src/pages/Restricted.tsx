@@ -10,8 +10,9 @@ import { Footer } from "../components/Footer";
 export const Restricted = () => {
   const { profile } = useAuth();
 
-  const handleLogout = () => {
-    signOut(auth);
+  const handleLogout = async () => {
+    await signOut(auth);
+    window.location.replace("/login");
   };
 
   return (

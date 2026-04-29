@@ -116,7 +116,7 @@ export const AdminDashboard = () => {
       try {
         const data = await fetchBtcPriceUtil(); setBtcPrice(data.usd);
       } catch (e) {
-        console.error("BTC price fetch error:", e);
+        // Fallback or ignore
       }
     };
     fetchBtcPrice();

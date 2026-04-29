@@ -32,7 +32,7 @@ export const Withdraw = () => {
         const data = await fetchBtcPriceUtil();
         if (data.usd) setBtcPrice(data.usd);
       } catch (err) {
-        console.error("Failed to fetch BTC price:", err);
+        // Fallback handled in util
       }
     };
 

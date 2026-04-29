@@ -51,6 +51,22 @@ export const Dashboard = () => {
   const [activeInvestmentsCount, setActiveInvestmentsCount] = useState(0);
   const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
   const [copied, setCopied] = useState(false);
+  const [chartData, setChartData] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (prices?.btc?.usd) {
+      const btcPrice = prices.btc.usd;
+      const history = Array.from({ length: 7 }, (_, i) => {
+        const day = new Date();
+        day.setDate(day.getDate() - (6 - i));
+        return {
+          name: day.toLocaleDateString('en-US', { weekday: 'short' }),
+          value: btcPrice * (1 + (Math.random() - 0.5) * 0.1) // Simulate 10% variance
+        };
+      });
+      setChartData(history);
+    }
+  }, [prices]);
 
   useEffect(() => {
     const fetchPrices = async () => {
@@ -238,7 +254,7 @@ export const Dashboard = () => {
           </div>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data}>
+              <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#C9A96E" stopOpacity={0.3}/>

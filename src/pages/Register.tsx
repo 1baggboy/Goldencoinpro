@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, setDoc, getDocs, query, collection, where, updateDoc, increment, addDoc } from "firebase/firestore";
+import { doc, setDoc, getDocs, getDoc, query, collection, where, updateDoc, increment, addDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { APP_CONFIG } from "../config";
 import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
@@ -25,7 +25,11 @@ export const Register = () => {
   const referralCode = searchParams.get("ref");
   const { theme } = useTheme();
 
-  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const allowedDomains = ['gmail.com', 'outlook.com', 'yahoo.com', 'live.com', 'hotmail.com', 'icloud.com'];
+  const isEmailValidFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const emailDomain = email.split('@')[1]?.toLowerCase();
+  const isEmailValidDomain = allowedDomains.includes(emailDomain);
+  const isEmailValid = isEmailValidFormat && isEmailValidDomain;
   const passwordCriteria = {
     length: password.length >= 8,
     uppercase: /[A-Z]/.test(password),
@@ -37,9 +41,30 @@ export const Register = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSubmit) return;
     setLoading(true);
     setError("");
     try {
+      // Check for 60 days deletion cooldown
+      try {
+        const emailDocId = email.toLowerCase().replace(/[@.]/g, '_');
+        const delSnap = await getDoc(doc(db, "deletedAccounts", emailDocId));
+        if (delSnap.exists()) {
+          const data = delSnap.data();
+          const lastDeletedAt = new Date(data.deletedAt).getTime();
+          const now = Date.now();
+          const diffDays = (now - lastDeletedAt) / (1000 * 60 * 60 * 24);
+          
+          if (diffDays < 60) {
+            setError(`This email was recently used on a deleted account. You must wait ${Math.ceil(60 - diffDays)} more days before registering again.`);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (err: any) {
+        console.warn("Could not check deleted accounts:", err);
+      }
+
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
@@ -113,6 +138,22 @@ export const Register = () => {
           });
         } catch (err: any) {
           handleFirestoreError(err, OperationType.WRITE, "referral bonus/notification");
+        }
+      }
+
+      // Update global user count
+      try {
+        const statsRef = doc(db, "system", "stats");
+        await updateDoc(statsRef, {
+          totalUsers: increment(1)
+        });
+      } catch (err: any) {
+        // If it doesn't exist, try creating it. Ignore if it fails due to existing.
+        try {
+          const statsRef = doc(db, "system", "stats");
+          await setDoc(statsRef, { totalUsers: 1421 });
+        } catch (e) {
+          console.error("Failed to initialize stats", e);
         }
       }
 
@@ -198,7 +239,7 @@ export const Register = () => {
               </div>
               {email && !isEmailValid && (
                 <p className="text-[10px] text-red-500 ml-1 flex items-center gap-1">
-                  <AlertCircle size={10} /> Please enter a valid email address
+                  <AlertCircle size={10} /> Please enter a valid email address (e.g., gmail.com, outlook.com, yahoo.com)
                 </p>
               )}
             </div>
