@@ -25,7 +25,7 @@ import { Logo } from "./Logo";
 
 export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () => void }) => {
   const location = useLocation();
-  const { isAdmin } = useAuth();
+  const { isAdmin, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [unreadSupportCount, setUnreadSupportCount] = React.useState(0);
 
@@ -133,8 +133,7 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () =>
         </button>
         <button
           onClick={async () => {
-            await auth.signOut();
-            window.location.replace('/login');
+            await logout();
           }}
           className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-red-400 hover:bg-red-400/10 transition-all duration-200"
         >

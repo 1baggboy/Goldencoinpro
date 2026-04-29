@@ -35,6 +35,7 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   isRestricted: boolean;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -43,12 +44,24 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   isAdmin: false,
   isRestricted: false,
+  logout: async () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const logout = async () => {
+    try {
+      await auth.signOut();
+      setUser(null);
+      setProfile(null);
+      window.location.replace('/login');
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   useEffect(() => {
     let unsubProfile: (() => void) | undefined;
@@ -149,7 +162,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isRestricted = profile?.status === "restricted";
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, isAdmin, isRestricted }}>
+    <AuthContext.Provider value={{ user, profile, loading, isAdmin, isRestricted, logout }}>
       {children}
     </AuthContext.Provider>
   );

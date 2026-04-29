@@ -1,18 +1,15 @@
 import React from "react";
 import { ShieldAlert, LogOut, MessageSquare } from "lucide-react";
 import { useAuth } from "../AuthContext";
-import { auth } from "../firebase";
-import { signOut } from "firebase/auth";
 import { motion } from "motion/react";
 import { APP_CONFIG } from "../config";
 import { Footer } from "../components/Footer";
 
 export const Restricted = () => {
-  const { profile } = useAuth();
+  const { profile, logout } = useAuth();
 
   const handleLogout = async () => {
-    await signOut(auth);
-    window.location.replace("/login");
+    await logout();
   };
 
   return (
