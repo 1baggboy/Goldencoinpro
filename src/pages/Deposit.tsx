@@ -14,6 +14,7 @@ import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, increment
 import { db } from "../firebase";
 import { motion } from "motion/react";
 import { fetchBtcPrice as fetchBtcPriceUtil } from "../lib/utils";
+import { sendAdminEmailNotification } from "../lib/emailService";
 
 export const Deposit = () => {
   const { user, profile } = useAuth();
@@ -140,6 +141,14 @@ export const Deposit = () => {
           addNotification(adminDoc.id, "New Deposit Received", `User ${profile?.displayName || user.email} has successfully deposited $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC).`, "info")
         );
         await Promise.all(adminPromises);
+
+        // Send email
+        const eventTitle = valUsd >= 1000 ? "Critical Event: Large Deposit" : "New Deposit Received";
+        await sendAdminEmailNotification(
+          eventTitle,
+          `User ${profile?.displayName || user.email} has deposited $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC). TX Hash: ${txHash}`
+        );
+
       } catch (adminErr) {
         console.error("Failed to notify admins:", adminErr);
       }

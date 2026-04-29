@@ -12,6 +12,8 @@ import { cn, generateReferralCode } from "../lib/utils";
 import { Logo } from "../components/Logo";
 import { Footer } from "../components/Footer";
 
+import { sendAdminEmailNotification } from "../lib/emailService";
+
 export const Register = () => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [name, setName] = useState("");
@@ -156,6 +158,11 @@ export const Register = () => {
           console.error("Failed to initialize stats", e);
         }
       }
+
+      await sendAdminEmailNotification(
+        "Critical Event: New Registration",
+        `A new user has registered. Name: ${name}, Email: ${email}`
+      );
 
       navigate("/dashboard");
     } catch (err: any) {

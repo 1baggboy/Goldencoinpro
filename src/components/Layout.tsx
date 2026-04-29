@@ -14,6 +14,15 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     <div className={cn("flex h-screen font-sans overflow-hidden", theme === 'light' ? 'bg-[#F5F5F5] text-[#0B0B0B]' : 'bg-slate-950 text-white')}>
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="flex-1 flex flex-col relative overflow-hidden">
+        {/* Moving Legal Updates Banner */}
+        <div className="bg-[#C9A96E]/20 text-[#C9A96E] py-2 px-4 shadow-sm border-b border-[#C9A96E]/30 relative overflow-hidden flex items-center font-medium text-sm sm:text-base shrink-0">
+          <div className="whitespace-nowrap overflow-hidden w-full relative">
+             <div className="inline-block animate-marquee whitespace-nowrap">
+                 Notice: We have comprehensively updated our Privacy Policy, Terms of Service, Risk Governance, and AML/KYC Policy. Please review these legal updates.
+             </div>
+          </div>
+        </div>
+
         <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
         <main className="flex-1 overflow-y-auto px-2 sm:px-6 lg:px-10 py-6 sm:py-8 lg:py-12 custom-scrollbar transition-all duration-300">
           <AnimatePresence mode="wait">

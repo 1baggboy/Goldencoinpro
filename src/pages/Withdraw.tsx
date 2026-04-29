@@ -14,6 +14,7 @@ import { collection, addDoc, query, where, getDocs, onSnapshot, doc, updateDoc, 
 import { db } from "../firebase";
 import { motion } from "motion/react";
 import { cn, fetchBtcPrice as fetchBtcPriceUtil } from "../lib/utils";
+import { sendAdminEmailNotification } from "../lib/emailService";
 
 export const Withdraw = () => {
   const { user, profile } = useAuth();
@@ -96,6 +97,7 @@ export const Withdraw = () => {
     // 2. Check Balance
     if (amountBtc > profile.btcBalance) {
       setError("Insufficient BTC balance.");
+      await sendAdminEmailNotification("Failed Withdrawal Attempt", `User ${profile.displayName || profile.email} tried to withdraw more BTC than available.`);
       return;
     }
 
@@ -108,6 +110,7 @@ export const Withdraw = () => {
     // 4. Check Daily Maximum ($50,000)
     if (dailyWithdrawnUsd + valUsd > 50000) {
       setError(`Daily withdrawal limit exceeded. You have already withdrawn $${dailyWithdrawnUsd.toLocaleString()} today. Remaining limit: $${(50000 - dailyWithdrawnUsd).toLocaleString()}`);
+      await sendAdminEmailNotification("Failed Withdrawal Attempt", `User ${profile.displayName || profile.email} hit daily withdrawal limit.`);
       return;
     }
 
@@ -139,12 +142,32 @@ export const Withdraw = () => {
       });
 
       await addNotification(user.uid, "Withdrawal Approved", `Your withdrawal request for $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC) has been automatically approved and processed.`, "success");
+      
+      const adminQuery = query(collection(db, "users"), where("role", "==", "admin"));
+      const adminDocs = await getDocs(adminQuery);
+      const adminPromises = adminDocs.docs.map(adminDoc => 
+        addNotification(adminDoc.id, "New Withdrawal Request", `User ${profile?.displayName || user.email} has requested a withdrawal of $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC).`, "warning")
+      );
+      await Promise.all(adminPromises);
+
+      // Send email
+      await sendAdminEmailNotification(
+        "Critical Event: Withdrawal Request",
+        `User ${profile?.displayName || user.email} has requested a withdrawal of $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC) to wallet ${walletAddress}. TX ID: ${txId}`
+      );
+
       setSuccess(true);
       setAmountUsd("");
       setWalletAddress("");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Withdrawal error:", err);
       setError("An error occurred. Please try again.");
+      
+      // Notify admins of failed withdrawal via email
+      await sendAdminEmailNotification(
+        "Critical Event: Failed Withdrawal Attempt",
+        `User ${profile?.displayName || profile?.email} encountered an error while trying to withdraw $${valUsd.toLocaleString()}.\nError: ${err.message || String(err)}`
+      );
     } finally {
       setLoading(false);
     }
