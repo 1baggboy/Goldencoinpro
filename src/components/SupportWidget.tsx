@@ -158,14 +158,14 @@ export const SupportWidget = () => {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[100] flex flex-col items-end">
+    <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[500] flex flex-col items-end">
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="absolute bottom-20 right-0 w-[calc(100vw-32px)] md:w-[400px] h-[calc(100vh-120px)] md:h-[500px] max-h-[600px] bg-slate-900 border border-[#C9A96E]/20 rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+                        className="fixed bottom-24 right-4 md:right-6 w-[calc(100vw-32px)] md:w-[400px] h-[60vh] max-h-[500px] z-[600] bg-slate-900 border border-[#C9A96E]/20 rounded-3xl shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="p-4 bg-[#C9A96E] flex items-center justify-between">
@@ -236,7 +236,7 @@ export const SupportWidget = () => {
             </div>
 
             {/* Input */}
-            <form onSubmit={handleSendMessage} className="p-4 bg-slate-950 border-t border-[#C9A96E]/10 space-y-2">
+            <form onSubmit={handleSendMessage} className="p-4 bg-slate-950 border-t border-[#C9A96E]/10 space-y-2 shrink-0">
               {!authUser && (
                 <div className="grid grid-cols-2 gap-2">
                   <input
