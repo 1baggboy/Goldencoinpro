@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
 import { AuthProvider, useAuth } from "./AuthContext";
 import { NotificationProvider } from "./NotificationContext";
 import { PriceProvider, usePrices } from "./PriceContext";
@@ -215,6 +216,7 @@ function AppContent({ siteLoading, setSiteLoading }: { siteLoading: boolean, set
         <SupportWidget />
         <CookieBanner />
         <Toaster richColors position="top-right" />
+        <Analytics />
       </Router>
     </ThemeProvider>
   );
