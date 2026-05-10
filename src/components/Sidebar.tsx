@@ -140,6 +140,11 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () =>
           <LogOut size={20} />
           <span className="font-medium">Sign Out</span>
         </button>
+        <div className="pt-2 text-center">
+           <span className="text-[10px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest">
+             GoldenCoin v{APP_CONFIG.version}
+           </span>
+        </div>
       </div>
     </aside>
     </>

@@ -10,15 +10,15 @@ async function startServer() {
 
   app.use(cors());
   app.use(helmet({
-    contentSecurityPolicy: false, // Disable for development/iframe compatibility
-    xFrameOptions: false, // Allow iframe masking (e.g. for domain forwarding like goldencoin.live)
+    contentSecurityPolicy: false,
+    xFrameOptions: false,
     crossOriginResourcePolicy: false,
   }));
   app.use(express.json());
 
   // API Routes
   app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", timestamp: new Date().toISOString() });
+    res.json({ status: "ok", version: "2.1.2", timestamp: new Date().toISOString() });
   });
 
   const fetchWithTimeout = async (url: string, options: any = {}, timeout = 5000) => {

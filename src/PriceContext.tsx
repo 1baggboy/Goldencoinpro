@@ -11,33 +11,46 @@ interface PriceContextType {
 
 const PriceContext = createContext<PriceContextType | undefined>(undefined);
 
+const CACHE_KEY = "goldencoin_market_prices";
+
 export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [prices, setPrices] = useState<any>({
-    btc: { usd: 0, change: 0 },
-    eth: { usd: 0, change: 0 },
-    sol: { usd: 0, change: 0 },
-    ada: { usd: 0, change: 0 },
-    xrp: { usd: 0, change: 0 },
-    bnb: { usd: 0, change: 0 },
-    doge: { usd: 0, change: 0 },
-    link: { usd: 0, change: 0 },
-    dot: { usd: 0, change: 0 },
-    matic: { usd: 0, change: 0 },
-    avax: { usd: 0, change: 0 },
-    shib: { usd: 0, change: 0 },
-    trx: { usd: 0, change: 0 },
-    ltc: { usd: 0, change: 0 },
-    near: { usd: 0, change: 0 },
-    uni: { usd: 0, change: 0 },
-    algo: { usd: 0, change: 0 },
-    atom: { usd: 0, change: 0 },
-    icp: { usd: 0, change: 0 },
-    xlm: { usd: 0, change: 0 },
-    stx: { usd: 0, change: 0 },
-    fil: { usd: 0, change: 0 },
-    ldo: { usd: 0, change: 0 },
-    hbar: { usd: 0, change: 0 },
-    arb: { usd: 0, change: 0 }
+  // Try to load cached prices first for instant initialization
+  const [prices, setPrices] = useState<any>(() => {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch (e) {
+        console.error("Failed to parse cached prices", e);
+      }
+    }
+    return {
+      btc: { usd: 0, change: 0 },
+      eth: { usd: 0, change: 0 },
+      sol: { usd: 0, change: 0 },
+      ada: { usd: 0, change: 0 },
+      xrp: { usd: 0, change: 0 },
+      bnb: { usd: 0, change: 0 },
+      doge: { usd: 0, change: 0 },
+      link: { usd: 0, change: 0 },
+      dot: { usd: 0, change: 0 },
+      matic: { usd: 0, change: 0 },
+      avax: { usd: 0, change: 0 },
+      shib: { usd: 0, change: 0 },
+      trx: { usd: 0, change: 0 },
+      ltc: { usd: 0, change: 0 },
+      near: { usd: 0, change: 0 },
+      uni: { usd: 0, change: 0 },
+      algo: { usd: 0, change: 0 },
+      atom: { usd: 0, change: 0 },
+      icp: { usd: 0, change: 0 },
+      xlm: { usd: 0, change: 0 },
+      stx: { usd: 0, change: 0 },
+      fil: { usd: 0, change: 0 },
+      ldo: { usd: 0, change: 0 },
+      hbar: { usd: 0, change: 0 },
+      arb: { usd: 0, change: 0 }
+    };
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +61,8 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (data && typeof data === 'object' && data.btc) {
         setPrices(data);
         setError(null);
+        // Persist to local storage for instant next-load
+        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
       }
     } catch (err) {
       // Background logging is already handled in utils.ts
