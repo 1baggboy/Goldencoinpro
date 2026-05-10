@@ -1115,7 +1115,7 @@ const StatCard = ({
         <h4 className="text-xl xl:text-2xl font-black text-[#0B0B0B] dark:text-white tracking-tight leading-none mb-1 truncate">
           {value}
         </h4>
-        <div
+        <p
           className={cn(
             "text-[9px] font-bold uppercase tracking-tight line-clamp-1",
             color === "green"
@@ -1128,7 +1128,7 @@ const StatCard = ({
           )}
         >
           {subValue}
-        </div>
+        </p>
       </div>
     </div>
     <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-[#C9A96E]/5 rounded-full blur-2xl group-hover:bg-[#C9A96E]/15 transition-all duration-700"></div>
