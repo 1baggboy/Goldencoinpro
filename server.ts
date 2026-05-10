@@ -4,15 +4,9 @@ import { createServer as createViteServer } from "vite";
 import cors from "cors";
 import helmet from "helmet";
 
-import { GoogleGenAI } from "@google/genai";
-
 async function startServer() {
   const app = express();
   const PORT = 3000;
-
-  // Initialize Gemini AI for the backend
-  const apiKey = process.env.GEMINI_API_KEY;
-  const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
   app.use(cors());
   app.use(helmet({
@@ -21,74 +15,6 @@ async function startServer() {
     crossOriginResourcePolicy: false,
   }));
   app.use(express.json());
-
-  // AI Insights Route
-  app.post("/api/ai/insight", async (req, res) => {
-    if (!genAI) return res.status(503).json({ error: "AI Service not configured" });
-    const { prices } = req.body;
-    
-    try {
-      const prompt = `You are a professional institutional crypto trading analyst at Goldencoin. Based on these current market prices:
-      BTC: $${prices?.btc?.usd} (${prices?.btc?.change}% 24h)
-      ETH: $${prices?.eth?.usd} (${prices?.eth?.change}% 24h)
-      Provide a sophisticated, institutional-grade market insight. 
-      Return a raw JSON object with fields: headline, insight, sentiment (bullish/bearish/neutral), recommendation.`;
-
-      const result = await genAI.models.generateContent({
-        model: "gemini-1.5-flash",
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: { responseMimeType: "application/json" }
-      });
-      
-      res.json(JSON.parse(result.text || "{}"));
-    } catch (error) {
-      console.error("AI Insight Error:", error);
-      res.status(500).json({ error: "Failed to generate AI insight" });
-    }
-  });
-
-  // AI Strategy Route
-  app.post("/api/ai/strategy", async (req, res) => {
-    if (!genAI) return res.status(503).json({ error: "AI Service not configured" });
-    const { userContext } = req.body;
-    
-    try {
-      const prompt = `As a Goldencoin Senior Strategist, provide a personalized investment strategy for a portfolio with:
-      USD Balance: $${userContext?.usdBalance || 0}
-      Focus on risk management for the next 24-72 hours.
-      Return JSON: {title, strategy}.`;
-
-      const result = await genAI.models.generateContent({
-        model: "gemini-1.5-flash",
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: { responseMimeType: "application/json" }
-      });
-      
-      res.json(JSON.parse(result.text || "{}"));
-    } catch (error) {
-      res.status(500).json({ error: "Strategy AI failed" });
-    }
-  });
-
-  // AI Support Route
-  app.post("/api/ai/support", async (req, res) => {
-    if (!genAI) return res.status(503).json({ error: "AI Service unavailable" });
-    const { message, context } = req.body;
-    
-    try {
-      const prompt = `You are Goldencoin AI Support Assistant. User: ${context?.displayName || 'Guest'}.
-      Message: "${message}"
-      Be professional and concierge-like. Keep it under 2 sentences.`;
-      
-      const result = await genAI.models.generateContent({
-        model: "gemini-1.5-flash",
-        contents: [{ role: 'user', parts: [{ text: prompt }] }]
-      });
-      res.json({ response: result.text || "I'm sorry, I couldn't process that." });
-    } catch (error) {
-      res.status(500).json({ error: "Support AI failed" });
-    }
-  });
 
   // API Routes
   app.get("/api/health", (req, res) => {
