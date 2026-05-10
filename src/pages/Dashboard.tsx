@@ -408,10 +408,23 @@ export const Dashboard = () => {
         <StatCard
           title="Market Context"
           value={`$${prices?.btc?.usd?.toLocaleString() || "---"}`}
-          subValue={`${prices?.btc?.change >= 0 ? "+" : ""}${prices?.btc?.change?.toFixed(2)}% (24h)`}
+          subValue={
+            <div className="flex items-center gap-1.5 justify-center sm:justify-start">
+               <span className={cn(
+                 "text-[9px] font-black uppercase tracking-tighter",
+                 prices?.btc?.change >= 0 ? "text-green-600 dark:text-green-500" : "text-red-600 dark:text-red-400"
+               )}>
+                 {prices?.btc?.change >= 0 ? "+" : ""}{prices?.btc?.change?.toFixed(2)}% (24h)
+               </span>
+               <div className="flex items-center gap-1 bg-[#C9A96E]/10 px-1.5 py-0.5 rounded-full border border-[#C9A96E]/20">
+                 <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                 <span className="text-[7px] font-black text-[#C9A96E] uppercase tracking-widest">Live</span>
+               </div>
+            </div>
+          }
           icon={TrendingUp}
           color={prices?.btc?.change >= 0 ? "green" : "red"}
-          tooltip="Current real-time Bitcoin price"
+          tooltip="Current real-time Bitcoin price directly from high-frequency market sockets"
         />
       </div>
 
@@ -1102,7 +1115,7 @@ const StatCard = ({
         <h4 className="text-xl xl:text-2xl font-black text-[#0B0B0B] dark:text-white tracking-tight leading-none mb-1 truncate">
           {value}
         </h4>
-        <p
+        <div
           className={cn(
             "text-[9px] font-bold uppercase tracking-tight line-clamp-1",
             color === "green"
@@ -1115,7 +1128,7 @@ const StatCard = ({
           )}
         >
           {subValue}
-        </p>
+        </div>
       </div>
     </div>
     <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-[#C9A96E]/5 rounded-full blur-2xl group-hover:bg-[#C9A96E]/15 transition-all duration-700"></div>

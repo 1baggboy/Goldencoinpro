@@ -732,9 +732,9 @@ const StatCard = ({ title, value, subValue, icon: Icon, color }: any) => (
       <div>
         <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">{title}</p>
         <h4 className="text-2xl font-bold text-white tracking-tight">{value}</h4>
-        <p className={cn("text-xs mt-1", color === 'green' ? "text-green-500" : "text-gray-400")}>
+        <div className={cn("text-xs mt-1", color === 'green' ? "text-green-500" : "text-gray-400")}>
           {subValue}
-        </p>
+        </div>
       </div>
       <div className={cn(
         "w-12 h-12 rounded-xl flex items-center justify-center",

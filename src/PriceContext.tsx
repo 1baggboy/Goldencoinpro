@@ -77,8 +77,8 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     refreshPrices();
-    // Faster updates (10 seconds) for a more "live" feel
-    const interval = setInterval(refreshPrices, 10000); 
+    // Faster updates (5 seconds) for a more "live" feel, synced with backend
+    const interval = setInterval(refreshPrices, 5000); 
     return () => clearInterval(interval);
   }, []);
 
