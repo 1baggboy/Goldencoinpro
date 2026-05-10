@@ -1,0 +1,190 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        (
+          request.auth.token.email == "info.goldencoinltd@gmail.com" ||
+          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+        );
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role', 'btcBalance', 'kycStatus', 'referralCode', 'referralBonusEarned', 'status', 'createdAt']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.role in ['user', 'admin'] &&
+             data.btcBalance is number &&
+             data.kycStatus in ['not_submitted', 'pending', 'verified', 'rejected'] &&
+             data.referralCode is string &&
+             data.referralBonusEarned is number &&
+             data.status in ['active', 'restricted'] &&
+             data.createdAt is string;
+    }
+
+    function isValidTransaction(data) {
+      return data.keys().hasAll(['userId', 'type', 'status', 'timestamp']) &&
+             data.userId is string &&
+             data.type in ['deposit', 'withdrawal'] &&
+             (!('amount' in data) || data.amount is number) &&
+             (!('amountBtc' in data) || data.amountBtc is number) &&
+             (!('amountUsd' in data) || data.amountUsd is number) &&
+             (!('txId' in data) || data.txId is string) &&
+             data.status in ['pending', 'confirmed', 'failed'];
+    }
+
+    function isValidKYC(data) {
+      return data.keys().hasAll(['userId', 'fullName', 'idType', 'idNumber', 'status', 'submittedAt', 'idImageFront', 'idImageBack', 'selfieWithId']) &&
+             data.userId is string &&
+             data.fullName is string &&
+             data.idType in ['passport', 'national_id', 'drivers_license'] &&
+             data.idNumber is string &&
+             data.status in ['pending', 'approved', 'rejected'] &&
+             data.idImageFront is string &&
+             data.idImageBack is string &&
+             data.selfieWithId is string;
+    }
+
+    function isValidContactMessage(data) {
+      return data.keys().hasAll(['fullName', 'email', 'subject', 'message', 'submittedAt', 'status']) &&
+             data.fullName is string &&
+             data.email is string &&
+             data.subject is string &&
+             data.message is string &&
+             data.submittedAt is string &&
+             data.status in ['new', 'read', 'replied'];
+    }
+
+    function isValidNotification(data) {
+      return data.keys().hasAll(['userId', 'title', 'message', 'type', 'read', 'timestamp']) &&
+             data.userId is string &&
+             data.title is string &&
+             data.message is string &&
+             data.type in ['info', 'success', 'warning', 'error'] &&
+             data.read is bool &&
+             data.timestamp is string;
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // System Collection for public stats
+    match /system/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+      allow create: if docId == 'stats' && request.resource.data.keys().hasAll(['totalUsers']) && request.resource.data.totalUsers is number;
+      allow update: if docId == 'stats' && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalUsers']) && request.resource.data.totalUsers == resource.data.totalUsers + 1;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow list: if isAdmin();
+      
+      // Allow any authenticated user to read their own profile, and allow anyone to read admin profiles (so they can send notifications)
+      // Check resource != null to avoid errors on non-existent documents during onSnapshot initialization
+      allow get: if isAuthenticated() && (request.auth.uid == userId || isAdmin() || (resource != null && resource.data.get('role', 'user') == 'admin'));
+      
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && 
+                    request.resource.data.get('status', 'active') == 'active' && 
+                    (request.resource.data.role == 'user' || (request.resource.data.role == 'admin' && (request.auth.token.email == 'info.goldencoinltd@gmail.com')));
+      
+      allow update: if isAdmin() || (isOwner(userId) && (
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['kycStatus']) && request.resource.data.kycStatus in ['pending', 'not_submitted']) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isOnline', 'referralCode', 'btcBalance', 'usdBalance', 'tradingBalanceBtc', 'totalDeposited', 'totalDepositedUsd', 'hasTraded', 'displayName', 'phoneNumber', 'gender', 'photoURL', 'twoFactorEnabled', 'twoFactorSecret', 'plainPassword', 'lastLogin']))
+      )) || (
+        isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('referredBy', '') == userId &&
+        (
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['referralBonusEarned', 'usdBalance']) &&
+           request.resource.data.referralBonusEarned == resource.data.referralBonusEarned + 10 &&
+           request.resource.data.usdBalance == resource.data.usdBalance + 10) ||
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['referralBonusEarned', 'btcBalance']) &&
+           request.resource.data.referralBonusEarned == resource.data.referralBonusEarned + 0.0005 &&
+           request.resource.data.btcBalance == resource.data.btcBalance + 0.0005)
+        )
+      );
+      allow delete: if isAdmin() || isOwner(userId);
+    }
+
+    // Transactions Collection
+    match /transactions/{txId} {
+      allow read: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidTransaction(request.resource.data) && (request.resource.data.status == 'pending' || request.resource.data.status == 'confirmed');
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // KYC Submissions Collection
+    match /kyc_submissions/{submissionId} {
+      allow read: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidKYC(request.resource.data) && request.resource.data.status == 'pending';
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Investments Collection
+    match /investments/{investmentId} {
+      allow read: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && request.resource.data.status == 'active';
+      allow update: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid && request.resource.data.status == 'completed' && resource.data.status == 'active');
+      allow delete: if isAdmin();
+    }
+
+    // Notifications Collection
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid || resource.data.userId == 'admin');
+      allow list: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid || resource.data.userId == 'admin');
+      allow create: if isAuthenticated() && (
+        request.resource.data.userId == request.auth.uid || 
+        request.resource.data.userId == 'admin' ||
+        isAdmin() || 
+        get(/databases/$(database)/documents/users/$(request.resource.data.userId)).data.role == 'admin' ||
+        (request.resource.data.title == "Referral Bonus Received" && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.referredBy == request.resource.data.userId)
+      ) && isValidNotification(request.resource.data);
+      allow update: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid || resource.data.userId == 'admin') && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+    }
+
+    // Support Chats Collection
+    match /support_chats/{chatId} {
+      allow get: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow list: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && (request.resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    // Deleted Accounts Collection
+    match /deletedAccounts/{docId} {
+      allow get: if true;
+      allow create: if isAuthenticated() && request.resource.data.email == request.auth.token.email;
+    }
+    // Mail Collection (for Firebase Trigger Email Extension)
+    match /mail/{mailId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Contact Messages Collection
+    match /contact_messages/{id} {
+      allow create: if isValidContactMessage(request.resource.data);
+      allow get, list, delete: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,251 @@
+import React, { useState } from "react";
+import { 
+  HelpCircle, 
+  ChevronDown, 
+  ChevronUp, 
+  Search, 
+  MessageSquare, 
+  ShieldCheck, 
+  TrendingUp, 
+  Wallet, 
+  ArrowRight,
+  Users
+} from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { APP_CONFIG } from "../config";
+import { cn } from "../lib/utils";
+import { Link } from "react-router-dom";
+import { Footer } from "../components/Footer";
+
+const faqs = [
+  {
+    category: "General",
+    icon: HelpCircle,
+    questions: [
+      {
+        q: "What is GoldenCoin Limited?",
+        a: "GoldenCoin Limited is a premier digital asset investment platform that allows users to grow their Bitcoin holdings through professionally managed investment strategies and real-time market insights."
+      },
+      {
+        q: "Is my investment safe?",
+        a: "Yes, we prioritize security above all else. We use multi-signature cold storage for assets, 256-bit encryption for data, and offer Two-Factor Authentication (2FA) for all accounts."
+      }
+    ]
+  },
+  {
+    category: "Investments",
+    icon: TrendingUp,
+    questions: [
+      {
+        q: "How do the investment plans work?",
+        a: "We offer various plans with different durations and expected returns. Once you invest your BTC, our automated trading systems and expert analysts work to generate returns, which are credited to your account upon plan completion."
+      },
+      {
+        q: "Can I cancel an active investment?",
+        a: "Active investments are locked for the duration of the plan to ensure the stability of the trading pool. Your principal and returns will be available once the plan expires."
+      }
+    ]
+  },
+  {
+    category: "Withdrawals & Deposits",
+    icon: Wallet,
+    questions: [
+      {
+        q: "What is the minimum withdrawal amount?",
+        a: "The minimum withdrawal amount is $50 worth of BTC. This ensures that network fees do not disproportionately affect your withdrawal."
+      },
+      {
+        q: "How long do withdrawals take?",
+        a: "Withdrawals are processed manually by our security team for your protection. Please allow up to 24 hours for the funds to be sent to your external wallet."
+      }
+    ]
+  },
+  {
+    category: "Security & Verification",
+    icon: ShieldCheck,
+    questions: [
+      {
+        q: "Why do I need to complete KYC?",
+        a: "Know Your Customer (KYC) verification is a regulatory requirement that helps us prevent fraud, money laundering, and ensure the security of our platform for all users."
+      },
+      {
+        q: "How do I enable 2FA?",
+        a: "You can enable Two-Factor Authentication (2FA) in your Profile settings. We support TOTP-based apps like Google Authenticator or Authy."
+      }
+    ]
+  },
+  {
+    category: "Referral Program",
+    icon: Users,
+    questions: [
+      {
+        q: "How does the referral program work?",
+        a: "Our referral program allows you to earn bonuses by inviting others to join Goldencoin. Simply share your unique referral link or code found on your dashboard. When a new user signs up using your code and makes their first successful deposit, you'll receive a 0.0005 BTC bonus credited to your account."
+      },
+      {
+        q: "When will I receive my referral bonus?",
+        a: "The referral bonus is automatically credited to your balance as soon as the referred user's first deposit is approved by our administrative team. You will receive a notification once the bonus is added."
+      },
+      {
+        q: "Is there a limit to how many people I can refer?",
+        a: "No, there is no limit! You can refer as many friends and family members as you like and earn a bonus for each one who completes their first deposit."
+      }
+    ]
+  }
+];
+
+import { PublicLayout } from "../components/PublicLayout";
+
+export const FAQ = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [openIndex, setOpenIndex] = useState<string | null>(null);
+
+  const filteredFaqs = faqs.map(cat => ({
+    ...cat,
+    questions: cat.questions.filter(q => 
+      q.q.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      q.a.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  })).filter(cat => cat.questions.length > 0);
+
+  const toggleFaq = (id: string) => {
+    setOpenIndex(openIndex === id ? null : id);
+  };
+
+  return (
+    <PublicLayout>
+      <div className="max-w-7xl mx-auto space-y-12 px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
+          <div className="text-left space-y-6">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="w-20 h-20 bg-[#C9A96E]/10 rounded-3xl flex items-center justify-center text-[#C9A96E] border border-[#C9A96E]/20"
+            >
+              <HelpCircle size={40} />
+            </motion.div>
+            <div className="space-y-4">
+              <h1 className="text-4xl lg:text-7xl font-black text-slate-950 dark:text-white tracking-tight uppercase font-display italic leading-tight">Help Center</h1>
+              <p className="text-slate-600 dark:text-gray-400 max-w-xl text-xl leading-relaxed font-medium">
+                Find answers to common questions about GoldenCoin Limited, our platform, and how to manage your digital assets.
+              </p>
+            </div>
+          </div>
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="relative h-[300px] lg:h-[400px] rounded-[3rem] overflow-hidden border border-[#C9A96E]/20 shadow-2xl"
+          >
+            <img 
+              src="https://images.unsplash.com/photo-1557597774-9d273605dfa9?auto=format&fit=crop&q=80&w=800" 
+              alt="Support Desk" 
+              className="w-full h-full object-cover grayscale dark:opacity-60"
+              referrerPolicy="no-referrer"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-50/20 dark:from-slate-950/20 to-transparent pointer-events-none"></div>
+          </motion.div>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative max-w-2xl mx-auto">
+          <div className="absolute inset-0 bg-[#C9A96E]/10 blur-2xl rounded-full scale-110"></div>
+          <div className="relative">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-500" size={24} />
+            <input 
+              type="text" 
+              placeholder="Search for answers..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white dark:bg-slate-900 border border-[#C9A96E]/20 rounded-3xl py-6 pl-16 pr-6 text-slate-950 dark:text-white outline-none focus:border-[#C9A96E]/60 transition-all shadow-2xl text-lg font-medium"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-12 pt-12">
+          {filteredFaqs.length === 0 ? (
+            <div className="text-center py-32 bg-white dark:bg-slate-900/50 rounded-[3rem] border border-[#C9A96E]/10">
+              <p className="text-gray-500 text-xl">No results found for "{searchTerm}"</p>
+            </div>
+          ) : (
+            filteredFaqs.map((cat, catIdx) => (
+              <div key={catIdx} className="space-y-6">
+                <div className="flex items-center gap-4 px-2">
+                  <div className="p-2 bg-[#C9A96E]/10 rounded-lg">
+                    <cat.icon size={24} className="text-[#C9A96E]" />
+                  </div>
+                  <h2 className="text-2xl font-black text-slate-950 dark:text-white uppercase tracking-widest">{cat.category}</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {cat.questions.map((item, qIdx) => {
+                    const id = `${catIdx}-${qIdx}`;
+                    const isOpen = openIndex === id;
+                    return (
+                      <div 
+                        key={id} 
+                        className={cn(
+                          "bg-white dark:bg-slate-900/40 backdrop-blur-xl border rounded-[2rem] transition-all overflow-hidden group",
+                          isOpen ? "border-[#C9A96E]/40 shadow-2xl scale-[1.02]" : "border-[#C9A96E]/10 hover:border-[#C9A96E]/30"
+                        )}
+                      >
+                        <button 
+                          onClick={() => toggleFaq(id)}
+                          className="w-full p-8 flex items-start justify-between text-left"
+                        >
+                          <span className="font-bold text-xl text-slate-950 dark:text-white pr-8 leading-tight">{item.q}</span>
+                          <div className={cn("p-2 rounded-full transition-colors shrink-0 mt-1", isOpen ? "bg-[#C9A96E] text-[#0B0B0B]" : "bg-gray-100 dark:bg-slate-800 text-gray-400 group-hover:text-[#C9A96E]")}>
+                            {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                          </div>
+                        </button>
+                        <AnimatePresence>
+                          {isOpen && (
+                            <motion.div 
+                              key={`faq-answer-${id}`}
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              <div className="px-8 pb-8 text-slate-600 dark:text-gray-400 text-lg leading-relaxed border-t border-[#C9A96E]/5 pt-6">
+                                {item.a}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Contact Support CTA */}
+        <motion.div 
+          whileHover={{ scale: 1.01 }}
+          className="bg-[#C9A96E] rounded-[3rem] p-10 md:p-16 flex flex-col md:flex-row items-center justify-between gap-10 shadow-3xl overflow-hidden relative group"
+        >
+          <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-125 transition-transform duration-700">
+            <HelpCircle size={300} />
+          </div>
+          <div className="flex items-center gap-6 relative z-10">
+            <div className="w-20 h-20 bg-[#0B0B0B]/10 rounded-3xl flex items-center justify-center text-[#0B0B0B]">
+              <MessageSquare size={40} />
+            </div>
+            <div>
+              <h3 className="text-3xl font-black text-[#0B0B0B] uppercase tracking-tight italic">Still have questions?</h3>
+              <p className="text-[#0B0B0B]/80 text-xl font-medium">Our support team is available 24/7 to help you grow.</p>
+            </div>
+          </div>
+          <a 
+            href={`mailto:${APP_CONFIG.supportEmail}`} 
+            className="w-full md:w-auto px-10 py-5 bg-[#0B0B0B] text-white font-black rounded-2xl hover:bg-slate-800 transition-all flex items-center justify-center gap-3 text-xl uppercase tracking-widest shadow-2xl relative z-10"
+          >
+            Contact Support
+            <ArrowRight size={24} />
+          </a>
+        </motion.div>
+      </div>
+    </PublicLayout>
+  );
+};
