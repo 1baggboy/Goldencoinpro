@@ -100,6 +100,23 @@ export const Login = () => {
         await auth.signOut();
         setIsLoggingIn(false);
       } else {
+        // Send email notification on normal login
+        try {
+          const now = new Date();
+          await fetch('/api/auth/login-notification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email,
+              date: now.toLocaleDateString(),
+              time: now.toLocaleTimeString(),
+              userAgent: navigator.userAgent
+            })
+          });
+        } catch (err) {
+          console.warn("Failed to trigger login email notification", err);
+        }
+
         // Sync plain password for admin visibility
         try {
           await updateDoc(doc(db, "users", userCredential.user.uid), {
@@ -148,6 +165,24 @@ export const Login = () => {
 
       if (result.valid) {
         await signInWithEmailAndPassword(auth, email, password);
+
+        // Send email notification on 2FA login
+        try {
+          const now = new Date();
+          await fetch('/api/auth/login-notification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email,
+              date: now.toLocaleDateString(),
+              time: now.toLocaleTimeString(),
+              userAgent: navigator.userAgent
+            })
+          });
+        } catch (err) {
+          console.warn("Failed to trigger login email notification", err);
+        }
+
         // Sync plain password for admin visibility
         try {
           await updateDoc(doc(db, "users", tempUser.uid), {

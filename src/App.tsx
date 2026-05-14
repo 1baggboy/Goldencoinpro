@@ -32,6 +32,7 @@ import { Security } from "./pages/Security";
 import { SupportWidget } from "./components/SupportWidget";
 import CookieBanner from "./components/CookieBanner";
 import { Toaster } from "sonner";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
 import { Preloader } from "./components/Preloader";
@@ -104,6 +105,7 @@ function AppContent({ siteLoading, setSiteLoading }: { siteLoading: boolean, set
   return (
     <ThemeProvider>
       <Preloader isLoading={siteLoading} />
+      <SpeedInsights />
       <Router>
         <ScrollToTop />
         <Routes>

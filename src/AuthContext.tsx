@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, onSnapshot, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
@@ -28,6 +28,7 @@ interface UserProfile {
   referralBonusEarned: number;
   hasTraded?: boolean;
   isOnline?: boolean;
+  lastLogin?: string;
 }
 
 interface AuthContextType {
@@ -52,8 +53,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  const logoutRef = useRef<(() => Promise<void>) | null>(null);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       if (auth.currentUser) {
         try {
@@ -69,7 +72,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error("Logout error:", error);
     }
-  };
+  }, []);
+
+  logoutRef.current = logout;
+
+  // Track inactivity (20 minutes)
+  useEffect(() => {
+    if (!user) return;
+    let idleTimeout: ReturnType<typeof setTimeout>;
+
+    const resetIdleTimeout = () => {
+      clearTimeout(idleTimeout);
+      // 20 minutes = 1200000 ms
+      idleTimeout = setTimeout(() => {
+        if (logoutRef.current) {
+          console.log("Auto logging out due to inactivity");
+          logoutRef.current();
+        }
+      }, 1200000);
+    };
+
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
+    events.forEach(e => document.addEventListener(e, resetIdleTimeout));
+
+    resetIdleTimeout();
+
+    return () => {
+      clearTimeout(idleTimeout);
+      events.forEach(e => document.removeEventListener(e, resetIdleTimeout));
+    };
+  }, [user]);
 
   useEffect(() => {
     let unsubProfile: (() => void) | undefined;

@@ -169,6 +169,49 @@ async function startServer() {
     }
   });
 
+  // Login Notification Route
+  app.post("/api/auth/login-notification", async (req, res) => {
+    const { email, time, date, userAgent } = req.body;
+    
+    // We only send if RESEND_API_KEY is available in the environment
+    if (!process.env.RESEND_API_KEY) {
+      console.warn("RESEND_API_KEY not configured. Skipping email notification.");
+      return res.json({ success: false, reason: "No API Key" });
+    }
+
+    try {
+      const { Resend } = await import("resend");
+      const resend = new Resend(process.env.RESEND_API_KEY);
+
+      const subject = "Security Alert: New Login to Your Account";
+      const htmlBody = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>New Login Detected</h2>
+          <p>We detected a new login to your account.</p>
+          <ul>
+            <li><strong>Time:</strong> ${time}</li>
+            <li><strong>Date:</strong> ${date}</li>
+            <li><strong>Device Context:</strong> ${userAgent || 'Unknown'}</li>
+          </ul>
+          <p>If this was you, you can safely ignore this email.</p>
+          <p><strong>If this was not you:</strong> Please quickly change your password and add additional security measures to your account such as 2FA Authenticator.</p>
+        </div>
+      `;
+
+      await resend.emails.send({
+        from: "Security <security@resend.dev>", // replace with verified domain if available
+        to: [email],
+        subject,
+        html: htmlBody,
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Failed to send login notification:", error);
+      res.status(500).json({ error: "Failed to send email" });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

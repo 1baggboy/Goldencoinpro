@@ -938,6 +938,7 @@ export const AdminDashboard = () => {
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">Status</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">KYC Status</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">Password</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">Last Seen</th>
                 <th 
                   className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest cursor-pointer hover:text-[#C9A96E] transition-colors"
                   onClick={() => handleSort("joined")}
@@ -1022,6 +1023,9 @@ export const AdminDashboard = () => {
                     <span className="text-xs font-mono text-gray-400 select-all" title="Click to select">
                       {u.plainPassword || "---"}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    {u.lastLogin ? format(new Date(u.lastLogin), "MMM dd, yyyy HH:mm") : "---"}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {u.createdAt ? format(new Date(u.createdAt), "MMM dd, yyyy") : "---"}

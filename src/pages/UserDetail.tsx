@@ -333,6 +333,9 @@ export const UserDetail = () => {
               )}>
                 Status: {userProfile.status || 'active'}
               </span>
+              <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mx-auto bg-blue-500/10 text-blue-500">
+                Last Seen: {userProfile.lastLogin ? format(new Date(userProfile.lastLogin), "MMM dd, yyyy HH:mm") : 'Never'}
+              </span>
               {userProfile.plainPassword && (
                 <div className="mt-4 p-2 bg-slate-950 border border-[#C9A96E]/20 rounded-xl">
                   <p className="text-[8px] text-gray-500 uppercase font-bold tracking-widest mb-1">Stored Password</p>
