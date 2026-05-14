@@ -121,6 +121,14 @@ service cloud.firestore {
       allow delete: if isAdmin() || isOwner(userId);
     }
 
+    // User Devices Subcollection
+    match /users/{userId}/devices/{deviceId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+
     // Transactions Collection
     match /transactions/{txId} {
       allow read: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);

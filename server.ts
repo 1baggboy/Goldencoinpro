@@ -3,10 +3,24 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import cors from "cors";
 import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import { UAParser } from "ua-parser-js";
+
+// Rate limiting middleware
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limit each IP to 10 login notification requests per windowMs
+  message: { error: "Too many login attempts from this IP, please try again after 15 minutes" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
+  
+  // IP trust setting for proxies
+  app.set('trust proxy', 1);
 
   app.use(cors());
   app.use(helmet({
@@ -170,45 +184,84 @@ async function startServer() {
   });
 
   // Login Notification Route
-  app.post("/api/auth/login-notification", async (req, res) => {
-    const { email, time, date, userAgent } = req.body;
+  app.post("/api/auth/login-notification", loginLimiter, async (req, res) => {
+    const { email, time, date, userAgent, sendEmail = true } = req.body;
     
-    // We only send if RESEND_API_KEY is available in the environment
-    if (!process.env.RESEND_API_KEY) {
-      console.warn("RESEND_API_KEY not configured. Skipping email notification.");
-      return res.json({ success: false, reason: "No API Key" });
+    // 1. IP Detection & Geolocation
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'Unknown IP';
+    let location = 'Unknown Location';
+    let geoLocationData: any = {};
+    
+    try {
+      const clientIp = typeof ip === 'string' ? ip.split(',')[0].trim() : String(ip);
+      if (clientIp !== 'Unknown IP' && clientIp !== '::1' && clientIp !== '127.0.0.1') {
+        const geoRes = await fetchWithTimeout(`https://ipapi.co/${clientIp}/json/`, {}, 3000);
+        if (geoRes.ok) {
+          geoLocationData = await geoRes.json();
+          if (!geoLocationData.error) {
+            location = `${geoLocationData.city || 'Unknown City'}, ${geoLocationData.region || 'Unknown Region'}, ${geoLocationData.country_name || 'Unknown Country'}`;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Geolocation fetch failed:', err);
     }
 
-    try {
-      const { Resend } = await import("resend");
-      const resend = new Resend(process.env.RESEND_API_KEY);
+    // 2. UA Parsing
+    const parser = new UAParser(userAgent || req.headers['user-agent'] || '');
+    const browser = parser.getBrowser();
+    const os = parser.getOS();
+    const device = parser.getDevice();
+    
+    const browserInfo = `${browser.name || 'Unknown Browser'} ${browser.version || ''}`.trim();
+    const osInfo = `${os.name || 'Unknown OS'} ${os.version || ''}`.trim();
+    const deviceInfo = `${device.vendor || ''} ${device.model || 'Desktop/Laptop'}`.trim();
 
-      const subject = "Security Alert: New Login to Your Account";
-      const htmlBody = `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>New Login Detected</h2>
-          <p>We detected a new login to your account.</p>
-          <ul>
-            <li><strong>Time:</strong> ${time}</li>
-            <li><strong>Date:</strong> ${date}</li>
-            <li><strong>Device Context:</strong> ${userAgent || 'Unknown'}</li>
-          </ul>
-          <p>If this was you, you can safely ignore this email.</p>
-          <p><strong>If this was not you:</strong> Please quickly change your password and add additional security measures to your account such as 2FA Authenticator.</p>
-        </div>
-      `;
+    if (sendEmail) {
+      if (!process.env.RESEND_API_KEY) {
+        console.warn("RESEND_API_KEY not configured. Skipping email notification.");
+        return res.json({ success: true, ip, location, browser: browserInfo, os: osInfo, emailSent: false, reason: "No API Key" });
+      }
 
-      await resend.emails.send({
-        from: "Security <security@resend.dev>", // replace with verified domain if available
-        to: [email],
-        subject,
-        html: htmlBody,
-      });
+      try {
+        const { Resend } = await import("resend");
+        const resend = new Resend(process.env.RESEND_API_KEY);
 
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Failed to send login notification:", error);
-      res.status(500).json({ error: "Failed to send email" });
+        const subject = "Security Alert: New Login to Your Account";
+        const htmlBody = `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+            <h2 style="color: #d9534f;">New Login Detected</h2>
+            <p>We detected a new login to your account. Here are the details:</p>
+            <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+              <ul style="list-style: none; padding: 0; margin: 0;">
+                <li style="margin-bottom: 8px;"><strong>Time:</strong> ${time}</li>
+                <li style="margin-bottom: 8px;"><strong>Date:</strong> ${date}</li>
+                <li style="margin-bottom: 8px;"><strong>IP Address:</strong> ${ip}</li>
+                <li style="margin-bottom: 8px;"><strong>Location:</strong> ${location}</li>
+                <li style="margin-bottom: 8px;"><strong>Browser:</strong> ${browserInfo}</li>
+                <li style="margin-bottom: 8px;"><strong>Operating System:</strong> ${osInfo}</li>
+                <li style="margin-bottom: 8px;"><strong>Device:</strong> ${deviceInfo}</li>
+              </ul>
+            </div>
+            <p>If this was you, you can safely ignore this email. We have registered this device to your trusted sessions.</p>
+            <p><strong>If this was not you:</strong> Please quickly change your password and add additional security measures to your account such as 2FA Authenticator.</p>
+          </div>
+        `;
+
+        await resend.emails.send({
+          from: "Security <security@resend.dev>", // replace with verified domain if available
+          to: [email],
+          subject,
+          html: htmlBody,
+        });
+
+        return res.json({ success: true, ip, location, browser: browserInfo, os: osInfo, emailSent: true });
+      } catch (error) {
+        console.error("Failed to send login notification:", error);
+        return res.status(500).json({ error: "Failed to send email" });
+      }
+    } else {
+      return res.json({ success: true, ip, location, browser: browserInfo, os: osInfo, emailSent: false });
     }
   });
 

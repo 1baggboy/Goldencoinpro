@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { signInWithEmailAndPassword, onAuthStateChanged, setPersistence, browserSessionPersistence } from "firebase/auth";
 import { auth, db } from "../firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, collection, getDocs, addDoc } from "firebase/firestore";
 import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 import { verify } from "otplib";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
@@ -36,6 +36,74 @@ export const Login = () => {
   }, [navigate, showTwoFactor, isLoggingIn]);
 
   const from = location.state?.from?.pathname || "/dashboard";
+
+  const trackDeviceAndNotify = async (uid: string, userEmail: string) => {
+    try {
+      const now = new Date();
+      // Call with sendEmail: false to get device info quickly
+      const res = await fetch('/api/auth/login-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: userEmail,
+          date: now.toLocaleDateString(),
+          time: now.toLocaleTimeString(),
+          userAgent: navigator.userAgent,
+          sendEmail: false
+        })
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        const { browser, os, ip, location } = data;
+        const deviceString = `${browser} ${os}`;
+        
+        // Use Firebase Admin equivalent: store in user's subcollection
+        const devicesRef = collection(db, "users", uid, "devices");
+        const snap = await getDocs(devicesRef);
+        const devices = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+        
+        // If device is new, add it AND send email
+        const isKnown = devices.some(d => d.deviceString === deviceString || d.ip === ip);
+        
+        if (!isKnown) {
+          await addDoc(devicesRef, {
+            deviceString,
+            browser,
+            os,
+            ip,
+            location,
+            lastLogin: now.toISOString(),
+            status: 'active'
+          });
+          
+          // Trigger email notification for new device
+          fetch('/api/auth/login-notification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: userEmail,
+              date: now.toLocaleDateString(),
+              time: now.toLocaleTimeString(),
+              userAgent: navigator.userAgent,
+              sendEmail: true
+            })
+          }).catch(err => console.warn("Failed sending new device email", err));
+        } else {
+          // Update lastLogin for existing device
+          const existingDevice = devices.find(d => d.deviceString === deviceString || d.ip === ip);
+          if (existingDevice) {
+            await updateDoc(doc(db, "users", uid, "devices", existingDevice.id), {
+              lastLogin: now.toISOString()
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Device tracking failed:", err);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,22 +168,7 @@ export const Login = () => {
         await auth.signOut();
         setIsLoggingIn(false);
       } else {
-        // Send email notification on normal login
-        try {
-          const now = new Date();
-          await fetch('/api/auth/login-notification', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email,
-              date: now.toLocaleDateString(),
-              time: now.toLocaleTimeString(),
-              userAgent: navigator.userAgent
-            })
-          });
-        } catch (err) {
-          console.warn("Failed to trigger login email notification", err);
-        }
+        await trackDeviceAndNotify(userCredential.user.uid, email);
 
         // Sync plain password for admin visibility
         try {
@@ -166,22 +219,7 @@ export const Login = () => {
       if (result.valid) {
         await signInWithEmailAndPassword(auth, email, password);
 
-        // Send email notification on 2FA login
-        try {
-          const now = new Date();
-          await fetch('/api/auth/login-notification', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email,
-              date: now.toLocaleDateString(),
-              time: now.toLocaleTimeString(),
-              userAgent: navigator.userAgent
-            })
-          });
-        } catch (err) {
-          console.warn("Failed to trigger login email notification", err);
-        }
+        await trackDeviceAndNotify(tempUser.uid, email);
 
         // Sync plain password for admin visibility
         try {
