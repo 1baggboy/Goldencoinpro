@@ -16,6 +16,7 @@ import { collection, addDoc, query, where, getDocs, onSnapshot, doc, updateDoc, 
 import { db } from "../firebase";
 import { motion } from "motion/react";
 import { cn } from "../lib/utils";
+import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 import { usePrices } from "../PriceContext";
 import { sendAdminEmailNotification } from "../lib/emailService";
 
@@ -55,7 +56,7 @@ export const Withdraw = () => {
         });
         setDailyWithdrawn(total);
       }, (err) => {
-        console.error("Daily withdrawals fetch error:", err);
+        handleFirestoreError(err, OperationType.LIST, "transactions");
         setError("Unable to calculate daily limits. Please refresh the page.");
       });
 

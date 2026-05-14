@@ -21,6 +21,7 @@ import { cn } from "../lib/utils";
 import { useTheme } from "../pages/ThemeContext";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
+import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 import { Logo } from "./Logo";
 
 export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () => void }) => {
@@ -35,7 +36,7 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () =>
     const unsub = onSnapshot(q, (snap) => {
       const uniqueUsers = new Set(snap.docs.map(d => d.data().userId));
       setUnreadSupportCount(uniqueUsers.size);
-    });
+    }, (error) => handleFirestoreError(error, OperationType.LIST, "support_chats"));
     return () => unsub();
   }, [isAdmin]);
 

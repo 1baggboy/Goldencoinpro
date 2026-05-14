@@ -8,6 +8,7 @@ import { db, auth } from "../firebase";
 import { deleteUser } from "firebase/auth";
 import { motion } from "motion/react";
 import { cn } from "../lib/utils";
+import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 import { Link, useNavigate } from "react-router-dom";
 
 export const Profile = () => {
@@ -53,7 +54,7 @@ export const Profile = () => {
     const qDevices = collection(db, "users", user.uid, "devices");
     const unsubDevices = onSnapshot(qDevices, (snap) => {
       setDevices(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    });
+    }, (error) => handleFirestoreError(error, OperationType.GET, `users/${user.uid}/devices`));
 
     const qTx = query(collection(db, "transactions"), where("userId", "==", user.uid));
     const unsubTx = onSnapshot(qTx, (snap) => {
@@ -62,13 +63,13 @@ export const Profile = () => {
         return { id: d.id, ...data, txType: data.type, type: 'transaction' };
       });
       setTransactions(txs);
-    });
+    }, (error) => handleFirestoreError(error, OperationType.GET, "transactions"));
 
     const qInv = query(collection(db, "investments"), where("userId", "==", user.uid));
     const unsubInv = onSnapshot(qInv, (snap) => {
       const invs = snap.docs.map(d => ({ id: d.id, ...d.data(), type: 'investment' }));
       setInvestments(invs);
-    });
+    }, (error) => handleFirestoreError(error, OperationType.GET, "investments"));
 
     const qKyc = query(collection(db, "kyc_submissions"), where("userId", "==", user.uid));
     const unsubKyc = onSnapshot(qKyc, (snap) => {
@@ -78,7 +79,7 @@ export const Profile = () => {
       } else {
         setKycSubmission(null);
       }
-    });
+    }, (error) => handleFirestoreError(error, OperationType.GET, "kyc_submissions"));
 
     return () => {
       unsubDevices();

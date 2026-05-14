@@ -16,6 +16,7 @@ import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, increment
 import { db } from "../firebase";
 import { motion } from "motion/react";
 import { usePrices } from "../PriceContext";
+import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 import { sendAdminEmailNotification } from "../lib/emailService";
 
 export const Deposit = () => {
@@ -58,7 +59,7 @@ export const Deposit = () => {
         });
         setDailyDeposited(total);
       }, (err) => {
-        console.error("Daily deposits fetch error:", err);
+        handleFirestoreError(err, OperationType.LIST, "transactions");
         setError("Unable to calculate daily limits. Please refresh the page.");
       });
 

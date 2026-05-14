@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { collection, query, onSnapshot, orderBy, addDoc, serverTimestamp, where, doc, updateDoc, getDocs } from "firebase/firestore";
+import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 import { db, auth } from "../firebase";
 import { useAuth } from "../AuthContext";
 import { cn } from "../lib/utils";
@@ -70,7 +71,7 @@ export const AdminSupport = () => {
       // If we have an initialUserId but it's not in the chat list yet (new chat), 
       // we might need to fetch the user name or just wait for them to send a message.
       // For now, if it's selected, it will show the ID.
-    });
+    }, (error) => handleFirestoreError(error, OperationType.LIST, "support_chats"));
 
     return () => unsub();
   }, []);
@@ -116,7 +117,7 @@ export const AdminSupport = () => {
 
     const unsub = onSnapshot(q, (snap) => {
       setMessages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    });
+    }, (error) => handleFirestoreError(error, OperationType.LIST, "support_chats"));
 
     return () => unsub();
   }, [selectedChatId]);

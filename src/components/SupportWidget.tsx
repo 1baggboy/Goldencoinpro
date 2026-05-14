@@ -107,9 +107,7 @@ export const SupportWidget: React.FC<{
 
     const unsub = onSnapshot(q, (snap) => {
       setUnreadCount(snap.docs.length);
-    }, (error) => {
-      // Silent fail
-    });
+    }, (error) => handleFirestoreError(error, OperationType.LIST, "support_chats"));
 
     return () => unsub();
   }, [effectiveUserId, isAdminMode]);

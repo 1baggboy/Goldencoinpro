@@ -25,6 +25,7 @@ import { Logo } from "../components/Logo";
 import { Footer } from "../components/Footer";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
+import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 
 const AccountIllustration = () => (
   <div className="relative w-full max-w-[280px] h-[240px] mx-auto flex items-center justify-center">
@@ -127,9 +128,7 @@ export const Landing = () => {
       if (docSnap.exists() && docSnap.data().totalUsers) {
         setUserCount(docSnap.data().totalUsers);
       }
-    }, (err) => {
-      console.warn("Could not fetch user stats:", err);
-    });
+    }, (err) => handleFirestoreError(err, OperationType.GET, "system/stats"));
     return () => unsub();
   }, []);
 

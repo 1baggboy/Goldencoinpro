@@ -21,6 +21,7 @@ import { db } from "../firebase";
 import { APP_CONFIG } from "../config";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "../lib/utils";
+import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 import { usePrices } from "../PriceContext";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -78,7 +79,7 @@ export const Invest = () => {
       const invs = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
       setActiveInvestments(invs.sort((a, b) => b.startTime - a.startTime));
     }, (err) => {
-      console.error("Investments fetch error:", err);
+      handleFirestoreError(err, OperationType.LIST, "investments");
       setMessage({ type: 'error', text: "Unable to load active investments. Please try again later." });
     });
 

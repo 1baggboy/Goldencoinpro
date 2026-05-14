@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, collection, query, where, onSnapshot, updateDoc } from "firebase/firestore";
+import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { db, auth } from "../firebase";
 import { useNotifications } from "../NotificationContext";
@@ -97,9 +98,8 @@ export const UserDetail = () => {
       }
       setLoading(false);
     }, (err) => {
-      console.error(err);
-      setError("Failed to stream user profile updates.");
       setLoading(false);
+      handleFirestoreError(err, OperationType.GET, `users/${userId}`);
     });
 
     // Fetch user transactions
@@ -110,20 +110,14 @@ export const UserDetail = () => {
         return { id: d.id, ...data, txType: data.type, type: 'transaction' };
       });
       setTransactions(txs.sort((a: any, b: any) => (b.timestamp || 0) - (a.timestamp || 0)));
-    }, (err) => {
-      console.error(err);
-      setError("Failed to fetch user transactions.");
-    });
+    }, (err) => handleFirestoreError(err, OperationType.LIST, "transactions"));
 
     // Fetch user investments
     const qInv = query(collection(db, "investments"), where("userId", "==", userId));
     const unsubInv = onSnapshot(qInv, (snap) => {
       const invs = snap.docs.map(d => ({ id: d.id, ...d.data(), type: 'investment' }));
       setInvestments(invs.sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0)));
-    }, (err) => {
-      console.error(err);
-      setError("Failed to fetch user investments.");
-    });
+    }, (err) => handleFirestoreError(err, OperationType.LIST, "investments"));
 
     // Fetch user KYC submission
     const qKyc = query(collection(db, "kyc_submissions"), where("userId", "==", userId));
@@ -132,10 +126,7 @@ export const UserDetail = () => {
       const sorted = docs.sort((a: any, b: any) => (b.submittedAt || 0) - (a.submittedAt || 0));
       setKycHistory(sorted);
       setKycSubmission(sorted[0] || null);
-    }, (err) => {
-      console.error(err);
-      setError("Failed to fetch user KYC data.");
-    });
+    }, (err) => handleFirestoreError(err, OperationType.LIST, "kyc_submissions"));
 
     return () => {
       unsubUser();
