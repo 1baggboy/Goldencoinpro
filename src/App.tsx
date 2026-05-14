@@ -33,6 +33,7 @@ import { SupportWidget } from "./components/SupportWidget";
 import CookieBanner from "./components/CookieBanner";
 import { Toaster } from "sonner";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
 import { Preloader } from "./components/Preloader";
@@ -106,6 +107,7 @@ function AppContent({ siteLoading, setSiteLoading }: { siteLoading: boolean, set
     <ThemeProvider>
       <Preloader isLoading={siteLoading} />
       <SpeedInsights />
+      <Analytics />
       <Router>
         <ScrollToTop />
         <Routes>
