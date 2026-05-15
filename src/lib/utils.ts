@@ -42,8 +42,10 @@ export async function fetchCryptoPrices(retries = 2): Promise<any> {
       });
       if (prices.btc) return prices;
     }
-  } catch (e) {
-    console.error("CoinCap fallback failed:", e);
+  } catch (e: any) {
+    if (!e.message?.includes('Failed to fetch')) {
+      console.error("CoinCap fallback failed:", e);
+    }
   }
 
   // 3. Last Resort: BitPay for pure BTC/ETH prices
@@ -59,8 +61,10 @@ export async function fetchCryptoPrices(retries = 2): Promise<any> {
          };
        }
     }
-  } catch (e) {
-    console.error("BitPay fallback failed:", e);
+  } catch (e: any) {
+    if (!e.message?.includes('Failed to fetch')) {
+      console.error("BitPay fallback failed:", e);
+    }
   }
 
       if (retries > 0) {
