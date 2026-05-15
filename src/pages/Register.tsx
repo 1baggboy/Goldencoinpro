@@ -188,6 +188,43 @@ export const Register = () => {
         }
       }
 
+      // Track registration device
+      try {
+        let deviceId = localStorage.getItem('goldencoin_device_id');
+        if (!deviceId) {
+          deviceId = 'dev_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
+          localStorage.setItem('goldencoin_device_id', deviceId);
+        }
+        
+        const res = await fetch('/api/auth/login-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            date: new Date().toLocaleDateString(),
+            time: new Date().toLocaleTimeString(),
+            userAgent: navigator.userAgent,
+            sendEmail: false
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          const { browser, os, ip, location } = data;
+          await addDoc(collection(db, "users", user.uid, "devices"), {
+            deviceId,
+            deviceString: `${browser} ${os}`,
+            browser,
+            os,
+            ip,
+            location,
+            lastLogin: new Date().toISOString(),
+            status: 'active'
+          });
+        }
+      } catch (dErr) {
+        console.warn("Initial device tracking failed:", dErr);
+      }
+
       await sendAdminEmailNotification(
         "Critical Event: New Registration",
         `A new user has registered. Name: ${name}, Email: ${email}`

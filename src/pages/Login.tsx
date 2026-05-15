@@ -40,7 +40,17 @@ export const Login = () => {
   const trackDeviceAndNotify = async (uid: string, userEmail: string) => {
     try {
       const now = new Date();
-      // Call with sendEmail: false to get device info quickly
+      
+      // 1. Get or create persistent device ID (cleared in incognito)
+      let deviceId = localStorage.getItem('goldencoin_device_id');
+      const isNewSession = !deviceId;
+      
+      if (!deviceId) {
+        deviceId = 'dev_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
+        localStorage.setItem('goldencoin_device_id', deviceId);
+      }
+
+      // Call backend to get IP and browser info
       const res = await fetch('/api/auth/login-notification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -59,45 +69,57 @@ export const Login = () => {
         const { browser, os, ip, location } = data;
         const deviceString = `${browser} ${os}`;
         
-        // Use Firebase Admin equivalent: store in user's subcollection
+        // Use Firebase to store/check device
         const devicesRef = collection(db, "users", uid, "devices");
         const snap = await getDocs(devicesRef);
         const devices = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
         
-        // If device is new, add it AND send email
-        const isKnown = devices.some(d => d.deviceString === deviceString || d.ip === ip);
+        // A device is known if we have its deviceId in our list
+        const existingDevice = devices.find(d => d.deviceId === deviceId);
         
-        if (!isKnown) {
-          await addDoc(devicesRef, {
-            deviceString,
-            browser,
-            os,
-            ip,
-            location,
-            lastLogin: now.toISOString(),
-            status: 'active'
-          });
+        if (!existingDevice || isNewSession) {
+          // If we have no record of this deviceId OR it's a completely fresh session (incognito)
+          // we treat it as potentially new.
           
-          // Trigger email notification for new device
-          fetch('/api/auth/login-notification', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: userEmail,
-              date: now.toLocaleDateString(),
-              time: now.toLocaleTimeString(),
-              userAgent: navigator.userAgent,
-              sendEmail: true
-            })
-          }).catch(err => console.warn("Failed sending new device email", err));
-        } else {
-          // Update lastLogin for existing device
-          const existingDevice = devices.find(d => d.deviceString === deviceString || d.ip === ip);
-          if (existingDevice) {
-            await updateDoc(doc(db, "users", uid, "devices", existingDevice.id), {
-              lastLogin: now.toISOString()
+          // Double check if this EXACT combination of ID and IP exists to avoid spamming
+          const exactMatch = devices.some(d => d.deviceId === deviceId && d.ip === ip);
+          
+          if (!exactMatch) {
+            console.log("Device/Session not recognized. Adding to trusted devices and sending alert.");
+            await addDoc(devicesRef, {
+              deviceId,
+              deviceString,
+              browser,
+              os,
+              ip,
+              location,
+              lastLogin: now.toISOString(),
+              status: 'active',
+              isIncognito: isNewSession
             });
+            
+            // Trigger email notification for new device
+            const emailRes = await fetch('/api/auth/login-notification', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: userEmail,
+                date: now.toLocaleDateString(),
+                time: now.toLocaleTimeString(),
+                userAgent: navigator.userAgent,
+                sendEmail: true
+              })
+            });
+            const emailData = await emailRes.json();
+            console.log("Security email attempt:", emailData.success ? "Success" : "Failed", emailData.messageId || emailData.error);
           }
+        } else {
+          console.log("Known device detected. Updating last login.");
+          await updateDoc(doc(db, "users", uid, "devices", existingDevice.id), {
+            lastLogin: now.toISOString(),
+            ip, // Update in case IP changed
+            location
+          });
         }
       }
     } catch (err) {

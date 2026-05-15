@@ -189,15 +189,14 @@ async function startServer() {
     
     // 1. IP Detection & Geolocation
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'Unknown IP';
+    const clientIp = typeof ip === 'string' ? ip.split(',')[0].trim() : String(ip);
     let location = 'Unknown Location';
-    let geoLocationData: any = {};
     
     try {
-      const clientIp = typeof ip === 'string' ? ip.split(',')[0].trim() : String(ip);
       if (clientIp !== 'Unknown IP' && clientIp !== '::1' && clientIp !== '127.0.0.1') {
         const geoRes = await fetchWithTimeout(`https://ipapi.co/${clientIp}/json/`, {}, 3000);
         if (geoRes.ok) {
-          geoLocationData = await geoRes.json();
+          const geoLocationData = await geoRes.json();
           if (!geoLocationData.error) {
             location = `${geoLocationData.city || 'Unknown City'}, ${geoLocationData.region || 'Unknown Region'}, ${geoLocationData.country_name || 'Unknown Country'}`;
           }
@@ -220,48 +219,89 @@ async function startServer() {
     if (sendEmail) {
       if (!process.env.RESEND_API_KEY) {
         console.warn("RESEND_API_KEY not configured. Skipping email notification.");
-        return res.json({ success: true, ip, location, browser: browserInfo, os: osInfo, emailSent: false, reason: "No API Key" });
+        return res.json({ success: true, ip: clientIp, location, browser: browserInfo, os: osInfo, emailSent: false, reason: "No API Key" });
+      }
+
+      if (!email) {
+        return res.status(400).json({ error: "Email recipient is required", success: false });
       }
 
       try {
         const { Resend } = await import("resend");
         const resend = new Resend(process.env.RESEND_API_KEY);
 
-        const subject = "Security Alert: New Login to Your Account";
-        const htmlBody = `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-            <h2 style="color: #d9534f;">New Login Detected</h2>
-            <p>We detected a new login to your account. Here are the details:</p>
-            <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <ul style="list-style: none; padding: 0; margin: 0;">
-                <li style="margin-bottom: 8px;"><strong>Time:</strong> ${time}</li>
-                <li style="margin-bottom: 8px;"><strong>Date:</strong> ${date}</li>
-                <li style="margin-bottom: 8px;"><strong>IP Address:</strong> ${ip}</li>
-                <li style="margin-bottom: 8px;"><strong>Location:</strong> ${location}</li>
-                <li style="margin-bottom: 8px;"><strong>Browser:</strong> ${browserInfo}</li>
-                <li style="margin-bottom: 8px;"><strong>Operating System:</strong> ${osInfo}</li>
-                <li style="margin-bottom: 8px;"><strong>Device:</strong> ${deviceInfo}</li>
-              </ul>
-            </div>
-            <p>If this was you, you can safely ignore this email. We have registered this device to your trusted sessions.</p>
-            <p><strong>If this was not you:</strong> Please quickly change your password and add additional security measures to your account such as 2FA Authenticator.</p>
-          </div>
-        `;
-
-        await resend.emails.send({
-          from: "Security <security@resend.dev>", // replace with verified domain if available
+        console.log(`[Resend] Attempting to send login notification to: ${email}`);
+        
+        const { data: emailData, error: emailError } = await resend.emails.send({
+          from: "security@goldencoin.live",
           to: [email],
-          subject,
-          html: htmlBody,
+          replyTo: "support@goldencoin.live",
+          subject: `Security Alert: New Login to Golden Coin from ${location || clientIp}`,
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333; border: 1px solid #eee; border-radius: 10px; overflow: hidden;">
+              <div style="background-color: #C9A96E; padding: 20px; text-align: center;">
+                <h1 style="color: #0B0B0B; margin: 0; font-size: 24px;">Security Notification</h1>
+              </div>
+              <div style="padding: 30px;">
+                <h2 style="color: #d9534f; margin-top: 0;">New Device Login Detected</h2>
+                <p>Hello,</p>
+                <p>We detected a successful login to your Golden Coin account from a device we don't recognize.</p>
+                
+                <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 25px 0; border: 1px solid #eee;">
+                  <h3 style="margin-top: 0; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 10px;">Login Details:</h3>
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 5px 0; color: #666; width: 120px;"><strong>Date:</strong></td><td style="padding: 5px 0;">${date}</td></tr>
+                    <tr><td style="padding: 5px 0; color: #666;"><strong>Time:</strong></td><td style="padding: 5px 0;">${time}</td></tr>
+                    <tr><td style="padding: 5px 0; color: #666;"><strong>Location:</strong></td><td style="padding: 5px 0;">${location}</td></tr>
+                    <tr><td style="padding: 5px 0; color: #666;"><strong>IP Address:</strong></td><td style="padding: 5px 0;">${clientIp}</td></tr>
+                    <tr><td style="padding: 5px 0; color: #666;"><strong>Device:</strong></td><td style="padding: 5px 0;">${deviceInfo}</td></tr>
+                    <tr><td style="padding: 5px 0; color: #666;"><strong>Browser:</strong></td><td style="padding: 5px 0;">${browserInfo}</td></tr>
+                    <tr><td style="padding: 5px 0; color: #666;"><strong>OS:</strong></td><td style="padding: 5px 0;">${osInfo}</td></tr>
+                  </table>
+                </div>
+
+                <p style="font-weight: bold; color: #333;">Was this you?</p>
+                <p>If this was you, you can safely ignore this message. This device has been added to your trusted devices list.</p>
+                
+                <p style="font-weight: bold; color: #d9534f;">If this WAS NOT you:</p>
+                <p>Your account may be compromised. Please take these steps immediately:</p>
+                <ol>
+                  <li style="margin-bottom: 10px;">Change your password immediately.</li>
+                  <li style="margin-bottom: 10px;">Enable Two-Factor Authentication (2FA) if not already active.</li>
+                  <li style="margin-bottom: 10px;">Review your trusted devices in your profile settings.</li>
+                </ol>
+                
+                <div style="margin-top: 30px; text-align: center;">
+                  <a href="https://goldencoin.live/profile" style="background-color: #C9A96E; color: #0B0B0B; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Secure My Account</a>
+                </div>
+              </div>
+              <div style="background-color: #f4f4f4; padding: 20px; text-align: center; font-size: 12px; color: #999;">
+                <p>&copy; ${new Date().getFullYear()} Golden Coin Ltd. All rights reserved.</p>
+                <p>This is an automated security notification. Please do not reply directly to this email.</p>
+              </div>
+            </div>
+          `,
         });
 
-        return res.json({ success: true, ip, location, browser: browserInfo, os: osInfo, emailSent: true });
+        if (emailError) {
+          console.error("[Resend Error]:", JSON.stringify(emailError, null, 2));
+          return res.status(500).json({ 
+            error: "Resend API Error", 
+            details: emailError.message,
+            code: emailError.name,
+            success: false,
+            tip: "If your domain goldencoin.live is NOT yet fully verified in the Resend dashboard, you can ONLY send emails to the address you signed up with (lookuptoadams@gmail.com). Check Domain -> DNS Records in Resend."
+          });
+        }
+
+        console.log(`[Resend Success]: Sent message ${emailData?.id}`);
+        return res.json({ success: true, ip: clientIp, location, browser: browserInfo, os: osInfo, emailSent: true, messageId: emailData?.id });
       } catch (error) {
-        console.error("Failed to send login notification:", error);
-        return res.status(500).json({ error: "Failed to send email" });
+        console.error("Critical error in email route:", error);
+        return res.status(500).json({ error: "Server error during email sending", success: false });
       }
     } else {
-      return res.json({ success: true, ip, location, browser: browserInfo, os: osInfo, emailSent: false });
+      return res.json({ success: true, ip: clientIp, location, browser: browserInfo, os: osInfo, emailSent: false });
     }
   });
 
