@@ -41,7 +41,7 @@ export const Login = () => {
     try {
       const now = new Date();
       
-      // 1. Get or create persistent device ID (cleared in incognito)
+      // 1. Get or create persistent device ID
       let deviceId = localStorage.getItem('goldencoin_device_id');
       const isNewSession = !deviceId;
       
@@ -50,7 +50,8 @@ export const Login = () => {
         localStorage.setItem('goldencoin_device_id', deviceId);
       }
 
-      // Call backend to get IP and browser info
+      // 2. Call backend to capture fingerprint and SEND EMAIL (for every login as requested)
+      console.log(`[Security] Triggering login notification for ${userEmail}...`);
       const res = await fetch('/api/auth/login-notification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -59,71 +60,53 @@ export const Login = () => {
           date: now.toLocaleDateString(),
           time: now.toLocaleTimeString(),
           userAgent: navigator.userAgent,
-          sendEmail: false
+          sendEmail: true // Always send email as per requirement
         })
       });
       
       const data = await res.json();
       
       if (data.success) {
-        const { browser, os, ip, location } = data;
+        const { browser, os, ip, location, messageId } = data;
         const deviceString = `${browser} ${os}`;
         
-        // Use Firebase to store/check device
+        console.log(`%c[Security] Alert email status: ${data.emailSent ? "Sent (" + messageId + ")" : "Skipped"}`, "color: green; font-weight: bold;");
+
+        // 3. Update or Add device in Firestore
         const devicesRef = collection(db, "users", uid, "devices");
         const snap = await getDocs(devicesRef);
         const devices = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
         
-        // A device is known if we have its deviceId in our list
         const existingDevice = devices.find(d => d.deviceId === deviceId);
         
-        if (!existingDevice || isNewSession) {
-          // If we have no record of this deviceId OR it's a completely fresh session (incognito)
-          // we treat it as potentially new.
-          
-          // Double check if this EXACT combination of ID and IP exists to avoid spamming
-          const exactMatch = devices.some(d => d.deviceId === deviceId && d.ip === ip);
-          
-          if (!exactMatch) {
-            console.log("Device/Session not recognized. Adding to trusted devices and sending alert.");
-            await addDoc(devicesRef, {
-              deviceId,
-              deviceString,
-              browser,
-              os,
-              ip,
-              location,
-              lastLogin: now.toISOString(),
-              status: 'active',
-              isIncognito: isNewSession
-            });
-            
-            // Trigger email notification for new device
-            const emailRes = await fetch('/api/auth/login-notification', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                email: userEmail,
-                date: now.toLocaleDateString(),
-                time: now.toLocaleTimeString(),
-                userAgent: navigator.userAgent,
-                sendEmail: true
-              })
-            });
-            const emailData = await emailRes.json();
-            console.log("Security email attempt:", emailData.success ? "Success" : "Failed", emailData.messageId || emailData.error);
-          }
+        if (!existingDevice) {
+          console.log("[Security] New device detected. Registering...");
+          await addDoc(devicesRef, {
+            deviceId,
+            deviceString,
+            browser,
+            os,
+            ip,
+            location,
+            lastLogin: now.toISOString(),
+            status: 'active',
+            isIncognito: isNewSession
+          });
         } else {
-          console.log("Known device detected. Updating last login.");
+          console.log("[Security] Existing device detected. Updating metadata.");
           await updateDoc(doc(db, "users", uid, "devices", existingDevice.id), {
             lastLogin: now.toISOString(),
-            ip, // Update in case IP changed
-            location
+            ip, 
+            location,
+            browser,
+            os
           });
         }
+      } else {
+        console.error("[Security] Notification service failed:", data.error);
       }
     } catch (err) {
-      console.warn("Device tracking failed:", err);
+      console.warn("[Security] Device tracking/notification failed:", err);
     }
   };
 

@@ -10,6 +10,7 @@ import { motion } from "motion/react";
 import { cn } from "../lib/utils";
 import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 import { Link, useNavigate } from "react-router-dom";
+import { DeviceManagement } from "../components/DeviceManagement";
 
 export const Profile = () => {
   const { profile, user } = useAuth();
@@ -426,42 +427,7 @@ export const Profile = () => {
 
       {/* Trusted Devices Section */}
       <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6 lg:p-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
-          <h3 className="text-xl font-bold text-white flex items-center gap-2">
-            <Lock size={20} className="text-[#C9A96E]" />
-            Manage Devices
-          </h3>
-          <p className="text-xs text-gray-500 max-w-sm">
-            View active sessions and revoke access to devices you don't recognize.
-          </p>
-        </div>
-        
-        {devices.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 text-sm">No trusted devices found.</div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {devices.map((device, i) => (
-              <div key={device.id || i} className="p-4 bg-slate-950 border border-[#C9A96E]/10 rounded-xl relative group">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-bold text-white text-sm">{device.deviceString || 'Unknown Device'}</h4>
-                    <p className="text-xs text-gray-500 mt-1">IP: {device.ip || 'N/A'} &bull; {device.location || 'Unknown'}</p>
-                    <p className="text-[10px] text-gray-600 mt-2">
-                      Last Seen: {device.lastLogin ? new Date(device.lastLogin).toLocaleString() : 'Just now'}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => handleRevokeDevice(device.id)}
-                    className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors"
-                    title="Revoke Device"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <DeviceManagement />
       </div>
 
       {/* Recent Activity Feed */}

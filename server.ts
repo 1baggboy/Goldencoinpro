@@ -185,7 +185,7 @@ async function startServer() {
 
   // Login Notification Route
   app.post("/api/auth/login-notification", loginLimiter, async (req, res) => {
-    const { email, time, date, userAgent, sendEmail = true } = req.body;
+    const { email, time = new Date().toLocaleTimeString(), date = new Date().toLocaleDateString(), userAgent, sendEmail = true } = req.body;
     
     // 1. IP Detection & Geolocation
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'Unknown IP';
@@ -216,36 +216,40 @@ async function startServer() {
     const osInfo = `${os.name || 'Unknown OS'} ${os.version || ''}`.trim();
     const deviceInfo = `${device.vendor || ''} ${device.model || 'Desktop/Laptop'}`.trim();
 
+    console.log(`[Auth] Notification request for ${email || 'Anonymous'} - sendEmail: ${sendEmail}`);
+    
     if (sendEmail) {
       if (!process.env.RESEND_API_KEY) {
-        console.warn("RESEND_API_KEY not configured. Skipping email notification.");
+        console.warn("RESEND_API_KEY not configured in environment variables. Skipping email notification.");
         return res.json({ success: true, ip: clientIp, location, browser: browserInfo, os: osInfo, emailSent: false, reason: "No API Key" });
       }
+
+      // Log masked API key for debugging (only first 4 and last 4)
+      const apiKey = process.env.RESEND_API_KEY;
+      const maskedKey = `${apiKey.substring(0, 5)}...${apiKey.substring(apiKey.length - 4)}`;
+      console.log(`[Resend] Using API Key: ${maskedKey}`);
 
       if (!email) {
         return res.status(400).json({ error: "Email recipient is required", success: false });
       }
 
       try {
-        const { Resend } = await import("resend");
-        const resend = new Resend(process.env.RESEND_API_KEY);
+        const { sendEmail: dispatchEmail } = await import("./src/services/emailService");
 
-        console.log(`[Resend] Attempting to send login notification to: ${email}`);
+        console.log(`[Auth] Preparing security alert for: ${email}`);
         
-        const { data: emailData, error: emailError } = await resend.emails.send({
-          from: "security@goldencoin.live",
-          to: [email],
-          replyTo: "support@goldencoin.live",
-          subject: `Security Alert: New Login to Golden Coin from ${location || clientIp}`,
-          html: `
+        // Ensure email is a trimmed string
+        const recipient = Array.isArray(email) ? email[0].trim() : String(email).trim();
+
+        const html = `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333; border: 1px solid #eee; border-radius: 10px; overflow: hidden;">
               <div style="background-color: #C9A96E; padding: 20px; text-align: center;">
                 <h1 style="color: #0B0B0B; margin: 0; font-size: 24px;">Security Notification</h1>
               </div>
               <div style="padding: 30px;">
-                <h2 style="color: #d9534f; margin-top: 0;">New Device Login Detected</h2>
+                <h2 style="color: #d9534f; margin-top: 0;">Login Alert</h2>
                 <p>Hello,</p>
-                <p>We detected a successful login to your Golden Coin account from a device we don't recognize.</p>
+                <p>We detected a login to your Golden Coin account.</p>
                 
                 <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 25px 0; border: 1px solid #eee;">
                   <h3 style="margin-top: 0; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 10px;">Login Details:</h3>
@@ -261,7 +265,7 @@ async function startServer() {
                 </div>
 
                 <p style="font-weight: bold; color: #333;">Was this you?</p>
-                <p>If this was you, you can safely ignore this message. This device has been added to your trusted devices list.</p>
+                <p>If this was you, you can safely ignore this message.</p>
                 
                 <p style="font-weight: bold; color: #d9534f;">If this WAS NOT you:</p>
                 <p>Your account may be compromised. Please take these steps immediately:</p>
@@ -280,25 +284,22 @@ async function startServer() {
                 <p>This is an automated security notification. Please do not reply directly to this email.</p>
               </div>
             </div>
-          `,
+        `;
+
+        const data = await dispatchEmail({
+          to: recipient,
+          subject: `Security Alert: Login to Golden Coin from ${location || clientIp}`,
+          html,
         });
 
-        if (emailError) {
-          console.error("[Resend Error]:", JSON.stringify(emailError, null, 2));
-          return res.status(500).json({ 
-            error: "Resend API Error", 
-            details: emailError.message,
-            code: emailError.name,
-            success: false,
-            tip: "If your domain goldencoin.live is NOT yet fully verified in the Resend dashboard, you can ONLY send emails to the address you signed up with (lookuptoadams@gmail.com). Check Domain -> DNS Records in Resend."
-          });
-        }
-
-        console.log(`[Resend Success]: Sent message ${emailData?.id}`);
-        return res.json({ success: true, ip: clientIp, location, browser: browserInfo, os: osInfo, emailSent: true, messageId: emailData?.id });
-      } catch (error) {
-        console.error("Critical error in email route:", error);
-        return res.status(500).json({ error: "Server error during email sending", success: false });
+        return res.json({ success: true, ip: clientIp, location, browser: browserInfo, os: osInfo, emailSent: true, messageId: data?.id });
+      } catch (error: any) {
+        console.error("[Auth Error] Email dispatch failed:", error);
+        return res.status(500).json({ 
+          error: "Failed to dispatch security email", 
+          details: error.message,
+          success: false 
+        });
       }
     } else {
       return res.json({ success: true, ip: clientIp, location, browser: browserInfo, os: osInfo, emailSent: false });
