@@ -15,6 +15,12 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Global market data cache
+let globalMarketDataCache: any = null;
+let lastMarketDataFetch = 0;
+let isFetchingMarket = false;
+let lastSource = "none";
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
@@ -32,7 +38,18 @@ async function startServer() {
 
   // API Routes
   app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", version: "2.1.2", timestamp: new Date().toISOString() });
+    res.json({ 
+      status: "ok", 
+      version: "2.1.2", 
+      timestamp: new Date().toISOString(),
+      market: {
+        hasCache: !!globalMarketDataCache,
+        lastFetch: lastMarketDataFetch ? new Date(lastMarketDataFetch).toISOString() : "never",
+        lastSource: lastSource,
+        btc: globalMarketDataCache?.btc?.usd || 0,
+        symbolsCount: globalMarketDataCache ? Object.keys(globalMarketDataCache).length : 0
+      }
+    });
   });
 
   const fetchWithTimeout = async (url: string, options: any = {}, timeout = 5000) => {
@@ -51,16 +68,13 @@ async function startServer() {
     }
   };
 
-  let globalMarketDataCache: any = null;
-  let lastMarketDataFetch = 0;
-  let isFetching = false;
-
   // Background fetch logic to keep data fresh
   const updateMarketData = async () => {
-    if (isFetching) return;
-    isFetching = true;
+    if (isFetchingMarket) return;
+    isFetchingMarket = true;
     try {
-      // First try Binance
+      console.log(`[Market] Starting update cycle... (Last source: ${lastSource})`);
+      
       const symbols = [
         "BTCUSDT", "ETHUSDT", "SOLUSDT", "ADAUSDT", "XRPUSDT", 
         "BNBUSDT", "DOGEUSDT", "LINKUSDT", "DOTUSDT", "MATICUSDT",
@@ -70,19 +84,16 @@ async function startServer() {
       ];
       const encodedSymbols = encodeURIComponent(JSON.stringify(symbols));
       
-      let prices: any = null;
+      let prices: any = {};
       let success = false;
-      const endpoints = [
-        "https://api.binance.com",
-        "https://api1.binance.com"
-      ];
-      
-      for (const baseUrl of endpoints) {
+
+      // 1. PRIMARY: BINANCE
+      const binanceEndpoints = ["https://api.binance.com", "https://api1.binance.com", "https://api2.binance.com"];
+      for (const baseUrl of binanceEndpoints) {
         try {
-          const response = await fetchWithTimeout(`${baseUrl}/api/v3/ticker/24hr?symbols=${encodedSymbols}`, {}, 3000);
+          const response = await fetchWithTimeout(`${baseUrl}/api/v3/ticker/24hr?symbols=${encodedSymbols}`, {}, 4000);
           if (response.ok) {
             const data = await response.json();
-            prices = {};
             data.forEach((item: any) => {
               const sym = item.symbol.replace('USDT', '').toLowerCase();
               prices[sym] = {
@@ -91,92 +102,145 @@ async function startServer() {
               };
             });
             success = true;
+            lastSource = "binance";
             break;
           }
-        } catch (e) {}
+        } catch (e) {
+          console.warn(`[Market] Binance endpoint failed: ${baseUrl}`);
+        }
       }
 
+      // 2. SECONDARY: COINCAP (with expanded map)
       if (!success) {
-        // Fallback to CoinCap
-        const response = await fetchWithTimeout("https://api.coincap.io/v2/assets?limit=100", {}, 5000);
-        if (response.ok) {
-          const json = await response.json();
-          prices = {};
-          const symbolMap: Record<string, string> = {
-            'bitcoin': 'btc', 'ethereum': 'eth', 'solana': 'sol', 'cardano': 'ada', 'xrp': 'xrp',
-            'binance-coin': 'bnb', 'dogecoin': 'doge', 'chainlink': 'link', 'polkadot': 'dot',
-            'polygon': 'matic', 'avalanche': 'avax', 'shiba-inu': 'shib', 'tron': 'trx'
-          };
-          json.data.forEach((asset: any) => {
-            const sym = symbolMap[asset.id];
-            if (sym) {
-              prices[sym] = { usd: parseFloat(asset.priceUsd), change: parseFloat(asset.changePercent24Hr) };
+        try {
+          const response = await fetchWithTimeout("https://api.coincap.io/v2/assets?limit=100", {}, 5000);
+          if (response.ok) {
+            const json = await response.json();
+            const symbolMap: Record<string, string> = {
+              'bitcoin': 'btc', 'ethereum': 'eth', 'solana': 'sol', 'cardano': 'ada', 'xrp': 'xrp',
+              'binance-coin': 'bnb', 'dogecoin': 'doge', 'chainlink': 'link', 'polkadot': 'dot',
+              'polygon': 'matic', 'avalanche': 'avax', 'shiba-inu': 'shib', 'tron': 'trx',
+              'litecoin': 'ltc', 'near-protocol': 'near', 'uniswap': 'uni', 'algorand': 'algo',
+              'cosmos': 'atom', 'internet-computer': 'icp', 'stellar': 'xlm', 'stacks': 'stx',
+              'filecoin': 'fil', 'lido-dao': 'ldo', 'hedera-hashgraph': 'hbar', 'arbitrum': 'arb'
+            };
+            json.data.forEach((asset: any) => {
+              const sym = symbolMap[asset.id];
+              if (sym) {
+                prices[sym] = { usd: parseFloat(asset.priceUsd), change: parseFloat(asset.changePercent24Hr) };
+              }
+            });
+            if (prices.btc && prices.btc.usd > 0) {
+              success = true;
+              lastSource = "coincap";
             }
-          });
-          success = true;
+          }
+        } catch (e) {
+          console.warn("[Market] CoinCap fallback failed");
+        }
+      }
+
+      // 3. TERTIARY: COINGECKO
+      if (!success) {
+        try {
+          const cgResponse = await fetchWithTimeout("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,cardano,ripple,binancecoin,dogecoin,chainlink,polkadot,matic-network,avalanche-2,shiba-inu,tron,litecoin,near,uniswap,algorand,cosmos,internet-computer,stellar,blockstack,filecoin,lido-dao,hedera-hashgraph,arbitrum&vs_currencies=usd&include_24hr_change=true", {}, 5000);
+          if (cgResponse.ok) {
+            const cgData = await cgResponse.json();
+            const cgMap: Record<string, string> = {
+              'bitcoin': 'btc', 'ethereum': 'eth', 'solana': 'sol', 'cardano': 'ada', 'ripple': 'xrp',
+              'binancecoin': 'bnb', 'dogecoin': 'doge', 'chainlink': 'link', 'polkadot': 'dot',
+              'matic-network': 'matic', 'avalanche-2': 'avax', 'shiba-inu': 'shib', 'tron': 'trx',
+              'litecoin': 'ltc', 'near': 'near', 'uniswap': 'uni', 'algorand': 'algo',
+              'cosmos': 'atom', 'internet-computer': 'icp', 'stellar': 'xlm', 'blockstack': 'stx',
+              'filecoin': 'fil', 'lido-dao': 'ldo', 'hedera-hashgraph': 'hbar', 'arbitrum': 'arb'
+            };
+            Object.keys(cgData).forEach(id => {
+              const sym = cgMap[id];
+              if (sym) {
+                prices[sym] = { 
+                  usd: cgData[id].usd, 
+                  change: cgData[id].usd_24h_change || 0 
+                };
+              }
+            });
+            if (prices.btc && prices.btc.usd > 0) {
+              success = true;
+              lastSource = "coingecko";
+            }
+          }
+        } catch (e) {
+          console.warn("[Market] CoinGecko fallback failed");
         }
       }
 
       if (success && prices && prices.btc && prices.btc.usd > 0) {
+        prices._source = lastSource;
+        prices._updatedAt = new Date().toISOString();
         globalMarketDataCache = prices;
         lastMarketDataFetch = Date.now();
+        console.log(`[Market] Cache updated successfully from ${lastSource}. BTC: $${prices.btc.usd}`);
+      } else {
+        console.warn(`[Market] Update cycle finished without success. Last source: ${lastSource}`);
       }
     } catch (err) {
-      console.error("Market update background fetch error:", err);
+      console.error("[Market] Critical update error:", err);
     } finally {
-      isFetching = false;
+      isFetchingMarket = false;
     }
   };
 
   // Perform initial fetch 
   updateMarketData();
-  // Auto-refresh every 5 seconds in the background for "live" feel
-  setInterval(updateMarketData, 5000);
+  // Auto-refresh every 10 seconds (slightly slower than 5s to avoid rate limits on fallbacks)
+  setInterval(updateMarketData, 10000);
 
-  // Real Crypto Prices API from multiple sources for high reliability
+  // Real Crypto Prices API
   app.get("/api/market/prices", async (req, res) => {
-    if (globalMarketDataCache && Date.now() - lastMarketDataFetch < 7000) {
+    // If cache is very fresh (less than 12s), return it immediately
+    if (globalMarketDataCache && Date.now() - lastMarketDataFetch < 12000) {
       return res.json(globalMarketDataCache);
     }
     
-    // If cache is empty or stale, and we aren't already fetching, fetch now
-    if (!isFetching) {
-      await updateMarketData();
+    // If cache is stale or missing, return whatever we have but trigger refresh if not already fetching
+    if (!isFetchingMarket) {
+      updateMarketData();
     }
     
-    // Fallbacks if everything absolutely fails
-    if (!globalMarketDataCache) {
-      try {
-        const bpResponse = await fetchWithTimeout('https://bitpay.com/api/rates', {}, 5000);
-        const bpData = await bpResponse.json();
-        const btc = bpData.find((r: any) => r.code === 'USD')?.rate;
-        if (btc) {
-          return res.json({
-            btc: { usd: btc, change: 0.1 },
-            eth: { usd: btc / 30, change: 0.1 }
-          });
-        }
-      } catch (e) {
-        return res.status(503).json({ error: "Market data service unavailable" });
+    if (globalMarketDataCache) {
+      return res.json(globalMarketDataCache);
+    }
+
+    // Direct emergency fallbacks for BTC only if NO cache exists
+    try {
+      const response = await fetchWithTimeout('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', {}, 3000);
+      if (response.ok) {
+        const data = await response.json();
+        return res.json({
+          btc: { usd: parseFloat(data.price), change: 0, _source: 'emergency-binance' },
+          _emergency: true
+        });
       }
-    }
-    
-    return res.json(globalMarketDataCache || { error: "No data" });
+    } catch (e) {}
+
+    res.status(503).json({ error: "Market data service temporarily unavailable" });
   });
 
   app.get("/api/market/btc-price", async (req, res) => {
+    if (globalMarketDataCache?.btc) {
+      return res.json(globalMarketDataCache.btc);
+    }
     try {
       const response = await fetchWithTimeout('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', {}, 5000);
       if (response.ok) {
         const data = await response.json();
-        return res.json({ usd: parseFloat(data.price) });
+        return res.json({ usd: parseFloat(data.price), change: 0 });
       }
       throw new Error("Binance failed");
     } catch (error) {
       try {
         const response = await fetchWithTimeout('https://api.coindesk.com/v1/bpi/currentprice.json', {}, 5000);
         const data = await response.json();
-        res.json({ usd: data.bpi.USD.rate_float });
+        res.json({ usd: data.bpi.USD.rate_float, change: 0 });
       } catch (e) {
         res.status(503).json({ error: "BTC price unavailable" });
       }

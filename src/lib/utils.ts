@@ -23,39 +23,45 @@ export async function fetchCryptoPrices(retries = 2): Promise<any> {
           const json = await coincapResponse.json();
           const prices: any = {};
           const symbolMap: Record<string, string> = {
-            'bitcoin': 'btc', 'ethereum': 'eth', 'solana': 'sol', 'cardano': 'ada', 'xrp': 'xrp',
-            'binance-coin': 'bnb', 'dogecoin': 'doge', 'chainlink': 'link', 'polkadot': 'dot',
-            'polygon': 'matic', 'avalanche': 'avax', 'shiba-inu': 'shib', 'tron': 'trx',
-            'litecoin': 'ltc', 'near-protocol': 'near', 'uniswap': 'uni', 'algorand': 'algo',
-            'cosmos': 'atom', 'internet-computer': 'icp', 'stellar': 'xlm', 'stacks': 'stx'
+        'bitcoin': 'btc', 'ethereum': 'eth', 'solana': 'sol', 'cardano': 'ada', 'xrp': 'xrp',
+        'binance-coin': 'bnb', 'dogecoin': 'doge', 'chainlink': 'link', 'polkadot': 'dot',
+        'polygon': 'matic', 'avalanche': 'avax', 'shiba-inu': 'shib', 'tron': 'trx',
+        'litecoin': 'ltc', 'near-protocol': 'near', 'uniswap': 'uni', 'algorand': 'algo',
+        'cosmos': 'atom', 'internet-computer': 'icp', 'stellar': 'xlm', 'stacks': 'stx',
+        'filecoin': 'fil', 'lido-dao': 'ldo', 'hedera-hashgraph': 'hbar', 'arbitrum': 'arb'
+      };
+      json.data.forEach((asset: any) => {
+        const sym = symbolMap[asset.id];
+        if (sym) {
+          prices[sym] = { 
+            usd: parseFloat(asset.priceUsd), 
+            change: parseFloat(asset.changePercent24Hr),
+            source: 'fallback-coincap'
           };
-          json.data.forEach((asset: any) => {
-            const sym = symbolMap[asset.id];
-            if (sym) {
-              prices[sym] = { 
-                usd: parseFloat(asset.priceUsd), 
-                change: parseFloat(asset.changePercent24Hr) 
-              };
-            }
-          });
-          if (prices.btc) return prices;
         }
-      } catch (e) {}
+      });
+      if (prices.btc) return prices;
+    }
+  } catch (e) {
+    console.error("CoinCap fallback failed:", e);
+  }
 
-      // 3. Last Resort: BitPay for pure BTC/ETH prices
-      try {
-        const bpResponse = await fetch("https://bitpay.com/api/rates");
-        if (bpResponse.ok) {
-           const data = await bpResponse.json();
-           const btc = data.find((r: any) => r.code === 'USD')?.rate;
-           if (btc) {
-             return {
-               btc: { usd: btc, change: 0.1 },
-               eth: { usd: btc / 30, change: 0.1 }
-             };
-           }
-        }
-      } catch (e) {}
+  // 3. Last Resort: BitPay for pure BTC/ETH prices
+  try {
+    const bpResponse = await fetch("https://bitpay.com/api/rates");
+    if (bpResponse.ok) {
+       const data = await bpResponse.json();
+       const btc = data.find((r: any) => r.code === 'USD')?.rate;
+       if (btc) {
+         return {
+           btc: { usd: btc, change: 0, source: 'fallback-bitpay' },
+           eth: { usd: btc / 30, change: 0, source: 'fallback-bitpay' }
+         };
+       }
+    }
+  } catch (e) {
+    console.error("BitPay fallback failed:", e);
+  }
 
       if (retries > 0) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
