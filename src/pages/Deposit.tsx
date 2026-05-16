@@ -44,8 +44,8 @@ export const Deposit = () => {
       const q = query(
         collection(db, "transactions"), 
         where("userId", "==", user.uid), 
-        where("type", "==", "deposit"),
-        where("status", "in", ["pending", "confirmed"])
+        where("type", "==", "DEPOSIT"),
+        where("status", "in", ["PENDING", "SUCCESS"])
       );
 
       const unsub = onSnapshot(q, (snap) => {
@@ -104,22 +104,15 @@ export const Deposit = () => {
     try {
       await addDoc(collection(db, "transactions"), {
         userId: user.uid,
-        type: "deposit",
+        type: "DEPOSIT",
         amountUsd: valUsd,
         amountBtc: amountBtc,
-        status: "confirmed",
+        status: "PENDING",
         txHash: txHash,
         timestamp: new Date().toISOString(),
       });
       
-      // Update user balance
-      await updateDoc(doc(db, "users", user.uid), {
-        usdBalance: increment(valUsd),
-        tradingBalanceBtc: increment(amountBtc),
-        totalDepositedUsd: increment(valUsd)
-      });
-
-      await addNotification(user.uid, "Deposit Confirmed", `Your deposit of $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC) has been confirmed and added to your balance.`, "success");
+      await addNotification(user.uid, "Deposit Submitted", `Your deposit of $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC) has been submitted for verification. It will be credited once confirmed by an admin.`, "info");
       
       // Notify admins
       try {

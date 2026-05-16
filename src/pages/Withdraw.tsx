@@ -41,8 +41,8 @@ export const Withdraw = () => {
       const q = query(
         collection(db, "transactions"), 
         where("userId", "==", user.uid), 
-        where("type", "==", "withdrawal"),
-        where("status", "in", ["pending", "confirmed"])
+        where("type", "==", "WITHDRAWAL"),
+        where("status", "in", ["PENDING", "SUCCESS"])
       );
 
       const unsub = onSnapshot(q, (snap) => {
@@ -90,9 +90,9 @@ export const Withdraw = () => {
       return;
     }
 
-    // 3. Check Minimum ($1000)
-    if (valUsd < 1000) {
-      setError("Minimum withdrawal amount is $1000.");
+    // 3. Check Minimum ($50)
+    if (valUsd < 50) {
+      setError("Minimum withdrawal amount is $50.");
       return;
     }
 
@@ -115,22 +115,22 @@ export const Withdraw = () => {
       const txId = 'TX-' + Math.random().toString(36).substr(2, 9).toUpperCase();
       await addDoc(collection(db, "transactions"), {
         userId: user.uid,
-        type: "withdrawal",
+        type: "WITHDRAWAL",
         txId: txId,
         amountUsd: valUsd,
         amountBtc: amountBtc,
-        status: "confirmed",
+        status: "PENDING",
         walletAddress: walletAddress,
         timestamp: new Date().toISOString(),
       });
       
-      // Update user balance
+      // Update user balance immediately to prevent double-spending pending approval
       await updateDoc(doc(db, "users", user.uid), {
         btcBalance: increment(-amountBtc),
         tradingBalanceBtc: increment(-amountBtc)
       });
 
-      await addNotification(user.uid, "Withdrawal Approved", `Your withdrawal request for $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC) has been automatically approved and processed.`, "success");
+      await addNotification(user.uid, "Withdrawal Requested", `Your withdrawal request for $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC) has been submitted for approval. Your balance has been adjusted.`, "info");
       
       const adminQuery = query(collection(db, "users"), where("role", "==", "admin"));
       const adminDocs = await getDocs(adminQuery);
@@ -190,7 +190,7 @@ export const Withdraw = () => {
           </div>
           <div>
             <p className="text-xs font-black text-[#C9A96E] uppercase tracking-widest">AI Withdrawal Guide</p>
-            <p className="text-sm text-gray-300">Min $1,000. Batch processing runs daily at 12:00 UTC. Ensure your 2FA is active for secure release.</p>
+            <p className="text-sm text-gray-300">Min $50. Batch processing runs daily at 12:00 UTC. Ensure your 2FA is active for secure release.</p>
           </div>
         </div>
         <button 

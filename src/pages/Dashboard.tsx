@@ -1163,12 +1163,12 @@ const ActivityItem = ({ type, amount, status, date }: any) => (
       <div
         className={cn(
           "w-10 h-10 rounded-full flex items-center justify-center",
-          type === "deposit"
+          type?.toUpperCase() === "DEPOSIT"
             ? "bg-green-500/10 text-green-600 dark:text-green-500"
             : "bg-red-500/10 text-red-600 dark:text-red-500",
         )}
       >
-        {type === "deposit" ? (
+        {type?.toUpperCase() === "DEPOSIT" ? (
           <ArrowDownCircle size={18} />
         ) : (
           <ArrowUpCircle size={18} />
@@ -1176,7 +1176,7 @@ const ActivityItem = ({ type, amount, status, date }: any) => (
       </div>
       <div>
         <p className="text-sm font-semibold text-[#0B0B0B] dark:text-white capitalize">
-          {type}
+          {type?.toLowerCase()}
         </p>
         <p className="text-xs text-gray-600 dark:text-gray-500">{date}</p>
       </div>
@@ -1185,28 +1185,28 @@ const ActivityItem = ({ type, amount, status, date }: any) => (
       <p
         className={cn(
           "text-sm font-bold",
-          type === "deposit"
+          type?.toUpperCase() === "DEPOSIT"
             ? "text-green-600 dark:text-green-500"
             : "text-red-600 dark:text-red-500",
         )}
       >
-        {type === "deposit" ? "+" : "-"}
-        {amount} BTC
+        {type?.toUpperCase() === "DEPOSIT" ? "+" : "-"}
+        {amount?.toFixed(6)} BTC
       </p>
       <div className="flex flex-col items-end">
         <p
           className={cn(
             "text-[10px] uppercase tracking-wider font-bold",
-            status === "confirmed"
+            ["SUCCESS", "APPROVED", "confirmed"].includes(status)
               ? "text-green-600 dark:text-green-500"
-              : status === "pending"
+              : ["PENDING", "pending"].includes(status)
                 ? "text-yellow-600 dark:text-yellow-500"
                 : "text-red-600 dark:text-red-500",
           )}
         >
           {status}
         </p>
-        {status === "failed" && (
+        {(status === "failed" || status === "REJECTED") && (
           <p className="text-[8px] text-red-400 italic">Rejected</p>
         )}
       </div>
