@@ -83,8 +83,9 @@ export const Withdraw = () => {
       return;
     }
 
-    if (profile.kycStatus !== 'verified') {
-      setError("Your account must be KYC verified (Currently: " + (profile.kycStatus || 'Not Submitted') + ") to withdraw funds.");
+    const kycStatus = profile?.kycStatus?.toLowerCase() || '';
+    if (kycStatus !== 'verified' && kycStatus !== 'approved') {
+      setError("Your account must be KYC verified (Currently: " + (profile?.kycStatus || 'Not Submitted') + ") to withdraw funds.");
       return;
     }
 

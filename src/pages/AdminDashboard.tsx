@@ -83,10 +83,17 @@ export const AdminDashboard = () => {
     if (!auth.currentUser || !isAdmin) return;
 
     // Fetch users
-    const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
+    const unsubUsers = onSnapshot(collection(db, "users"), async (snap) => {
       const u = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setUsers(u);
       setStats(prev => ({ ...prev, totalUsers: u.length }));
+      
+      // Update system stats in Firestore for Landing page
+      try {
+        await updateDoc(doc(db, "system", "stats"), { totalUsers: u.length });
+      } catch (err) {
+        console.warn("Could not update public system stats:", err);
+      }
     }, (error) => handleFirestoreError(error, OperationType.LIST, "users"));
 
     // Fetch active investments count
@@ -371,7 +378,20 @@ export const AdminDashboard = () => {
     try {
       console.log("Starting system reset...");
       
-      const collectionsToClear = ["transactions", "investments", "kyc_submissions", "notifications"];
+      const collectionsToClear = [
+        "transactions", 
+        "investments", 
+        "kyc_submissions", 
+        "notifications",
+        "contact_messages",
+        "support_chats",
+        "support_tickets",
+        "emailLogs",
+        "mail",
+        "newsletters",
+        "chat_messages",
+        "contact_submissions"
+      ];
       let totalDeleted = 0;
 
       // 1. Reset all user balances (using batches of 500)
@@ -389,7 +409,11 @@ export const AdminDashboard = () => {
           totalDeposited: 0,
           totalDepositedUsd: 0,
           referralBonusEarned: 0,
-          kycStatus: "not_submitted"
+          kycStatus: "not_submitted",
+          kycRejectionReason: "",
+          isSuspended: false,
+          status: "active",
+          hasTraded: false
         });
         count++;
         if (count === 500) {
@@ -403,29 +427,51 @@ export const AdminDashboard = () => {
 
       // 2. Delete other collections
       for (const colName of collectionsToClear) {
-        const snap = await getDocs(collection(db, colName));
-        console.log(`Deleting ${snap.size} documents from ${colName}...`);
-        
-        batch = writeBatch(db);
-        count = 0;
-        for (const d of snap.docs) {
-          batch.delete(doc(db, colName, d.id));
-          count++;
-          totalDeleted++;
-          if (count === 500) {
-            await batch.commit();
-            batch = writeBatch(db);
-            count = 0;
+        try {
+          const snap = await getDocs(collection(db, colName));
+          if (snap.empty) continue;
+          
+          console.log(`Deleting ${snap.size} documents from ${colName}...`);
+          
+          batch = writeBatch(db);
+          count = 0;
+          for (const d of snap.docs) {
+            batch.delete(doc(db, colName, d.id));
+            count++;
+            totalDeleted++;
+            if (count === 500) {
+              await batch.commit();
+              batch = writeBatch(db);
+              count = 0;
+            }
           }
+          if (count > 0) await batch.commit();
+        } catch (colErr) {
+          console.warn(`Could not clear collection ${colName}:`, colErr);
         }
-        if (count > 0) await batch.commit();
+      }
+
+      // 3. Reset system stats explicitly for landing page
+      try {
+        await updateDoc(doc(db, "system", "stats"), { 
+          totalUsers: usersSnap.size,
+          lastReset: new Date().toISOString()
+        });
+      } catch (statsErr) {
+        console.warn("Could not explicitly update system stats after reset:", statsErr);
       }
 
       console.log(`System reset complete. Total documents deleted: ${totalDeleted}`);
-      alert("System data has been successfully reset.");
+      toast.success("System data has been successfully reset.");
+      
+      // Force reload to refresh all local states
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+      
     } catch (error: any) {
       console.error("Reset error:", error);
-      alert("Failed to reset system data: " + (error.code ? `[${error.code}] ` : "") + error.message);
+      toast.error("Failed to reset system data: " + (error.code ? `[${error.code}] ` : "") + error.message);
     } finally {
       setIsResetting(false);
     }
@@ -442,11 +488,12 @@ export const AdminDashboard = () => {
           <h1 className="text-3xl font-bold text-white tracking-tight">Admin Control Panel</h1>
           <p className="text-gray-400">Manage users, deposits, and KYC verifications.</p>
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto relative z-10">
           <button 
             onClick={resetSystemData}
             disabled={isResetting}
-            className="px-4 py-2 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl text-sm font-bold hover:bg-red-500/20 transition-all flex items-center gap-2 disabled:opacity-50"
+            style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+            className="px-4 py-2 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl text-sm font-bold hover:bg-red-500 hover:text-white transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg active:scale-95"
           >
             <ShieldAlert size={18} />
             {isResetting ? "Resetting..." : "Reset System Data"}
@@ -488,12 +535,16 @@ export const AdminDashboard = () => {
               pendingDeposits.map(tx => {
                 const txUser = users.find(u => u.id === tx.userId);
                 return (
-                  <div key={tx.id} className="p-4 bg-slate-950 border border-[#C9A96E]/10 rounded-xl flex items-center justify-between group hover:border-[#C9A96E]/30 transition-all">
-                    <Link to={`/admin/user/${tx.userId}`} className="flex-1 cursor-pointer">
+                  <div 
+                    key={tx.id} 
+                    onClick={() => navigate(`/admin/user/${tx.userId}`)}
+                    className="p-4 bg-slate-950 border border-[#C9A96E]/10 rounded-xl flex items-center justify-between group hover:border-[#C9A96E]/30 transition-all cursor-pointer"
+                  >
+                    <div className="flex-1">
                       <p className="text-sm font-bold text-white group-hover:text-[#C9A96E] transition-colors">{tx.amountBtc || tx.amount} BTC</p>
                       <p className="text-[10px] text-gray-500 mt-1">From: <span className="text-gray-300 font-medium">{txUser?.displayName || tx.userId.slice(0, 8) + '...'}</span></p>
-                    </Link>
-                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    </div>
+                    <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                       <button 
                         onClick={() => setSelectedTx(tx)}
                         data-tooltip-id="admin-tooltip"
@@ -536,13 +587,17 @@ export const AdminDashboard = () => {
               pendingWithdrawals.map(tx => {
                 const txUser = users.find(u => u.id === tx.userId);
                 return (
-                  <div key={tx.id} className="p-4 bg-slate-950 border border-[#C9A96E]/10 rounded-xl flex items-center justify-between group hover:border-[#C9A96E]/30 transition-all">
-                    <Link to={`/admin/user/${tx.userId}`} className="flex-1 cursor-pointer">
+                  <div 
+                    key={tx.id} 
+                    onClick={() => navigate(`/admin/user/${tx.userId}`)}
+                    className="p-4 bg-slate-950 border border-[#C9A96E]/10 rounded-xl flex items-center justify-between group hover:border-[#C9A96E]/30 transition-all cursor-pointer"
+                  >
+                    <div className="flex-1">
                       <p className="text-sm font-bold text-white group-hover:text-[#C9A96E] transition-colors">{tx.amountBtc || tx.amount} BTC</p>
                       <p className="text-[10px] text-gray-500 mt-1">User: <span className="text-gray-300 font-medium">{txUser?.displayName || tx.userId.slice(0, 8) + '...'}</span></p>
                       <p className="text-[10px] text-gray-500">Address: {tx.walletAddress?.slice(0, 12)}...</p>
-                    </Link>
-                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    </div>
+                    <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                       <button 
                         onClick={() => setSelectedTx(tx)}
                         data-tooltip-id="admin-tooltip"

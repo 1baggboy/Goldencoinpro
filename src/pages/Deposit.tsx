@@ -88,7 +88,8 @@ export const Deposit = () => {
       return;
     }
 
-    if (profile?.kycStatus !== 'verified') {
+    const kycStatus = profile?.kycStatus?.toLowerCase() || '';
+    if (kycStatus !== 'verified' && kycStatus !== 'approved') {
       setError("Your account must be KYC verified (Currently: " + (profile?.kycStatus || 'Not Submitted') + ") to deposit funds.");
       return;
     }

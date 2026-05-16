@@ -1050,17 +1050,23 @@ export const Dashboard = () => {
 
           {/* System Status (Hardware recipe feel) */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-slate-100 dark:bg-slate-950/50 border border-[#C9A96E]/5 rounded-xl p-3 flex flex-col items-center justify-center text-center">
-              <span className="text-[8px] uppercase tracking-widest text-gray-500 mb-1">
-                Latency
+            <div className="bg-slate-100 dark:bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl p-4 flex flex-col items-center justify-center text-center group hover:border-[#C9A96E]/40 transition-all">
+              <span className="text-[7px] font-black uppercase tracking-[0.3em] text-gray-500 mb-2">
+                Network Latency
               </span>
-              <span className="text-xs font-mono text-[#C9A96E]">{latency || "---"}ms</span>
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                <span className="text-sm font-mono font-bold text-[#C9A96E]">{latency || "---"}ms</span>
+              </div>
             </div>
-            <div className="bg-slate-100 dark:bg-slate-950/50 border border-[#C9A96E]/5 rounded-xl p-3 flex flex-col items-center justify-center text-center">
-              <span className="text-[8px] uppercase tracking-widest text-gray-500 mb-1">
-                TPS
+            <div className="bg-slate-100 dark:bg-[#0B0B0B] border border-[#C9A96E]/10 rounded-xl p-4 flex flex-col items-center justify-center text-center group hover:border-[#C9A96E]/40 transition-all">
+              <span className="text-[7px] font-black uppercase tracking-[0.3em] text-gray-500 mb-2">
+                Node Throughput
               </span>
-              <span className="text-xs font-mono text-[#C9A96E]">{tps.toLocaleString() || "---"}</span>
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                <span className="text-sm font-mono font-bold text-white">{(tps || 0).toLocaleString()} <span className="text-[8px] text-gray-600">tps</span></span>
+              </div>
             </div>
           </div>
         </div>

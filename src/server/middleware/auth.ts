@@ -32,9 +32,10 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
       if (adminAuth) {
         try {
           const firebaseUser = await adminAuth.verifyIdToken(token);
+          const isAdmin = firebaseUser.email === 'info.goldencoinltd@gmail.com';
           req.user = {
             userId: firebaseUser.uid,
-            role: 'USER', // Base role, service can check DB for 'ADMIN'
+            role: isAdmin ? 'ADMIN' : 'USER',
             email: firebaseUser.email || ''
           };
           return next();

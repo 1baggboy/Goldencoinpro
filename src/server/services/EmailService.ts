@@ -217,14 +217,15 @@ export class EmailService {
     });
   }
 
-  static async sendKYCAlert(user: any, status: 'APPROVED' | 'REJECTED' | 'SUBMITTED', reason?: string) {
-    const statusText = status === 'APPROVED' ? 'Approved' : status === 'REJECTED' ? 'Rejected' : 'Submitted';
-    const headerColor = status === 'APPROVED' ? '#28a745' : (status === 'REJECTED' ? '#d9534f' : '#C9A96E');
+  static async sendKYCAlert(user: any, status: 'APPROVED' | 'REJECTED' | 'SUBMITTED' | 'verified' | 'rejected' | 'pending', reason?: string) {
+    const normalizedStatus = status.toUpperCase() as 'APPROVED' | 'REJECTED' | 'SUBMITTED';
+    const statusText = normalizedStatus === 'APPROVED' ? 'Approved' : normalizedStatus === 'REJECTED' ? 'Rejected' : 'Submitted';
+    const headerColor = normalizedStatus === 'APPROVED' ? '#28a745' : (normalizedStatus === 'REJECTED' ? '#d9534f' : '#C9A96E');
 
     let message = '';
-    if (status === 'APPROVED') {
+    if (normalizedStatus === 'APPROVED') {
       message = `<p>Congratulations! Your identity verification has been <strong>approved</strong>. You now have full access to all Golden Coin features, including higher limits and faster withdrawals.</p>`;
-    } else if (status === 'REJECTED') {
+    } else if (normalizedStatus === 'REJECTED') {
       message = `
         <p>Unfortunately, your identity verification could not be approved at this time.</p>
         <div style="background-color: #fff5f5; border-left: 4px solid #d9534f; padding: 15px; margin: 20px 0;">

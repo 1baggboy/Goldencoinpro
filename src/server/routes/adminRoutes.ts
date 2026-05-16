@@ -29,20 +29,20 @@ adminRouter.post('/kyc/approve', authenticate, authorizeAdmin, async (req, res) 
     if (!userSnap.exists) return res.status(404).json({ error: "User not found" });
     const user = { ...userSnap.data(), id: userId } as any;
 
-    await userRef.update({ kycStatus: 'APPROVED' });
+    await userRef.update({ kycStatus: 'verified' });
     
-    // Update kycVerification doc
-    const kycSnap = await db.collection('kycVerifications')
+    // Update kycSubmission doc
+    const kycSnap = await db.collection('kyc_submissions')
       .where('userId', '==', userId)
-      .where('status', '==', 'PENDING')
+      .where('status', '==', 'pending')
       .limit(1)
       .get();
     
     if (!kycSnap.empty) {
-      await kycSnap.docs[0].ref.update({ status: 'APPROVED', updatedAt: new Date() });
+      await kycSnap.docs[0].ref.update({ status: 'verified', updatedAt: new Date() });
     }
 
-    await EmailService.sendKYCAlert(user, 'APPROVED');
+    await EmailService.sendKYCAlert(user, 'verified');
     res.json({ success: true });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
@@ -60,20 +60,20 @@ adminRouter.post('/kyc/reject', authenticate, authorizeAdmin, async (req, res) =
     if (!userSnap.exists) return res.status(404).json({ error: "User not found" });
     const user = { ...userSnap.data(), id: userId } as any;
 
-    await userRef.update({ kycStatus: 'REJECTED' });
+    await userRef.update({ kycStatus: 'rejected' });
 
-    // Update kycVerification doc
-    const kycSnap = await db.collection('kycVerifications')
+    // Update kycSubmission doc
+    const kycSnap = await db.collection('kyc_submissions')
       .where('userId', '==', userId)
-      .where('status', '==', 'PENDING')
+      .where('status', '==', 'pending')
       .limit(1)
       .get();
     
     if (!kycSnap.empty) {
-      await kycSnap.docs[0].ref.update({ status: 'REJECTED', updatedAt: new Date(), rejectionReason: reason });
+      await kycSnap.docs[0].ref.update({ status: 'rejected', updatedAt: new Date(), rejectionReason: reason });
     }
 
-    await EmailService.sendKYCAlert(user, 'REJECTED', reason);
+    await EmailService.sendKYCAlert(user, 'rejected', reason);
     res.json({ success: true });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
