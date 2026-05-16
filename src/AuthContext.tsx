@@ -17,7 +17,8 @@ interface UserProfile {
   kycStatus: "not_submitted" | "pending" | "verified" | "rejected";
   kycRejectionReason?: string;
   createdAt: string;
-  status: "active" | "restricted";
+  status: "active" | "restricted" | "suspended" | "inactive";
+  isSuspended?: boolean;
   twoFactorEnabled?: boolean;
   photoURL?: string;
   phoneNumber?: string;

@@ -196,33 +196,32 @@ export const Register = () => {
           localStorage.setItem('goldencoin_device_id', deviceId);
         }
         
+        const idToken = await user.getIdToken();
         const res = await fetch('/api/auth/login-notification', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          },
           body: JSON.stringify({
-            email,
-            date: new Date().toLocaleDateString(),
-            time: new Date().toLocaleTimeString(),
-            userAgent: navigator.userAgent,
-            sendEmail: false
+            deviceDetails: {
+              deviceId,
+              userAgent: navigator.userAgent
+            }
           })
         });
-        const data = await res.json();
-        if (data.success) {
-          const { browser, os, ip, location } = data;
-          await addDoc(collection(db, "users", user.uid, "devices"), {
-            deviceId,
-            deviceString: `${browser} ${os}`,
-            browser,
-            os,
-            ip,
-            location,
-            lastLogin: new Date().toISOString(),
-            status: 'active'
-          });
-        }
+        
+        // Also send welcome email
+        await fetch('/api/auth/welcome', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          }
+        });
+
       } catch (dErr) {
-        console.warn("Initial device tracking failed:", dErr);
+        console.warn("Initial tracking/welcome failed:", dErr);
       }
 
       await sendAdminEmailNotification(

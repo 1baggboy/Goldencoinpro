@@ -108,11 +108,16 @@ export class TransactionService {
 
     const userRef = db.collection('users').doc(tx.userId);
     const userDoc = await userRef.get();
+    if (!userDoc.exists) throw new Error("User not found");
     const user = { ...userDoc.data(), id: tx.userId } as any;
 
     if (tx.type === 'DEPOSIT') {
-      const newBalance = (user.balance || 0) + tx.amount;
-      await userRef.update({ balance: newBalance });
+      const amountBtc = tx.amountBtc || 0;
+      await userRef.update({ 
+        btcBalance: (user.btcBalance || 0) + amountBtc,
+        tradingBalanceBtc: (user.tradingBalanceBtc || 0) + amountBtc,
+        totalDeposited: (user.totalDeposited || 0) + amountBtc
+      });
     }
     // Withdrawal balance already deducted at request time
 
@@ -145,8 +150,11 @@ export class TransactionService {
 
     if (tx.type === 'WITHDRAWAL') {
       // Refund balance
-      const newBalance = (user.balance || 0) + tx.amount;
-      await userRef.update({ balance: newBalance });
+      const amountBtc = tx.amountBtc || 0;
+      await userRef.update({ 
+        btcBalance: (user.btcBalance || 0) + amountBtc,
+        tradingBalanceBtc: (user.tradingBalanceBtc || 0) + amountBtc
+      });
     }
 
     await EmailService.sendTransactionAlert(user, updatedTx);

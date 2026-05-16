@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { UAParser } from 'ua-parser-js';
 import { AuthService } from '../services/AuthService';
+import { EmailService } from '../services/EmailService';
+import { db } from '../lib/firebase';
 import { authenticate, AuthRequest } from '../middleware/auth';
 
 export const authRouter = Router();
@@ -82,6 +84,44 @@ authRouter.post('/change-password', authenticate, async (req: AuthRequest, res) 
     const { newPassword } = req.body;
     const result = await AuthService.changePassword(req.user!.userId, newPassword);
     res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+authRouter.post('/welcome', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userDoc = await db!.collection('users').doc(req.user!.userId).get();
+    if (!userDoc.exists) throw new Error("User not found");
+    const userData = userDoc.data() as any;
+    
+    await EmailService.sendWelcomeEmail({
+      id: req.user!.userId,
+      email: userData.email,
+      firstName: userData.firstName || userData.name?.split(' ')[0] || 'User',
+      role: userData.role || 'USER'
+    });
+    
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+authRouter.post('/login-notification', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const { deviceDetails } = req.body;
+    const userDoc = await db!.collection('users').doc(req.user!.userId).get();
+    if (!userDoc.exists) throw new Error("User not found");
+    const userData = userDoc.data() as any;
+
+    await EmailService.sendLoginAlert({
+      id: req.user!.userId,
+      email: userData.email,
+      firstName: userData.firstName || userData.name?.split(' ')[0] || 'User',
+    }, deviceDetails);
+
+    res.json({ success: true });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }

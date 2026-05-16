@@ -82,9 +82,19 @@ export const Deposit = () => {
     const amountBtc = valUsd / btcPrice;
     const dailyDepositedUsd = dailyDeposited * btcPrice;
 
-    // 0. Check KYC
+    // 0. Check KYC - Ensure profile exists before checking
+    if (!profile) {
+      setError("Loading your profile... Please try again in a moment.");
+      return;
+    }
+
     if (profile?.kycStatus !== 'verified') {
-      setError("Your account must be KYC verified to deposit funds.");
+      setError("Your account must be KYC verified (Currently: " + (profile?.kycStatus || 'Not Submitted') + ") to deposit funds.");
+      return;
+    }
+
+    if (profile?.status === 'restricted' || profile?.status === 'suspended' || profile?.isSuspended) {
+      setError(`Your account is currently ${profile.isSuspended ? 'suspended' : profile.status}. Please contact support.`);
       return;
     }
 
@@ -100,17 +110,30 @@ export const Deposit = () => {
       return;
     }
 
+    if (btcPrice <= 0 || isNaN(btcPrice)) {
+      setError("Unable to get current Bitcoin price. Please try again in a few moments.");
+      return;
+    }
+
+    if (isNaN(valUsd) || isNaN(amountBtc)) {
+      setError("The calculated deposit amount is invalid. Please check your input.");
+      return;
+    }
+
     setLoading(true);
     try {
-      await addDoc(collection(db, "transactions"), {
+      console.log("Submitting deposit to transactions collection...");
+      const txData = {
         userId: user.uid,
         type: "DEPOSIT",
         amountUsd: valUsd,
         amountBtc: amountBtc,
         status: "PENDING",
-        txHash: txHash,
+        txHash: txHash || "N/A",
         timestamp: new Date().toISOString(),
-      });
+      };
+      
+      await addDoc(collection(db, "transactions"), txData);
       
       await addNotification(user.uid, "Deposit Submitted", `Your deposit of $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC) has been submitted for verification. It will be credited once confirmed by an admin.`, "info");
       
@@ -129,26 +152,13 @@ export const Deposit = () => {
       setAmountUsd("");
       setTxHash("");
 
-      // Notify admins safely in background for in-app notifications
-      (async () => {
-        try {
-          const adminQuery = query(collection(db, "users"), where("role", "==", "admin"));
-          const adminDocs = await getDocs(adminQuery);
-          const adminPromises = adminDocs.docs.map(adminDoc => 
-            addNotification(adminDoc.id, "New Deposit Received", `User ${profile?.displayName || user.email} has successfully deposited $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC).`, "info")
-          );
-          await Promise.all(adminPromises);
-        } catch (adminErr) {
-          // This is expected to fail for non-admins as they can't query users collection
-          console.warn("Could not notify admins directly via in-app notification:", adminErr);
-        }
-      })();
     } catch (err: any) {
-      console.error("Deposit error:", err);
-      if (err.message && err.message.includes("permission")) {
-        setError("Permission denied. Your account may be restricted or KYC is required.");
+      console.error("Deposit execution error:", err);
+      // provide more details if possible
+      if (err.code === "permission-denied" || (err.message && err.message.toLowerCase().includes("permission"))) {
+        setError(`Permission denied (Code: ${err.code || 'unknown'}). Please ensure your account status is 'Verified' and not 'Restricted'. If the issue persists, contact support.`);
       } else {
-        setError("An error occurred during submission. Please check your internet connection and try again.");
+        setError("An error occurred during submission: " + (err.message || "Unknown error") + ". Please check your connection and try again.");
       }
     } finally {
       setLoading(false);

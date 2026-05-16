@@ -77,9 +77,19 @@ export const Withdraw = () => {
     const amountBtc = valUsd / btcPrice;
     const dailyWithdrawnUsd = dailyWithdrawn * btcPrice;
 
-    // 1. Check KYC
+    // 1. Check KYC - Ensure profile exists
+    if (!profile) {
+      setError("Loading your profile... Please try again in a moment.");
+      return;
+    }
+
     if (profile.kycStatus !== 'verified') {
-      setError("Your account must be KYC verified to withdraw funds.");
+      setError("Your account must be KYC verified (Currently: " + (profile.kycStatus || 'Not Submitted') + ") to withdraw funds.");
+      return;
+    }
+
+    if (profile.status === 'restricted' || profile.status === 'suspended' || profile.isSuspended) {
+      setError(`Your account is currently ${profile.isSuspended ? 'suspended' : profile.status}. Please contact support.`);
       return;
     }
 

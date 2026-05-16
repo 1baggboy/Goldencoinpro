@@ -37,6 +37,7 @@ import { cn } from "../lib/utils";
 import { usePrices } from "../PriceContext";
 import { format } from "date-fns";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export const AdminDashboard = () => {
   const { isAdmin } = useAuth();
@@ -142,100 +143,85 @@ export const AdminDashboard = () => {
 
   const approveDeposit = async (tx: any) => {
     try {
-      const amountBtc = Number(tx.amountBtc || tx.amount || 0);
-      const amountUsd = Number(tx.amountUsd || 0);
-      
-      if (amountBtc <= 0) {
-        throw new Error("Invalid deposit amount.");
-      }
-      
-      await updateDoc(doc(db, "transactions", tx.id), { status: "SUCCESS" });
-      
-      // Update user balance
-      await updateDoc(doc(db, "users", tx.userId), {
-        btcBalance: increment(amountBtc),
-        tradingBalanceBtc: increment(amountBtc),
-        totalDeposited: increment(amountBtc)
+      const idToken = await auth.currentUser?.getIdToken();
+      const res = await fetch('/api/admin/transactions/approve', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ transactionId: tx.id })
       });
-
-      // Referral bonus is now handled at registration in Register.tsx
-      /*
-      const userSnap = await getDoc(doc(db, "users", tx.userId));
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        if (userData.referredBy && !userData.hasTraded) {
-          const REFERRAL_BONUS_BTC = 0.0005; // Example bonus amount
-          
-          // Credit referrer
-          await updateDoc(doc(db, "users", userData.referredBy), {
-            btcBalance: increment(REFERRAL_BONUS_BTC),
-            referralBonusEarned: increment(REFERRAL_BONUS_BTC)
-          });
-          
-          // Mark user as having triggered the bonus
-          await updateDoc(doc(db, "users", tx.userId), {
-            hasTraded: true
-          });
-
-          await addNotification(userData.referredBy, "Referral Bonus Received", `You've earned ${REFERRAL_BONUS_BTC} BTC as a bonus for referring ${userData.displayName}.`, "success");
-        }
+      
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to approve deposit");
       }
-      */
 
-      await addNotification(tx.userId, "Deposit Approved", `Your deposit of ${amountBtc} BTC ($${amountUsd}) has been confirmed and added to your balance.`, "success");
+      await addNotification(tx.userId, "Deposit Approved", `Your deposit of ${tx.amountBtc || tx.amount} BTC has been confirmed and added to your balance.`, "success");
+      toast.success("Deposit approved successfully");
     } catch (e: any) {
       console.error("Approve deposit error:", e);
-      alert("Failed to approve deposit: " + (e.message || "Unknown error"));
+      toast.error("Failed to approve deposit: " + (e.message || "Unknown error"));
     }
   };
 
   const approveWithdrawal = async (tx: any) => {
     try {
-      const amountBtc = Number(tx.amountBtc || tx.amount || 0);
-      const amountUsd = Number(tx.amountUsd || 0);
-
-      if (amountBtc <= 0) {
-        throw new Error("Invalid withdrawal amount.");
-      }
-
-      // Check user balance before approving
-      const userSnap = await getDoc(doc(db, "users", tx.userId));
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        if ((userData.btcBalance || 0) < amountBtc) {
-          throw new Error("User has insufficient balance for this withdrawal.");
-        }
-      } else {
-        throw new Error("User not found.");
-      }
-
-      await updateDoc(doc(db, "transactions", tx.id), { status: "SUCCESS" });
-      await updateDoc(doc(db, "users", tx.userId), {
-        btcBalance: increment(-amountBtc),
-        tradingBalanceBtc: increment(-amountBtc)
+      const idToken = await auth.currentUser?.getIdToken();
+      const res = await fetch('/api/admin/transactions/approve', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ transactionId: tx.id })
       });
-      await addNotification(tx.userId, "Withdrawal Approved", `Your withdrawal request for ${amountBtc} BTC ($${amountUsd}) has been approved and processed.`, "success");
+      
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to approve withdrawal");
+      }
+
+      await addNotification(tx.userId, "Withdrawal Approved", `Your withdrawal request for ${tx.amountBtc || tx.amount} BTC has been approved and processed.`, "success");
+      toast.success("Withdrawal approved successfully");
     } catch (e: any) {
       console.error("Approve withdrawal error:", e);
-      alert("Failed to approve withdrawal: " + (e.message || "Unknown error"));
+      toast.error("Failed to approve withdrawal: " + (e.message || "Unknown error"));
     }
   };
 
   const handleRejectTransaction = async () => {
     if (!rejectingTx || !rejectReason.trim()) return;
     try {
-      const amountBtc = Number(rejectingTx.amount || 0);
-      await updateDoc(doc(db, "transactions", rejectingTx.id), { 
-        status: "REJECTED",
-        rejectionReason: rejectReason
+      const idToken = await auth.currentUser?.getIdToken();
+      const res = await fetch('/api/admin/transactions/reject', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ 
+          transactionId: rejectingTx.id,
+          reason: rejectReason
+        })
       });
-      await addNotification(rejectingTx.userId, `${rejectingTx.type.charAt(0).toUpperCase() + rejectingTx.type.slice(1)} Rejected`, `Your ${rejectingTx.type} request for ${amountBtc} BTC has been rejected. Reason: ${rejectReason}`, "error");
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to reject transaction");
+      }
+
+      await addNotification(rejectingTx.userId, `${rejectingTx.type.charAt(0).toUpperCase() + rejectingTx.type.slice(1)} Rejected`, `Your ${rejectingTx.type} request for ${rejectingTx.amount} BTC has been rejected. Reason: ${rejectReason}`, "error");
+      
       setShowTxRejectModal(false);
       setRejectReason("");
       setRejectingTx(null);
       setSelectedTx(null);
-    } catch (error) {
+      toast.success("Transaction rejected");
+    } catch (error: any) {
       console.error("Error rejecting transaction:", error);
+      toast.error(error.message);
     }
   };
 
@@ -246,37 +232,61 @@ export const AdminDashboard = () => {
 
   const approveKyc = async (kyc: any) => {
     try {
-      if (!kyc.id || !kyc.userId) {
-        throw new Error("Invalid KYC submission data (missing id or userId).");
+      if (!kyc.userId) throw new Error("Missing user ID");
+      const idToken = await auth.currentUser?.getIdToken();
+      const res = await fetch('/api/admin/kyc/approve', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ userId: kyc.userId })
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to approve KYC");
       }
-      await updateDoc(doc(db, "kyc_submissions", kyc.id), { status: "approved" });
-      await updateDoc(doc(db, "users", kyc.userId), { kycStatus: "verified" });
+
       await addNotification(kyc.userId, "KYC Verified", "Your KYC verification has been approved. You can now access all features, including withdrawals.", "success");
+      toast.success("KYC approved successfully");
       setSelectedKyc(null);
-    } catch (error: any) {
-      console.error("Error approving KYC:", error);
-      alert("Failed to approve KYC: " + (error.message || "Unknown error"));
+    } catch (e: any) {
+      console.error("KYC approve error:", e);
+      toast.error(e.message);
     }
   };
 
   const handleRejectKyc = async () => {
     if (!rejectingKyc || !rejectReason.trim()) return;
     try {
-      await updateDoc(doc(db, "kyc_submissions", rejectingKyc.id), { 
-        status: "rejected",
-        rejectionReason: rejectReason 
+      const idToken = await auth.currentUser?.getIdToken();
+      const res = await fetch('/api/admin/kyc/reject', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ 
+          userId: rejectingKyc.userId,
+          reason: rejectReason
+        })
       });
-      await updateDoc(doc(db, "users", rejectingKyc.userId), { 
-        kycStatus: "rejected",
-        kycRejectionReason: rejectReason 
-      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to reject KYC");
+      }
+
       await addNotification(rejectingKyc.userId, "KYC Rejected", `Your KYC verification was rejected. Reason: ${rejectReason}`, "error");
       setShowRejectModal(false);
       setRejectReason("");
       setRejectingKyc(null);
       setSelectedKyc(null);
-    } catch (error) {
+      toast.success("KYC rejected successfully");
+    } catch (error: any) {
       console.error("Error rejecting KYC:", error);
+      toast.error(error.message);
     }
   };
 
