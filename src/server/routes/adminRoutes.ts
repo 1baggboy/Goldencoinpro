@@ -94,23 +94,10 @@ adminRouter.post('/transactions/approve', authenticate, authorizeAdmin, async (r
 
 adminRouter.post('/transactions/reject', authenticate, authorizeAdmin, async (req, res) => {
   try {
-    if (!db) return res.status(500).json({ error: "Firebase DB not initialized" });
     const { transactionId, reason } = req.body;
-    
-    const txRef = db.collection('transactions').doc(transactionId);
-    const txSnap = await txRef.get();
-    if (!txSnap.exists) return res.status(404).json({ error: "Transaction not found" });
-    
-    const tx = txSnap.data() as any;
-    if (tx.status !== 'PENDING') return res.status(400).json({ error: "Already processed" });
-
-    await txRef.update({ status: 'REJECTED', updatedAt: new Date(), rejectionReason: reason });
-
-    const userSnap = await db.collection('users').doc(tx.userId).get();
-    const user = { ...userSnap.data(), id: tx.userId } as any;
-
-    await EmailService.sendTransactionAlert(user, { ...tx, status: 'REJECTED' });
-    res.json({ success: true });
+    const { TransactionService } = await import('../services/TransactionService');
+    const result = await TransactionService.rejectTransaction(transactionId, reason);
+    res.json(result);
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }

@@ -33,6 +33,9 @@ export class TransactionService {
 
   static async createWithdrawal(userId: string, amount: number, method: string, details: string) {
     if (!db) throw new Error("Firebase Admin not initialized");
+
+    if (amount < 50) throw new Error("Minimum withdrawal amount is $50");
+
     const userDocRef = db.collection('users').doc(userId);
     const userDoc = await userDocRef.get();
     if (!userDoc.exists) throw new Error("User not found");
@@ -40,6 +43,30 @@ export class TransactionService {
     const user = { ...userDoc.data(), id: userId } as any;
 
     if (user.balance < amount) throw new Error("Insufficient balance");
+
+    // Check daily limit
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const withdrawalsToday = await db.collection('transactions')
+      .where('userId', '==', userId)
+      .where('type', '==', 'WITHDRAWAL')
+      .where('status', 'in', ['PENDING', 'SUCCESS'])
+      .where('createdAt', '>=', startOfDay)
+      .get();
+
+    let totalWithdrawnToday = 0;
+    withdrawalsToday.forEach(doc => {
+      totalWithdrawnToday += doc.data().amount;
+    });
+
+    if (totalWithdrawnToday + amount > 50000) {
+      throw new Error(`Daily withdrawal limit reached. You have already withdrawn $${totalWithdrawnToday.toLocaleString()} today. Maximum daily limit is $50,000.`);
+    }
+
+    // Deduct balance immediately
+    const newBalance = (user.balance || 0) - amount;
+    await userDocRef.update({ balance: newBalance });
 
     const reference = `WTH-${uuidv4().substring(0, 8).toUpperCase()}`;
 
@@ -86,8 +113,39 @@ export class TransactionService {
     if (tx.type === 'DEPOSIT') {
       const newBalance = (user.balance || 0) + tx.amount;
       await userRef.update({ balance: newBalance });
-    } else if (tx.type === 'WITHDRAWAL') {
-      const newBalance = (user.balance || 0) - tx.amount;
+    }
+    // Withdrawal balance already deducted at request time
+
+    await EmailService.sendTransactionAlert(user, updatedTx);
+
+    return updatedTx;
+  }
+
+  static async rejectTransaction(txId: string, reason: string) {
+    if (!db) throw new Error("Firebase Admin not initialized");
+    const txRef = db.collection('transactions').doc(txId);
+    const txDoc = await txRef.get();
+    
+    if (!txDoc.exists) throw new Error("Transaction not found");
+    const tx = txDoc.data() as any;
+
+    if (tx.status !== 'PENDING') throw new Error("Transaction already processed");
+
+    await txRef.update({ 
+      status: 'REJECTED',
+      rejectionReason: reason,
+      updatedAt: new Date()
+    });
+
+    const updatedTx = { ...tx, status: 'REJECTED', rejectionReason: reason };
+
+    const userRef = db.collection('users').doc(tx.userId);
+    const userDoc = await userRef.get();
+    const user = { ...userDoc.data(), id: tx.userId } as any;
+
+    if (tx.type === 'WITHDRAWAL') {
+      // Refund balance
+      const newBalance = (user.balance || 0) + tx.amount;
       await userRef.update({ balance: newBalance });
     }
 
