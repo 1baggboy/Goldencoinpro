@@ -28,7 +28,10 @@ export class SupportService {
       createdAt: new Date()
     });
 
-    return { id: ticketRef.id, subject, status: 'OPEN' };
+    const ticket = { id: ticketRef.id, subject, status: 'OPEN' };
+    await EmailService.sendSupportTicketAlert(user, ticket);
+
+    return ticket;
   }
 
   static async replyToTicket(ticketId: string, senderId: string, senderType: 'USER' | 'ADMIN', message: string) {
@@ -56,29 +59,7 @@ export class SupportService {
 
     if (senderType === 'ADMIN') {
       // Send email notification to user
-      await EmailService.sendEmail({
-        to: user.email,
-        subject: `New Reply to your support ticket: ${ticket.subject}`,
-        html: `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; overflow: hidden;">
-            <div style="background-color: #C9A96E; padding: 20px; text-align: center;">
-              <h1 style="color: #0B0B0B; margin: 0;">Support Notification</h1>
-            </div>
-            <div style="padding: 30px; color: #333;">
-              <p>Hello ${user.firstName || 'User'},</p>
-              <p>An administrator has replied to your support ticket.</p>
-              <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <p>${message}</p>
-              </div>
-              <p>You can view the full conversation in your dashboard.</p>
-              <div style="text-align: center; margin-top: 30px;">
-                <a href="${process.env.FRONTEND_URL}/support" style="background-color: #C9A96E; color: #0B0B0B; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Ticket</a>
-              </div>
-            </div>
-          </div>
-        `,
-        type: 'SUPPORT_REPLY'
-      });
+      await EmailService.sendSupportReply(user, ticket, message);
     }
 
     return { id: replyRef.id, ticketId, message };

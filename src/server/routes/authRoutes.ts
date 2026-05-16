@@ -77,6 +77,16 @@ authRouter.post('/verify-email', authenticate, async (req: AuthRequest, res) => 
   }
 });
 
+authRouter.post('/change-password', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const { newPassword } = req.body;
+    const result = await AuthService.changePassword(req.user!.userId, newPassword);
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 authRouter.post('/refresh', async (req, res) => {
   try {
     const { refreshToken } = req.body;

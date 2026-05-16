@@ -58,6 +58,9 @@ export class AuthService {
     const otp = await this.generateOTP(userRecord.uid, 'VERIFY_EMAIL');
     await EmailService.sendOTP(userObj, otp, 'Email Verification');
 
+    // Send welcome email
+    await EmailService.sendWelcomeEmail(userObj);
+
     return this.generateTokens(userObj);
   }
 
@@ -330,6 +333,19 @@ export class AuthService {
     await EmailService.sendSecurityAlert(userObj, "Your password was recently changed.");
     
     return { success: true, message: "Password reset successfully." };
+  }
+
+  static async changePassword(userId: string, newPassword: string) {
+    if (!auth || !db) throw new Error("Firebase Admin not initialized");
+    
+    await auth.updateUser(userId, { password: newPassword });
+
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userObj = { ...userDoc.data(), id: userId };
+
+    await EmailService.sendSecurityAlert(userObj, "Your password was recently changed from your profile settings.");
+    
+    return { success: true, message: "Password changed successfully." };
   }
 }
 

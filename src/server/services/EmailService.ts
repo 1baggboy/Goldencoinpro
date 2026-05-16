@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { db } from '../lib/firebase';
+import { TemplateEngine } from '../utils/TemplateEngine';
 
 let resendClient: Resend | null = null;
 
@@ -26,6 +27,7 @@ export type EmailType =
   | 'KYC_UPDATE' 
   | 'INVESTMENT_ALERT' 
   | 'SECURITY_ALERT' 
+  | 'WELCOME' 
   | 'SUPPORT_REPLY' 
   | 'NEWSLETTER';
 
@@ -86,35 +88,32 @@ export class EmailService {
 
   // Domain specific email methods
   static async sendLoginAlert(user: any, details: any) {
-    const html = `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; overflow: hidden;">
-        <div style="background-color: #C9A96E; padding: 20px; text-align: center;">
-          <h1 style="color: #0B0B0B; margin: 0;">Security Alert: New Login</h1>
-        </div>
-        <div style="padding: 30px; color: #333;">
-          <p>Hello ${user.firstName || 'User'},</p>
-          <p>We detected a new login to your account.</p>
-          <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p><strong>Time:</strong> ${details.time}</p>
-            <p><strong>IP Address:</strong> ${details.ip}</p>
-            <p><strong>Location:</strong> ${details.location}</p>
-            <p><strong>Device:</strong> ${details.device}</p>
-            <p><strong>Browser:</strong> ${details.browser}</p>
-          </div>
-          <p>If this was not you, please secure your account immediately.</p>
-          <div style="text-align: center; margin-top: 30px;">
-            <a href="${process.env.FRONTEND_URL}/profile/security" style="background-color: #C9A96E; color: #0B0B0B; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Secure My Account</a>
-          </div>
-        </div>
-        <div style="background-color: #f4f4f4; padding: 20px; text-align: center; font-size: 12px; color: #999;">
-          <p>&copy; ${new Date().getFullYear()} Golden Coin. All rights reserved.</p>
-        </div>
+    const content = `
+      <p>Hello ${user.firstName || 'User'},</p>
+      <p>We detected a new login to your Golden Coin account from a ${details.isSuspicious ? '<span style="color: #d9534f; font-weight: bold;">unrecognized/suspicious</span>' : 'new'} device.</p>
+      <div class="card" style="background-color: #f9f9f9; padding: 25px; border-radius: 12px; margin: 25px 0; border: 1px solid #eee;">
+        <p style="margin: 0 0 10px;"><strong>Time:</strong> ${details.time}</p>
+        <p style="margin: 0 0 10px;"><strong>IP Address:</strong> ${details.ip}</p>
+        <p style="margin: 0 0 10px;"><strong>Location:</strong> ${details.location}</p>
+        <p style="margin: 0 0 10px;"><strong>Device:</strong> ${details.deviceString || details.device}</p>
+        <p style="margin: 0;"><strong>Browser:</strong> ${details.browser}</p>
       </div>
+      <p>If this was not you, please secure your account immediately by changing your password and enabling 2FA.</p>
+      <div style="text-align: center; margin: 35px 0;">
+        <a href="${process.env.FRONTEND_URL}/profile/security" class="hover-bg-gold" style="background-color: #C9A96E; color: #0B0B0B; padding: 14px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Secure My Account</a>
+      </div>
+      <p style="font-size: 14px; color: #666;">You can also <a href="${process.env.FRONTEND_URL}/revoke-session?id=${details.deviceId}" style="color: #C9A96E;">revoke this session</a> directly.</p>
     `;
+
+    const html = TemplateEngine.render({
+      title: "Security Alert: New Login",
+      content,
+      preheader: "A new login was detected on your account."
+    });
 
     return this.sendEmail({
       to: user.email,
-      subject: "Security Notification: New Login Detected",
+      subject: details.isSuspicious ? "⚠️ Suspicious Login Alert" : "Security Alert: New Login Detected",
       html,
       from: "security@goldencoin.live",
       type: 'LOGIN_ALERT'
@@ -122,49 +121,63 @@ export class EmailService {
   }
 
   static async sendOTP(user: any, code: string, purpose: string) {
-    const html = `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; overflow: hidden;">
-        <div style="background-color: #C9A96E; padding: 20px; text-align: center;">
-          <h1 style="color: #0B0B0B; margin: 0;">Verification Code</h1>
+    const content = `
+      <div style="text-align: center;">
+        <p>Hello ${user.firstName || 'User'},</p>
+        <p>Your verification code for <strong>${purpose}</strong> is:</p>
+        <div style="background-color: #f4f4f4; border-radius: 12px; padding: 30px; margin: 25px 0;">
+          <h2 style="font-size: 42px; letter-spacing: 12px; color: #C9A96E; margin: 0; font-family: monospace;">${code}</h2>
         </div>
-        <div style="padding: 30px; color: #333; text-align: center;">
-          <p>Your verification code for ${purpose} is:</p>
-          <h2 style="font-size: 32px; letter-spacing: 5px; color: #C9A96E; margin: 20px 0;">${code}</h2>
-          <p>This code will expire in 10 minutes.</p>
-          <p style="font-size: 12px; color: #999; margin-top: 30px;">If you did not request this code, please ignore this email.</p>
-        </div>
+        <p>This code will expire in <strong>10 minutes</strong>.</p>
+        <p style="font-size: 14px; color: #888; margin-top: 25px;">If you did not request this verification, please ignore this email or contact support if you suspect unauthorized access.</p>
       </div>
     `;
+
+    const html = TemplateEngine.render({
+      title: "Verification Code",
+      content,
+      preheader: `Your Golden Coin verification code is ${code}`
+    });
 
     return this.sendEmail({
       to: user.email,
       subject: `[Golden Coin] ${code} is your verification code`,
       html,
+      from: "noreply@goldencoin.live",
       type: 'OTP'
     });
   }
 
   static async sendTransactionAlert(user: any, tx: any) {
-    const html = `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; overflow: hidden;">
-        <div style="background-color: #C9A96E; padding: 20px; text-align: center;">
-          <h1 style="color: #0B0B0B; margin: 0;">Transaction Update</h1>
-        </div>
-        <div style="padding: 30px; color: #333;">
-          <p>Hello ${user.firstName || 'User'},</p>
-          <p>Your transaction has been updated.</p>
-          <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p><strong>Amount:</strong> $${tx.amount.toLocaleString()}</p>
-            <p><strong>Type:</strong> ${tx.type}</p>
-            <p><strong>Status:</strong> ${tx.status}</p>
-            <p><strong>Reference:</strong> ${tx.reference}</p>
-            <p><strong>Date:</strong> ${new Date(tx.createdAt).toLocaleString()}</p>
-          </div>
-        </div>
+    const isSuccess = tx.status === 'SUCCESS' || tx.status === 'APPROVED';
+    const isRejected = tx.status === 'REJECTED' || tx.status === 'FAILED';
+    const accentColor = isSuccess ? '#28a745' : (isRejected ? '#d9534f' : '#C9A96E');
+
+    const content = `
+      <p>Hello ${user.firstName || 'User'},</p>
+      <p>Your <strong>${tx.type}</strong> request status has been updated to <span style="color: ${accentColor}; font-weight: bold;">${tx.status}</span>.</p>
+      <div class="card" style="background-color: #f9f9f9; padding: 25px; border-radius: 12px; margin: 25px 0; border: 1px solid #eee;">
+        <p style="margin: 0 0 10px;"><strong>Amount:</strong> $${tx.amount.toLocaleString()}</p>
+        <p style="margin: 0 0 10px;"><strong>Type:</strong> ${tx.type}</p>
+        <p style="margin: 0 0 10px;"><strong>Status:</strong> ${tx.status}</p>
+        <p style="margin: 0 0 10px;"><strong>Reference:</strong> ${tx.reference || tx.id}</p>
+        ${tx.rejectionReason ? `<p style="margin: 10px 0 0; color: #d9534f;"><strong>Reason:</strong> ${tx.rejectionReason}</p>` : ''}
+        <p style="margin: 10px 0 0; font-size: 14px; color: #888;"><strong>Date:</strong> ${new Date(tx.createdAt).toLocaleString()}</p>
+      </div>
+      <p>You can view full details in your transaction history.</p>
+      <div style="text-align: center; margin-top: 30px;">
+        <a href="${process.env.FRONTEND_URL}/transactions" style="background-color: #0B0B0B; color: #fff; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">View History</a>
       </div>
     `;
 
-    const subject = `Transaction ${tx.status === 'SUCCESS' ? 'Confirmed' : 'Update'}: ${tx.type}`;
+    const html = TemplateEngine.render({
+      title: "Transaction Update",
+      headerColor: accentColor,
+      headerTextColor: '#ffffff',
+      content
+    });
+
+    const subject = `Transaction ${tx.status}: ${tx.type} ($${tx.amount})`;
     const type = tx.type === 'DEPOSIT' ? 'DEPOSIT_ALERT' : (tx.type === 'WITHDRAWAL' ? 'WITHDRAWAL_ALERT' : 'TRANSACTION_CONFIRMATION');
 
     return this.sendEmail({
@@ -178,23 +191,22 @@ export class EmailService {
 
   static async sendPasswordReset(user: any, token: string) {
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
-    const html = `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; overflow: hidden;">
-        <div style="background-color: #C9A96E; padding: 20px; text-align: center;">
-          <h1 style="color: #0B0B0B; margin: 0;">Password Reset Request</h1>
-        </div>
-        <div style="padding: 30px; color: #333; text-align: center;">
-          <p>Hello ${user.firstName || 'User'},</p>
-          <p>We received a request to reset your password. Click the button below to choose a new password:</p>
-          <div style="margin: 30px 0;">
-            <a href="${resetLink}" style="background-color: #C9A96E; color: #0B0B0B; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Password</a>
-          </div>
-          <p style="font-size: 14px; text-align: left;">Or copy and paste this link into your browser:</p>
-          <p style="font-size: 14px; text-align: left; word-break: break-all; color: #0066cc;">${resetLink}</p>
-          <p style="font-size: 12px; color: #999; margin-top: 30px;">This link will expire in 1 hour. If you did not make this request, you can safely ignore this email.</p>
-        </div>
+    const content = `
+      <p>Hello ${user.firstName || 'User'},</p>
+      <p>We received a request to reset your password for your Golden Coin account. If you did not make this request, you can safely ignore this email.</p>
+      <div style="text-align: center; margin: 35px 0;">
+        <a href="${resetLink}" class="hover-bg-gold" style="background-color: #C9A96E; color: #0B0B0B; padding: 14px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Reset Password</a>
       </div>
+      <p style="font-size: 14px; color: #666;">Or copy and paste this link into your browser:</p>
+      <p style="font-size: 14px; word-break: break-all;"><a href="${resetLink}" style="color: #C9A96E;">${resetLink}</a></p>
+      <p style="font-size: 13px; color: #999; margin-top: 25px;">This link will expire in 1 hour for security reasons.</p>
     `;
+
+    const html = TemplateEngine.render({
+      title: "Password Reset Request",
+      content,
+      preheader: "Reset your Golden Coin password"
+    });
 
     return this.sendEmail({
       to: user.email,
@@ -207,28 +219,39 @@ export class EmailService {
 
   static async sendKYCAlert(user: any, status: 'APPROVED' | 'REJECTED' | 'SUBMITTED', reason?: string) {
     const statusText = status === 'APPROVED' ? 'Approved' : status === 'REJECTED' ? 'Rejected' : 'Submitted';
-    
-    let message = '';
-    if (status === 'APPROVED') message = "Congratulations! Your identity verification has been approved. You now have full access to all Golden Coin features.";
-    else if (status === 'REJECTED') message = `Unfortunately, your identity verification could not be approved at this time. ${reason ? `<br><br><strong>Reason:</strong> ${reason}` : ''}<br><br>Please try submitting again with clearer documents.`;
-    else message = "We have received your KYC documents and our team is currently reviewing them. We will notify you once the process is complete.";
+    const headerColor = status === 'APPROVED' ? '#28a745' : (status === 'REJECTED' ? '#d9534f' : '#C9A96E');
 
-    const html = `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; overflow: hidden;">
-        <div style="background-color: #C9A96E; padding: 20px; text-align: center;">
-          <h1 style="color: #0B0B0B; margin: 0;">KYC Update: ${statusText}</h1>
+    let message = '';
+    if (status === 'APPROVED') {
+      message = `<p>Congratulations! Your identity verification has been <strong>approved</strong>. You now have full access to all Golden Coin features, including higher limits and faster withdrawals.</p>`;
+    } else if (status === 'REJECTED') {
+      message = `
+        <p>Unfortunately, your identity verification could not be approved at this time.</p>
+        <div style="background-color: #fff5f5; border-left: 4px solid #d9534f; padding: 15px; margin: 20px 0;">
+          <p style="margin: 0; color: #c53030;"><strong>Reason:</strong> ${reason || 'Document clarity or mismatch issue'}</p>
         </div>
-        <div style="padding: 30px; color: #333;">
-          <p>Hello ${user.firstName || 'User'},</p>
-          <p>${message}</p>
-          ${status === 'REJECTED' ? `
-            <div style="text-align: center; margin-top: 30px;">
-              <a href="${process.env.FRONTEND_URL}/kyc" style="background-color: #0B0B0B; color: #fff; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Submit Again</a>
-            </div>
-          ` : ''}
-        </div>
+        <p>Please ensure your documents are valid, clear, and match your profile details before submitting again.</p>
+      `;
+    } else {
+      message = `<p>We have received your KYC documents. Our compliance team is currently reviewing them to ensure account security. We will notify you via email as soon as the review is complete.</p>`;
+    }
+
+    const content = `
+      <p>Hello ${user.firstName || 'User'},</p>
+      ${message}
+      <div style="text-align: center; margin-top: 35px;">
+        <a href="${process.env.FRONTEND_URL}/kyc" style="background-color: #0B0B0B; color: #fff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+          ${status === 'REJECTED' ? 'Submit Again' : 'Go to KYC Dashboard'}
+        </a>
       </div>
     `;
+
+    const html = TemplateEngine.render({
+      title: `KYC Status: ${statusText}`,
+      headerColor,
+      headerTextColor: '#ffffff',
+      content
+    });
 
     return this.sendEmail({
       to: user.email,
@@ -240,25 +263,25 @@ export class EmailService {
   }
 
   static async sendSecurityAlert(user: any, activity: string) {
-    const html = `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; overflow: hidden;">
-        <div style="background-color: #C9A96E; padding: 20px; text-align: center;">
-          <h1 style="color: #0B0B0B; margin: 0;">Security Alert</h1>
-        </div>
-        <div style="padding: 30px; color: #333;">
-          <p>Hello ${user.firstName || 'User'},</p>
-          <p>We noticed the following activity on your account:</p>
-          <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; font-weight: bold;">
-            ${activity}
-          </div>
-          <p>If you made this change, no further action is required.</p>
-          <p style="font-weight: bold; color: #d9534f;">If this was NOT you, please secure your account immediately or contact support.</p>
-          <div style="text-align: center; margin-top: 30px;">
-            <a href="${process.env.FRONTEND_URL}/profile/security" style="background-color: #C9A96E; color: #0B0B0B; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Secure Account</a>
-          </div>
-        </div>
+    const content = `
+      <p>Hello ${user.firstName || 'User'},</p>
+      <p>A recent change was made to your Golden Coin account security settings or profile details.</p>
+      <div class="card" style="background-color: #f9f9f9; padding: 25px; border-radius: 12px; margin: 25px 0; border: 1px solid #eee; font-weight: bold; color: #0B0B0B;">
+         ${activity}
+      </div>
+      <p>If you made this change, you can safely ignore this email.</p>
+      <p style="color: #d9534f; font-weight: bold;">If you did NOT make this change, please secure your account immediately.</p>
+      <div style="text-align: center; margin-top: 35px;">
+        <a href="${process.env.FRONTEND_URL}/profile/security" class="hover-bg-gold" style="background-color: #C9A96E; color: #0B0B0B; padding: 14px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Secure Account</a>
       </div>
     `;
+
+    const html = TemplateEngine.render({
+      title: "Security Notification",
+      headerColor: '#0B0B0B',
+      headerTextColor: '#C9A96E',
+      content
+    });
 
     return this.sendEmail({
       to: user.email,
@@ -266,6 +289,130 @@ export class EmailService {
       html,
       from: "security@goldencoin.live",
       type: 'SECURITY_ALERT'
+    });
+  }
+
+  static async sendSupportTicketAlert(user: any, ticket: any) {
+    const content = `
+      <p>Hello ${user.firstName || 'User'},</p>
+      <p>We have received your support request regarding <strong>${ticket.subject}</strong>.</p>
+      <p>Our support team is reviewing your ticket and will provide a response as soon as possible.</p>
+      <div class="card" style="background-color: #f9f9f9; padding: 25px; border-radius: 12px; margin: 25px 0; border: 1px solid #eee;">
+        <p style="margin: 0 0 10px;"><strong>Ticket ID:</strong> ${ticket.id}</p>
+        <p style="margin: 0;"><strong>Status:</strong> ${ticket.status}</p>
+      </div>
+      <p>You can track the progress of your ticket directly in your Golden Coin support panel.</p>
+      <div style="text-align: center; margin-top: 35px;">
+        <a href="${process.env.FRONTEND_URL}/support" style="background-color: #0B0B0B; color: #fff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Go to Support</a>
+      </div>
+    `;
+
+    const html = TemplateEngine.render({
+      title: "Support Ticket Received",
+      content,
+      preheader: `Ticket #${ticket.id} received: ${ticket.subject}`
+    });
+
+    return this.sendEmail({
+      to: user.email,
+      subject: `Support Ticket Received: ${ticket.subject}`,
+      html,
+      from: "support@goldencoin.live",
+      type: 'SUPPORT_REPLY'
+    });
+  }
+
+  static async sendSupportReply(user: any, ticket: any, message: string) {
+    const content = `
+      <p>Hello ${user.firstName || 'User'},</p>
+      <p>An administrator has replied to your support ticket regarding <strong>${ticket.subject}</strong>.</p>
+      <div class="card" style="background-color: #f9f9f9; padding: 25px; border-radius: 12px; margin: 25px 0; border: 1px solid #eee; font-style: italic;">
+        "${message}"
+      </div>
+      <p>Please log in to your dashboard to view the full conversation and reply.</p>
+      <div style="text-align: center; margin-top: 35px;">
+        <a href="${process.env.FRONTEND_URL}/support" class="hover-bg-gold" style="background-color: #C9A96E; color: #0B0B0B; padding: 14px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">View Conversation</a>
+      </div>
+    `;
+
+    const html = TemplateEngine.render({
+      title: "New Support Reply",
+      content,
+      preheader: "New response from Golden Coin support"
+    });
+
+    return this.sendEmail({
+      to: user.email,
+      subject: `New Reply to your support ticket: ${ticket.subject}`,
+      html,
+      from: "support@goldencoin.live",
+      type: 'SUPPORT_REPLY'
+    });
+  }
+
+  static async sendInvestmentAlert(user: any, investment: any) {
+    const content = `
+      <p>Hello ${user.firstName || 'User'},</p>
+      <p>Congratulations! You have successfully invested in the <strong>${investment.planName}</strong> plan. Your capital is now working for you.</p>
+      <div class="card" style="background-color: #f9f9f9; padding: 25px; border-radius: 12px; margin: 25px 0; border: 1px solid #eee;">
+        <p style="margin: 0 0 10px;"><strong>Plan:</strong> ${investment.planName}</p>
+        <p style="margin: 0 0 10px;"><strong>Invested Amount:</strong> $${investment.amount.toLocaleString()}</p>
+        <p style="margin: 0 0 10px;"><strong>ROI:</strong> ${investment.roiPercentage}%</p>
+        <p style="margin: 0 0 10px;"><strong>Expected Payout:</strong> $${investment.expectedReturn.toLocaleString()}</p>
+        <p style="margin: 0;"><strong>Maturity Date:</strong> ${new Date(investment.endDate).toLocaleDateString()}</p>
+      </div>
+      <p>Your profits will be automatically credited to your main balance upon maturity.</p>
+      <div style="text-align: center; margin-top: 35px;">
+        <a href="${process.env.FRONTEND_URL}/invest" style="background-color: #0B0B0B; color: #fff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Manage Investments</a>
+      </div>
+    `;
+
+    const html = TemplateEngine.render({
+      title: "Investment Confirmed",
+      content,
+      preheader: `Success! You invested $${investment.amount} in ${investment.planName}`
+    });
+
+    return this.sendEmail({
+      to: user.email,
+      subject: `Investment Plan Purchased: ${investment.planName}`,
+      html,
+      from: "invest@goldencoin.live",
+      type: 'INVESTMENT_ALERT'
+    });
+  }
+
+  static async sendWelcomeEmail(user: any) {
+    const content = `
+      <p>Hello ${user.firstName || 'User'},</p>
+      <p>We are absolutely thrilled to welcome you to <strong>Golden Coin</strong>. You've taken your first step towards smarter, high-yield digital asset investments.</p>
+      <p>With your new account, you can access premium investment strategies, secure asset growth, and professional-grade financial tools.</p>
+      <div style="background-color: #f9f9f9; padding: 25px; border-radius: 12px; margin: 30px 0;">
+        <h3 style="margin-top: 0; color: #C9A96E;">Quick Start Guide:</h3>
+        <ul style="padding-left: 20px; color: #444;">
+          <li style="margin-bottom: 10px;"><strong>Verify Account:</strong> Submit your KYC to unlock full withdrawal limits.</li>
+          <li style="margin-bottom: 10px;"><strong>Deposit Funds:</strong> We support multiple cryptocurrencies and methods.</li>
+          <li style="margin-bottom: 0;"><strong>Active Plan:</strong> Choose a plan that fits your financial goals.</li>
+        </ul>
+      </div>
+      <p>If you need any guidance, our 24/7 concierge support is just a ticket away.</p>
+      <div style="text-align: center; margin: 40px 0;">
+        <a href="${process.env.FRONTEND_URL}/dashboard" class="hover-bg-gold" style="background-color: #C9A96E; color: #0B0B0B; padding: 15px 35px; text-decoration: none; border-radius: 8px; font-weight: 800; display: inline-block; font-size: 18px;">Start Investing Now</a>
+      </div>
+    `;
+
+    const html = TemplateEngine.render({
+      title: "Welcome to the Future of Investing",
+      content,
+      preheader: `Welcome to Golden Coin, ${user.firstName}! Let's grow your wealth together.`
+    });
+
+    return this.sendEmail({
+      to: user.email,
+      subject: "Welcome to Golden Coin!",
+      html,
+      from: "welcome@goldencoin.live",
+      type: 'WELCOME'
     });
   }
 }

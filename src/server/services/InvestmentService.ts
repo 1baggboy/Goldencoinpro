@@ -36,29 +36,7 @@ export class InvestmentService {
     const newBalance = (user.balance || 0) - amount;
     await userDocRef.update({ balance: newBalance });
 
-    await EmailService.sendEmail({
-      to: user.email,
-      subject: `Investment Plan Purchased: ${planName}`,
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; overflow: hidden;">
-          <div style="background-color: #C9A96E; padding: 20px; text-align: center;">
-            <h1 style="color: #0B0B0B; margin: 0;">Investment Confirmation</h1>
-          </div>
-          <div style="padding: 30px; color: #333;">
-            <p>Hello ${user.firstName || 'User'},</p>
-            <p>You have successfully invested in the <strong>${planName}</strong> plan.</p>
-            <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <p><strong>Amount:</strong> $${amount.toLocaleString()}</p>
-              <p><strong>ROI:</strong> ${roi}%</p>
-              <p><strong>Expected Payout:</strong> $${expectedReturn.toLocaleString()}</p>
-              <p><strong>Maturity Date:</strong> ${endDate.toLocaleDateString()}</p>
-            </div>
-            <p>Your profits will be credited automatically upon maturity.</p>
-          </div>
-        </div>
-      `,
-      type: 'INVESTMENT_ALERT'
-    });
+    await EmailService.sendInvestmentAlert(user, investment);
 
     return investment;
   }
