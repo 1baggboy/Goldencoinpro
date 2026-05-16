@@ -5,7 +5,7 @@ export interface TemplateOptions {
   headerTextColor?: string;
   content: string;
   preheader?: string;
-  unsubscribeUrl?: string;
+  email: string;
 }
 
 export class TemplateEngine {
@@ -16,8 +16,10 @@ export class TemplateEngine {
       headerTextColor = '#0B0B0B',
       content,
       preheader = '',
-      unsubscribeUrl = '#'
+      email
     } = options;
+
+    const unsubscribeUrl = `${process.env.FRONTEND_URL}/unsubscribe?email=${encodeURIComponent(email)}`;
 
     return `
 <!DOCTYPE html>

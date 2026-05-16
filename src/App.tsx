@@ -25,6 +25,7 @@ import { TwoFactorSetup } from "./pages/TwoFactorSetup";
 import { ForgotPassword } from "./pages/ForgotPassword";
 import { PrivacyPolicy, TermsOfService, RiskDisclaimer, AMLPolicy } from "./pages/Legal";
 import CookiePolicy from "./pages/CookiePolicy";
+import { Unsubscribe } from "./pages/Unsubscribe";
 import { About } from "./components/About";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { Features } from "./pages/Features";
@@ -125,6 +126,7 @@ function AppContent({ siteLoading, setSiteLoading }: { siteLoading: boolean, set
           <Route path="/risk-disclaimer" element={<RiskDisclaimer />} />
           <Route path="/aml-policy" element={<AMLPolicy />} />
           <Route path="/cookie-policy" element={<CookiePolicy />} />
+          <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="/2fa/setup" element={
             <ProtectedRoute>
               <TwoFactorSetup />

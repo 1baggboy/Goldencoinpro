@@ -58,7 +58,6 @@ export const AdminDashboard = () => {
   const [pendingDeposits, setPendingDeposits] = useState<any[]>([]);
   const [pendingWithdrawals, setPendingWithdrawals] = useState<any[]>([]);
   const [pendingKyc, setPendingKyc] = useState<any[]>([]);
-  const [contactMessages, setContactMessages] = useState<any[]>([]);
   const [selectedKyc, setSelectedKyc] = useState<any>(null);
   const [selectedTx, setSelectedTx] = useState<any>(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -124,13 +123,6 @@ export const AdminDashboard = () => {
       setPendingKyc(k);
     }, (error) => handleFirestoreError(error, OperationType.LIST, "kyc_submissions"));
 
-    // Fetch contact form messages
-    const qMsg = query(collection(db, "contact_messages"), orderBy("submittedAt", "desc"));
-    const unsubMsg = onSnapshot(qMsg, (snap) => {
-      const m = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      setContactMessages(m);
-    }, (error) => handleFirestoreError(error, OperationType.LIST, "contact_messages"));
-
     // Fetch active chats count (unread)
     const unsubChats = onSnapshot(collection(db, "support_chats"), (snap) => {
       const allMsgs = snap.docs.map(d => d.data());
@@ -144,7 +136,6 @@ export const AdminDashboard = () => {
       unsubD();
       unsubW();
       unsubK();
-      unsubMsg();
       unsubChats();
     };
   }, [isAdmin]);
@@ -328,15 +319,6 @@ export const AdminDashboard = () => {
       setActiveUserMenu(null);
     } catch (err: any) {
       alert(`Error: ${err.message}`);
-    }
-  };
-
-  const deleteContactMessage = async (id: string) => {
-    if (!window.confirm("Delete this message?")) return;
-    try {
-      await deleteDoc(doc(db, "contact_messages", id));
-    } catch (err) {
-      console.error("Delete message error:", err);
     }
   };
 
@@ -671,105 +653,6 @@ export const AdminDashboard = () => {
                   </div>
                 </div>
               ))
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mt-8">
-        {/* Contact Messages (Inbox) */}
-        <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-3xl overflow-hidden shadow-2xl">
-          <div className="p-6 bg-[#C9A96E] flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-slate-950/20 rounded-2xl text-slate-950">
-                <Inbox size={24} />
-              </div>
-              <div>
-                <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight">Main Inbox</h3>
-                <p className="text-[10px] text-slate-950/60 font-black uppercase tracking-[0.2em]">info.goldencoinltd@gmail.com</p>
-              </div>
-            </div>
-            <div className="px-4 py-2 bg-slate-900/10 rounded-full border border-slate-900/10">
-              <span className="text-xs font-black text-slate-950 uppercase">{contactMessages.length} Messages</span>
-            </div>
-          </div>
-
-          <div className="p-6 max-h-[600px] overflow-y-auto custom-scrollbar">
-            {contactMessages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="w-20 h-20 bg-slate-950 border border-white/5 rounded-full flex items-center justify-center text-gray-500 mb-6 opacity-20">
-                  <Mail size={40} />
-                </div>
-                <h3 className="text-lg font-bold text-gray-400">Your inbox is clear</h3>
-                <p className="text-xs text-gray-600 mt-1 max-w-xs uppercase tracking-widest">When clients use the contact form, their queries will appear here.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {contactMessages.map(msg => (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    key={msg.id} 
-                    className="group relative p-6 bg-slate-950 border border-[#C9A96E]/5 rounded-[2rem] hover:border-[#C9A96E]/30 transition-all duration-500"
-                  >
-                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 bg-[#C9A96E]/10 rounded-2xl flex items-center justify-center text-[#C9A96E] shrink-0 font-black text-lg">
-                          {msg.fullName?.charAt(0) || "U"}
-                        </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-3">
-                            <h4 className="text-lg font-bold text-white tracking-tight">{msg.fullName}</h4>
-                            <span className="px-2 py-0.5 bg-slate-800 text-gray-400 text-[10px] font-black uppercase tracking-widest rounded-md border border-white/5">
-                              {msg.status || 'NEW'}
-                            </span>
-                          </div>
-                          <p className="text-xs text-[#C9A96E] font-medium opacity-80">{msg.email}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Submitted On</p>
-                          <p className="text-xs font-bold text-white">
-                            {msg.submittedAt ? format(new Date(msg.submittedAt), "MMM dd, yyyy HH:mm") : "---"}
-                          </p>
-                        </div>
-                        <button 
-                          onClick={() => deleteContactMessage(msg.id)}
-                          className="w-10 h-10 flex items-center justify-center bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all opacity-0 group-hover:opacity-100"
-                          title="Delete Message"
-                        >
-                          <X size={18} />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="mt-6 pt-6 border-t border-[#C9A96E]/5">
-                      <div className="mb-4">
-                        <span className="text-[10px] text-gray-600 font-black uppercase tracking-widest block mb-2">Subject Line</span>
-                        <p className="text-sm font-bold text-[#C9A96E] uppercase tracking-tight">{msg.subject}</p>
-                      </div>
-                      <div className="bg-slate-900/50 p-6 rounded-2xl border border-white/5">
-                        <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest block mb-3">Message Content</span>
-                        <p className="text-sm text-gray-400 leading-relaxed italic">
-                          "{msg.message}"
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-6 flex justify-end">
-                      <a 
-                        href={`mailto:${msg.email}?subject=Re: ${msg.subject}`}
-                        className="px-6 py-3 bg-[#C9A96E]/10 text-[#C9A96E] hover:bg-[#C9A96E] hover:text-black font-black uppercase tracking-widest text-xs rounded-xl transition-all duration-300 flex items-center gap-2"
-                      >
-                        <Send size={14} />
-                        Quick Reply
-                      </a>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
             )}
           </div>
         </div>

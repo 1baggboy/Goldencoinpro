@@ -96,6 +96,22 @@ async function startServer() {
     }
   });
 
+  app.post("/api/unsubscribe", async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!db) return res.status(500).json({ error: "Firebase DB not initialized" });
+      const q = db.collection("newsletters").where("email", "==", email);
+      const snap = await q.get();
+      if (snap.empty) return res.status(404).json({ error: "Not found" });
+      for (const doc of snap.docs) {
+        await doc.ref.update({ isSubscribed: false });
+      }
+      res.json({ success: true, message: "Unsubscribed" });
+    } catch(err: any) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
   // --- VITE / STATIC SERVING ---
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({ server: { middlewareMode: true }, appType: "spa" });

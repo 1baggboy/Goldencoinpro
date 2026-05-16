@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
 import { Logo } from "./Logo";
 import { Footer } from "./Footer";
+import { NewsletterSubscription } from "./NewsletterSubscription";
 import { useAuth } from "../AuthContext";
 import { motion } from "motion/react";
 
@@ -64,6 +65,7 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
         </div>
       </main>
 
+      <NewsletterSubscription />
       <Footer />
     </div>
   );

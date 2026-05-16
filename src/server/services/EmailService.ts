@@ -142,7 +142,8 @@ export class EmailService {
     const html = TemplateEngine.render({
       title: "Security Alert: New Login",
       content,
-      preheader: "A new login was detected on your account."
+      preheader: "A new login was detected on your account.",
+      email: user.email
     });
 
     return this.sendEmail({
@@ -170,7 +171,8 @@ export class EmailService {
     const html = TemplateEngine.render({
       title: "Verification Code",
       content,
-      preheader: `Your Golden Coin verification code is ${code}`
+      preheader: `Your Golden Coin verification code is ${code}`,
+      email: user.email
     });
 
     return this.sendEmail({
@@ -208,7 +210,8 @@ export class EmailService {
       title: "Transaction Update",
       headerColor: accentColor,
       headerTextColor: '#ffffff',
-      content
+      content,
+      email: user.email
     });
 
     const subject = `Transaction ${tx.status}: ${tx.type} ($${tx.amount})`;
@@ -239,7 +242,8 @@ export class EmailService {
     const html = TemplateEngine.render({
       title: "Password Reset Request",
       content,
-      preheader: "Reset your Golden Coin password"
+      preheader: "Reset your Golden Coin password",
+      email: user.email
     });
 
     return this.sendEmail({
@@ -285,7 +289,8 @@ export class EmailService {
       title: `KYC Status: ${statusText}`,
       headerColor,
       headerTextColor: '#ffffff',
-      content
+      content,
+      email: user.email
     });
 
     return this.sendEmail({
@@ -315,7 +320,8 @@ export class EmailService {
       title: "Security Notification",
       headerColor: '#0B0B0B',
       headerTextColor: '#C9A96E',
-      content
+      content,
+      email: user.email
     });
 
     return this.sendEmail({
@@ -345,7 +351,8 @@ export class EmailService {
     const html = TemplateEngine.render({
       title: "Support Ticket Received",
       content,
-      preheader: `Ticket #${ticket.id} received: ${ticket.subject}`
+      preheader: `Ticket #${ticket.id} received: ${ticket.subject}`,
+      email: user.email
     });
 
     return this.sendEmail({
@@ -373,7 +380,8 @@ export class EmailService {
     const html = TemplateEngine.render({
       title: "New Support Reply",
       content,
-      preheader: "New response from Golden Coin support"
+      preheader: "New response from Golden Coin support",
+      email: user.email
     });
 
     return this.sendEmail({
@@ -405,7 +413,8 @@ export class EmailService {
     const html = TemplateEngine.render({
       title: "Investment Confirmed",
       content,
-      preheader: `Success! You invested $${investment.amount} in ${investment.planName}`
+      preheader: `Success! You invested $${investment.amount} in ${investment.planName}`,
+      email: user.email
     });
 
     return this.sendEmail({
@@ -440,7 +449,8 @@ export class EmailService {
     const html = TemplateEngine.render({
       title: "Welcome to the Future of Investing",
       content,
-      preheader: `Welcome to Golden Coin, ${displayName}! Let's grow your wealth together.`
+      preheader: `Welcome to Golden Coin, ${displayName}! Let's grow your wealth together.`,
+      email: user.email
     });
 
     return this.sendEmail({

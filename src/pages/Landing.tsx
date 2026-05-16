@@ -23,9 +23,11 @@ import { useAuth } from "../AuthContext";
 import { cn } from "../lib/utils";
 import { Logo } from "../components/Logo";
 import { Footer } from "../components/Footer";
+import { NewsletterSubscription } from "../components/NewsletterSubscription";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
+import { usePrices } from "../PriceContext";
 
 const AccountIllustration = () => (
   <div className="relative w-full max-w-[280px] h-[240px] mx-auto flex items-center justify-center">
@@ -440,6 +442,7 @@ export const Landing = () => {
       </section>
 
       {/* Footer */}
+      <NewsletterSubscription />
       <Footer />
     </div>
   );

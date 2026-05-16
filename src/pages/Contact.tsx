@@ -144,7 +144,7 @@ export const Contact = () => {
             </motion.div>
           </div>
 
-          {/* Right Column: Form */}
+          {/* Right Column: Information/Alternate */}
           <div className="relative">
             <div className="sticky top-32">
               <motion.div 
@@ -156,113 +156,18 @@ export const Contact = () => {
                 <div className="absolute top-0 right-0 w-48 h-48 bg-[#C9A96E]/5 rounded-bl-full blur-[80px]" />
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#C9A96E]/5 rounded-tr-full blur-[100px]" />
 
-                <AnimatePresence mode="wait">
-                  {!submitted ? (
-                    <motion.form 
-                      key="form"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      onSubmit={handleSubmit} 
-                      className="space-y-8 relative z-10"
-                    >
-                      <h2 className="text-3xl font-black uppercase tracking-tight italic font-display">Inquiry Channel</h2>
-                      
-                      {error && (
-                        <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-5 rounded-[1.5rem] text-sm font-bold flex items-center gap-3">
-                          <AlertTriangle size={18} />
-                          {error}
-                        </div>
-                      )}
-
-                      <div className="space-y-6">
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">Legal Full Name</label>
-                          <input 
-                            required
-                            type="text" 
-                            placeholder="Full Name"
-                            value={formData.fullName}
-                            onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                            className="w-full bg-slate-50 dark:bg-slate-950/50 border border-[#C9A96E]/10 rounded-[1.25rem] py-5 px-8 outline-none focus:border-[#C9A96E]/60 transition-all font-medium text-lg dark:text-white"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">Verified Email Address</label>
-                          <input 
-                            required
-                            type="email" 
-                            placeholder="Email Address"
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            className="w-full bg-slate-50 dark:bg-slate-950/50 border border-[#C9A96E]/10 rounded-[1.25rem] py-5 px-8 outline-none focus:border-[#C9A96E]/60 transition-all font-medium text-lg dark:text-white"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">Subject / Category</label>
-                          <input 
-                            required
-                            type="text" 
-                            placeholder="e.g. Asset Strategy Query"
-                            value={formData.subject}
-                            onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                            className="w-full bg-slate-50 dark:bg-slate-950/50 border border-[#C9A96E]/10 rounded-[1.25rem] py-5 px-8 outline-none focus:border-[#C9A96E]/60 transition-all font-medium text-lg dark:text-white"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">Message Payload</label>
-                          <textarea 
-                            required
-                            rows={4}
-                            placeholder="Detailed inquiry..."
-                            value={formData.message}
-                            onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                            className="w-full bg-slate-50 dark:bg-slate-950/50 border border-[#C9A96E]/10 rounded-[1.25rem] py-5 px-8 outline-none focus:border-[#C9A96E]/60 transition-all font-medium text-lg dark:text-white resize-none"
-                          />
-                        </div>
-                      </div>
-
-                      <button 
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-[#C9A96E] hover:bg-[#D4B985] text-black font-black uppercase tracking-[0.3em] py-6 rounded-[1.5rem] flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-50 text-base shadow-2xl shadow-[#C9A96E]/20"
-                      >
-                        {loading ? (
-                          <div className="w-6 h-6 border-4 border-black/20 border-t-black rounded-full animate-spin" />
-                        ) : (
-                          <>
-                            <Send size={20} />
-                            Transmit Inquiry
-                          </>
-                        )}
-                      </button>
-                    </motion.form>
-                  ) : (
-                    <motion.div 
-                      key="success"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="text-center py-20 space-y-8"
-                    >
-                      <div className="w-24 h-24 bg-[#C9A96E]/20 text-[#C9A96E] rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-[#C9A96E]/20">
-                        <CheckCircle2 size={48} />
-                      </div>
-                      <h2 className="text-4xl font-black uppercase tracking-tight italic font-display">Transmission <br /> Successful</h2>
-                      <p className="text-gray-600 dark:text-gray-400 max-w-sm mx-auto text-lg leading-relaxed">
-                        Your inquiry has been queued for institutional review. Expect a response at <span className="font-bold text-[#C9A96E] break-all">{formData.email}</span> within 24 hours.
-                      </p>
-                      <button 
-                        onClick={() => setSubmitted(false)}
-                        className="text-[#C9A96E] font-black uppercase tracking-[0.2em] text-sm hover:underline"
-                      >
-                        Send another transmission
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <div className="text-center py-10 space-y-8 relative z-10">
+                  <h2 className="text-3xl font-black uppercase tracking-tight italic font-display">Need Immediate Assistance?</h2>
+                  <p className="text-gray-600 dark:text-gray-400 max-w-sm mx-auto text-lg leading-relaxed">
+                    Our support team is available 24/7 to assist with your portfolio requirements. Please use the support widget or email us directly for immediate help.
+                  </p>
+                  <a 
+                    href="mailto:info.goldencoinltd@gmail.com"
+                    className="inline-block bg-[#C9A96E] hover:bg-[#D4B985] text-black font-black uppercase tracking-[0.3em] py-6 px-10 rounded-[1.5rem] transition-all active:scale-95 shadow-2xl shadow-[#C9A96E]/20"
+                  >
+                    Email Support
+                  </a>
+                </div>
               </motion.div>
             </div>
           </div>
