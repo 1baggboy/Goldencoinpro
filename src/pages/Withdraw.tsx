@@ -132,31 +132,34 @@ export const Withdraw = () => {
 
       await addNotification(user.uid, "Withdrawal Requested", `Your withdrawal request for $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC) has been submitted for approval. Your balance has been adjusted.`, "info");
       
-      const adminQuery = query(collection(db, "users"), where("role", "==", "admin"));
-      const adminDocs = await getDocs(adminQuery);
-      const adminPromises = adminDocs.docs.map(adminDoc => 
-        addNotification(adminDoc.id, "New Withdrawal Request", `User ${profile?.displayName || user.email} has requested a withdrawal of $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC).`, "warning")
-      );
-      await Promise.all(adminPromises);
-
-      // Send email
-      await sendAdminEmailNotification(
-        "Critical Event: Withdrawal Request",
-        `User ${profile?.displayName || user.email} has requested a withdrawal of $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC) to wallet ${walletAddress}. TX ID: ${txId}`
-      );
+      // Notify admins via email (Extension will pick this up)
+      try {
+        await sendAdminEmailNotification(
+          "Critical Event: Withdrawal Request",
+          `User ${profile?.displayName || user.email} has requested a withdrawal of $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC) to wallet ${walletAddress}. TX ID: ${txId}`
+        );
+      } catch (adminErr) {
+        console.error("Failed to send admin email notification:", adminErr);
+      }
 
       setSuccess(true);
       setAmountUsd("");
       setWalletAddress("");
     } catch (err: any) {
       console.error("Withdrawal error:", err);
-      setError("An error occurred. Please try again.");
+      if (err.message && err.message.includes("permission")) {
+        setError("Permission denied. Ensure you have sufficient balance and your account is active.");
+      } else {
+        setError("An error occurred. Please check your connection and try again.");
+      }
       
       // Notify admins of failed withdrawal via email
-      await sendAdminEmailNotification(
-        "Critical Event: Failed Withdrawal Attempt",
-        `User ${profile?.displayName || profile?.email} encountered an error while trying to withdraw $${valUsd.toLocaleString()}.\nError: ${err.message || String(err)}`
-      );
+      try {
+        await sendAdminEmailNotification(
+          "Critical Event: Failed Withdrawal Attempt",
+          `User ${profile?.displayName || profile?.email} encountered an error while trying to withdraw $${valUsd.toLocaleString()}.\nError: ${err.message || String(err)}`
+        );
+      } catch (innerErr) {}
     } finally {
       setLoading(false);
     }

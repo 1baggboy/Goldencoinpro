@@ -231,8 +231,8 @@ export const Transactions = () => {
                   </div>
                   <div className={cn(
                     "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border shadow-sm",
-                    tx.status === 'confirmed' ? "bg-green-500/10 text-green-500 border-green-500/20" : 
-                    tx.status === 'pending' ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" : 
+                    ["SUCCESS", "confirmed", "APPROVED"].includes(tx.status) ? "bg-green-500/10 text-green-500 border-green-500/20" : 
+                    ["PENDING", "pending"].includes(tx.status) ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" : 
                     "bg-red-500/10 text-red-500 border-red-500/20"
                   )}>
                     {tx.status}
@@ -243,8 +243,8 @@ export const Transactions = () => {
                   <div>
                     <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Amount</p>
                     <div className="flex items-baseline gap-2">
-                      <span className={cn("text-2xl font-bold", tx.type === 'deposit' ? "text-green-500" : "text-red-500")}>
-                        {tx.type === 'deposit' ? '+' : '-'}{(tx.amountBtc || tx.amount).toFixed(4)}
+                      <span className={cn("text-2xl font-bold", tx.type?.toLowerCase() === 'deposit' ? "text-green-500" : "text-red-500")}>
+                        {tx.type?.toLowerCase() === 'deposit' ? '+' : '-'}{(tx.amountBtc || tx.amount || 0).toFixed(4)}
                       </span>
                       <span className="text-sm font-bold text-gray-500">BTC</span>
                     </div>
@@ -331,16 +331,16 @@ export const Transactions = () => {
               <div className="p-8 text-center border-b border-[#C9A96E]/10">
                 <div className={cn(
                   "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4",
-                  selectedTx.status === 'confirmed' ? "bg-green-500/10 text-green-500" : 
-                  selectedTx.status === 'pending' ? "bg-yellow-500/10 text-yellow-500" : 
+                  ["SUCCESS", "confirmed", "APPROVED"].includes(selectedTx.status) ? "bg-green-500/10 text-green-500" : 
+                  ["PENDING", "pending"].includes(selectedTx.status) ? "bg-yellow-500/10 text-yellow-500" : 
                   "bg-red-500/10 text-red-500"
                 )}>
-                  {selectedTx.status === 'confirmed' ? <CheckCircle size={32} /> : 
-                   selectedTx.status === 'pending' ? <Clock size={32} /> : 
+                  {["SUCCESS", "confirmed", "APPROVED"].includes(selectedTx.status) ? <CheckCircle size={32} /> : 
+                   ["PENDING", "pending"].includes(selectedTx.status) ? <Clock size={32} /> : 
                    <AlertCircle size={32} />}
                 </div>
                 <h4 className="text-3xl font-bold text-white mb-1">
-                  {selectedTx.type === 'deposit' ? '+' : '-'}{(selectedTx.amountBtc || selectedTx.amount).toFixed(4)} BTC
+                  {selectedTx.type?.toLowerCase() === 'deposit' ? '+' : '-'}{(selectedTx.amountBtc || selectedTx.amount || 0).toFixed(4)} BTC
                 </h4>
                 {selectedTx.amountUsd && (
                   <p className="text-gray-500">≈ ${selectedTx.amountUsd.toLocaleString()}</p>
@@ -348,8 +348,8 @@ export const Transactions = () => {
                 
                 <div className={cn(
                   "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mt-4",
-                  selectedTx.status === 'confirmed' ? "bg-green-500/10 text-green-500 border border-green-500/20" : 
-                  selectedTx.status === 'pending' ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20" : 
+                  ["SUCCESS", "confirmed", "APPROVED"].includes(selectedTx.status) ? "bg-green-500/10 text-green-500 border border-green-500/20" : 
+                  ["PENDING", "pending"].includes(selectedTx.status) ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20" : 
                   "bg-red-500/10 text-red-500 border border-red-500/20"
                 )}>
                   {selectedTx.status}
@@ -384,7 +384,7 @@ export const Transactions = () => {
                     )}
                   </div>
                 </div>
-                {selectedTx.status === 'failed' && selectedTx.rejectionReason && (
+                {["failed", "REJECTED"].includes(selectedTx.status) && selectedTx.rejectionReason && (
                   <div className="flex justify-between items-start py-2 border-b border-white/5">
                     <span className="text-sm text-gray-500">Reason</span>
                     <span className="text-sm font-semibold text-red-400 text-right max-w-[200px]">{selectedTx.rejectionReason}</span>

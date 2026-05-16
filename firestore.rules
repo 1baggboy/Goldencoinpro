@@ -38,12 +38,14 @@ service cloud.firestore {
     function isValidTransaction(data) {
       return data.keys().hasAll(['userId', 'type', 'status', 'timestamp']) &&
              data.userId is string &&
-             data.type in ['deposit', 'withdrawal'] &&
+             (data.type in ['deposit', 'withdrawal'] || data.type in ['DEPOSIT', 'WITHDRAWAL']) &&
              (!('amount' in data) || data.amount is number) &&
              (!('amountBtc' in data) || data.amountBtc is number) &&
              (!('amountUsd' in data) || data.amountUsd is number) &&
              (!('txId' in data) || data.txId is string) &&
-             data.status in ['pending', 'confirmed', 'failed'];
+             (!('txHash' in data) || data.txHash is string) &&
+             (!('walletAddress' in data) || data.walletAddress is string) &&
+             (data.status in ['pending', 'confirmed', 'failed'] || data.status in ['PENDING', 'SUCCESS', 'REJECTED', 'APPROVED', 'FAILED']);
     }
 
     function isValidKYC(data) {
@@ -132,7 +134,8 @@ service cloud.firestore {
     // Transactions Collection
     match /transactions/{txId} {
       allow read: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidTransaction(request.resource.data) && (request.resource.data.status == 'pending' || request.resource.data.status == 'confirmed');
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidTransaction(request.resource.data) && 
+                    (request.resource.data.status in ['pending', 'confirmed', 'PENDING', 'SUCCESS', 'APPROVED']);
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }

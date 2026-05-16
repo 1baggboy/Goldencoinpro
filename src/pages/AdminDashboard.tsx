@@ -95,14 +95,14 @@ export const AdminDashboard = () => {
     }, (error) => handleFirestoreError(error, OperationType.LIST, "investments"));
 
     // Fetch pending deposits
-    const qD = query(collection(db, "transactions"), where("status", "==", "pending"), where("type", "==", "deposit"));
+    const qD = query(collection(db, "transactions"), where("status", "in", ["pending", "PENDING"]), where("type", "in", ["deposit", "DEPOSIT"]));
     const unsubD = onSnapshot(qD, (snap) => {
       const t = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setPendingDeposits(t);
     }, (error) => handleFirestoreError(error, OperationType.LIST, "transactions"));
 
     // Fetch pending withdrawals
-    const qW = query(collection(db, "transactions"), where("status", "==", "pending"), where("type", "==", "withdrawal"));
+    const qW = query(collection(db, "transactions"), where("status", "in", ["pending", "PENDING"]), where("type", "in", ["withdrawal", "WITHDRAWAL"]));
     const unsubW = onSnapshot(qW, (snap) => {
       const t = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setPendingWithdrawals(t);
@@ -149,7 +149,7 @@ export const AdminDashboard = () => {
         throw new Error("Invalid deposit amount.");
       }
       
-      await updateDoc(doc(db, "transactions", tx.id), { status: "confirmed" });
+      await updateDoc(doc(db, "transactions", tx.id), { status: "SUCCESS" });
       
       // Update user balance
       await updateDoc(doc(db, "users", tx.userId), {
@@ -209,7 +209,7 @@ export const AdminDashboard = () => {
         throw new Error("User not found.");
       }
 
-      await updateDoc(doc(db, "transactions", tx.id), { status: "confirmed" });
+      await updateDoc(doc(db, "transactions", tx.id), { status: "SUCCESS" });
       await updateDoc(doc(db, "users", tx.userId), {
         btcBalance: increment(-amountBtc),
         tradingBalanceBtc: increment(-amountBtc)
@@ -226,7 +226,7 @@ export const AdminDashboard = () => {
     try {
       const amountBtc = Number(rejectingTx.amount || 0);
       await updateDoc(doc(db, "transactions", rejectingTx.id), { 
-        status: "failed",
+        status: "REJECTED",
         rejectionReason: rejectReason
       });
       await addNotification(rejectingTx.userId, `${rejectingTx.type.charAt(0).toUpperCase() + rejectingTx.type.slice(1)} Rejected`, `Your ${rejectingTx.type} request for ${amountBtc} BTC has been rejected. Reason: ${rejectReason}`, "error");

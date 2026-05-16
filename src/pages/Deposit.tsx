@@ -114,32 +114,42 @@ export const Deposit = () => {
       
       await addNotification(user.uid, "Deposit Submitted", `Your deposit of $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC) has been submitted for verification. It will be credited once confirmed by an admin.`, "info");
       
-      // Notify admins
+      // Notify admins via email (Extension will pick this up)
       try {
-        const adminQuery = query(collection(db, "users"), where("role", "==", "admin"));
-        const adminDocs = await getDocs(adminQuery);
-        const adminPromises = adminDocs.docs.map(adminDoc => 
-          addNotification(adminDoc.id, "New Deposit Received", `User ${profile?.displayName || user.email} has successfully deposited $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC).`, "info")
-        );
-        await Promise.all(adminPromises);
-
-        // Send email
         const eventTitle = valUsd >= 1000 ? "Critical Event: Large Deposit" : "New Deposit Received";
         await sendAdminEmailNotification(
           eventTitle,
           `User ${profile?.displayName || user.email} has deposited $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC). TX Hash: ${txHash}`
         );
-
       } catch (adminErr) {
-        console.error("Failed to notify admins:", adminErr);
+        console.error("Failed to send admin email notification:", adminErr);
       }
 
       setSuccess(true);
       setAmountUsd("");
       setTxHash("");
-    } catch (err) {
+
+      // Notify admins safely in background for in-app notifications
+      (async () => {
+        try {
+          const adminQuery = query(collection(db, "users"), where("role", "==", "admin"));
+          const adminDocs = await getDocs(adminQuery);
+          const adminPromises = adminDocs.docs.map(adminDoc => 
+            addNotification(adminDoc.id, "New Deposit Received", `User ${profile?.displayName || user.email} has successfully deposited $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC).`, "info")
+          );
+          await Promise.all(adminPromises);
+        } catch (adminErr) {
+          // This is expected to fail for non-admins as they can't query users collection
+          console.warn("Could not notify admins directly via in-app notification:", adminErr);
+        }
+      })();
+    } catch (err: any) {
       console.error("Deposit error:", err);
-      setError("An error occurred. Please try again.");
+      if (err.message && err.message.includes("permission")) {
+        setError("Permission denied. Your account may be restricted or KYC is required.");
+      } else {
+        setError("An error occurred during submission. Please check your internet connection and try again.");
+      }
     } finally {
       setLoading(false);
     }
