@@ -73,6 +73,7 @@ service cloud.firestore {
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if isSignedIn() && incomingData().userId == request.auth.uid && incomingData().status == 'pending';
       allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // Investments
@@ -80,6 +81,7 @@ service cloud.firestore {
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if isSignedIn() && incomingData().userId == request.auth.uid;
       allow update: if isAdmin() || (isOwner(existingData().userId) && incomingData().diff(existingData()).affectedKeys().hasOnly(['status']));
+      allow delete: if isAdmin();
     }
 
     // Support Chats
@@ -87,6 +89,7 @@ service cloud.firestore {
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if isSignedIn() && (incomingData().userId == request.auth.uid || isAdmin());
       allow update: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
     }
 
     // Support Tickets (legacy/alternative)
@@ -94,17 +97,20 @@ service cloud.firestore {
       allow read: if isSignedIn() && (isOwner(existingData().userId) || isAdmin());
       allow create: if isSignedIn() && incomingData().userId == request.auth.uid;
       allow update: if isAdmin() || (isOwner(existingData().userId) && incomingData().diff(existingData()).affectedKeys().hasOnly(['status', 'updatedAt']));
+      allow delete: if isAdmin();
     }
     
     match /support_tickets/{ticketId}/messages/{msgId} {
       allow read: if isSignedIn() && (isOwner(get(/databases/$(database)/documents/support_tickets/$(ticketId)).data.userId) || isAdmin());
       allow create: if isSignedIn() && (isOwner(incomingData().userId) || isAdmin());
+      allow delete: if isAdmin();
     }
 
     // Contact Messages
     match /contact_messages/{msgId} {
       allow create: if true;
       allow read: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // Deleted Accounts (Security audit)
@@ -123,6 +129,7 @@ service cloud.firestore {
     match /emailLogs/{logId} {
       allow read: if isAdmin();
       allow create: if true; // Backend service creates these
+      allow delete: if isAdmin();
     }
 
     // System config & stats
@@ -138,10 +145,21 @@ service cloud.firestore {
     match /mail/{mailId} {
       allow create: if true; // Used by frontend services
       allow read: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // Newsletters
     match /newsletters/{msgId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /chat_messages/{msgId} {
+      allow create: if isSignedIn();
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /contact_submissions/{msgId} {
       allow create: if true;
       allow read, update, delete: if isAdmin();
     }

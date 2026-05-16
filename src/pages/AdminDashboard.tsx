@@ -69,6 +69,7 @@ export const AdminDashboard = () => {
   const [activeUserMenu, setActiveUserMenu] = useState<string | null>(null);
   const [activeChatUser, setActiveChatUser] = useState<{ id: string, name: string } | null>(null);
   const [isResetting, setIsResetting] = useState(false);
+  const [showResetConfirmDialog, setShowResetConfirmDialog] = useState(false);
   const { prices } = usePrices();
   const btcPrice = prices?.btc?.usd || 0;
   const [stats, setStats] = useState({
@@ -370,11 +371,8 @@ export const AdminDashboard = () => {
   };
 
   const resetSystemData = async () => {
-    if (!window.confirm("CRITICAL: This will reset ALL user balances to 0 and delete ALL transactions, investments, and KYC submissions. This action cannot be undone. Are you absolutely sure?")) {
-      return;
-    }
-
     setIsResetting(true);
+    setShowResetConfirmDialog(false);
     try {
       console.log("Starting system reset...");
       
@@ -490,7 +488,7 @@ export const AdminDashboard = () => {
         </div>
         <div className="ml-auto relative z-10">
           <button 
-            onClick={resetSystemData}
+            onClick={() => setShowResetConfirmDialog(true)}
             disabled={isResetting}
             style={{ pointerEvents: 'auto', cursor: 'pointer' }}
             className="px-4 py-2 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl text-sm font-bold hover:bg-red-500 hover:text-white transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg active:scale-95"
@@ -1334,6 +1332,54 @@ export const AdminDashboard = () => {
                     Confirm Rejection
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Reset Confirmation Dialog */}
+      <AnimatePresence>
+        {showResetConfirmDialog && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowResetConfirmDialog(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-slate-900 border border-red-500/20 rounded-3xl p-8 shadow-2xl"
+            >
+              <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mb-6 mx-auto">
+                <ShieldAlert size={32} />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2 text-center">Critical Warning</h3>
+              <p className="text-gray-400 text-sm mb-6 text-center">
+                This will reset ALL user balances to 0 and delete ALL transactions, investments, KYC submissions, support chats, notifications and more.
+                <br /><br />
+                <strong className="text-red-400">This action cannot be undone.</strong> Are you absolutely sure you want to proceed?
+              </p>
+              
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => setShowResetConfirmDialog(false)}
+                  disabled={isResetting}
+                  className="flex-1 py-3 bg-slate-800 text-white font-bold rounded-xl border border-[#C9A96E]/10 hover:bg-slate-700 transition-all disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={resetSystemData}
+                  disabled={isResetting}
+                  className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-400 transition-all disabled:opacity-50 flex justify-center items-center gap-2"
+                >
+                  {isResetting ? "Resetting..." : "Reset System"}
+                </button>
               </div>
             </motion.div>
           </div>
