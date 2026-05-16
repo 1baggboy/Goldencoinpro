@@ -1,4 +1,7 @@
 import admin from 'firebase-admin';
+import { getFirestore } from 'firebase-admin/firestore';
+import fs from 'fs';
+import path from 'path';
 
 if (!admin.apps || !admin.apps.length) {
   let projectId = process.env.FIREBASE_PROJECT_ID;
@@ -23,6 +26,7 @@ if (!admin.apps || !admin.apps.length) {
 
   if (projectId && clientEmail && privateKey && privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
     try {
+      console.log(`[Firebase Admin] Initializing with Service Account for project: ${projectId}`);
       admin.initializeApp({
         projectId,
         credential: admin.credential.cert({
@@ -37,14 +41,16 @@ if (!admin.apps || !admin.apps.length) {
     }
   } else {
     // Attempt fallback or default initialization
+    console.warn('[Firebase Admin] Missing or invalid credentials. Attempting fallback...');
     try {
       try {
-        const config = require('../../../firebase-applet-config.json');
+        const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        console.log(`[Firebase Admin] Using fallback projectId from config: ${config.projectId}`);
         admin.initializeApp({ projectId: config.projectId });
-        console.log('[Firebase Admin] Initialized with fallback projectId from config:', config.projectId);
       } catch (e) {
+        console.log('[Firebase Admin] Falling back to default app initialization');
         admin.initializeApp();
-        console.log('[Firebase Admin] Initialized with default credentials');
       }
     } catch (error) {
       console.warn('[Firebase Admin] Initialization failed: Missing credentials.', error);
@@ -58,21 +64,23 @@ export let auth: admin.auth.Auth | null = null;
 if (admin.apps && admin.apps.length) {
   auth = admin.auth();
   try {
-    const fs = require('fs');
-    const path = require('path');
     const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
     if (fs.existsSync(configPath)) {
-      const config = require(configPath);
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
       if (config.firestoreDatabaseId) {
-        const { getFirestore } = require('firebase-admin/firestore');
-        db = getFirestore(admin.app(), config.firestoreDatabaseId);
+        const dbId = config.firestoreDatabaseId;
+        console.log(`[Firebase Admin] Initializing with named database ID: ${dbId}`);
+        db = getFirestore(admin.app(), dbId);
       } else {
+        console.log('[Firebase Admin] Initializing with (default) database');
         db = admin.firestore();
       }
     } else {
+      console.warn('[Firebase Admin] config file not found, defaulting to (default) database');
       db = admin.firestore();
     }
   } catch (e) {
+    console.error('[Firebase Admin] Error initializing database:', e);
     db = admin.firestore();
   }
 }

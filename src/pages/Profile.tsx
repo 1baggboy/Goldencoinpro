@@ -3,7 +3,7 @@ import { User, Mail, ShieldCheck, Save, Camera, AlertCircle, Phone, Users, Lock,
 import { useAuth } from "../AuthContext";
 import { useNotifications } from "../NotificationContext";
 import { useTheme } from "./ThemeContext";
-import { doc, updateDoc, deleteDoc, collection, query, where, onSnapshot, setDoc } from "firebase/firestore";
+import { doc, updateDoc, deleteDoc, collection, query, where, onSnapshot, setDoc, writeBatch, getDocs } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { deleteUser } from "firebase/auth";
 import { motion } from "motion/react";
@@ -192,9 +192,37 @@ export const Profile = () => {
         });
       }
 
+      // 1. Prepare batch for full account database deletion
+      const batch = writeBatch(db);
+      
+      // Collections where userId matches
+      const collectionsToCleanup = ['transactions', 'investments', 'kyc_submissions', 'notifications'];
+      
+      // Fetch and add to batch
+      for (const colName of collectionsToCleanup) {
+        try {
+          const q = query(collection(db, colName), where("userId", "==", user.uid));
+          const snap = await getDocs(q);
+          snap.forEach((d) => batch.delete(d.ref));
+        } catch (colErr) {
+          console.warn(`Error queueing cleanup for ${colName}:`, colErr);
+        }
+      }
+      
+      // Cleanup subcollections (devices)
+      try {
+        const devicesSnap = await getDocs(collection(db, "users", user.uid, "devices"));
+        devicesSnap.forEach((d) => batch.delete(d.ref));
+      } catch (devErr) {
+        console.warn(`Error queueing cleanup for devices:`, devErr);
+      }
+      
       // Delete user document from Firestore (cache it first to restore if Firebase Auth fails)
       const cachedProfile = { ...profile };
-      await deleteDoc(doc(db, "users", user.uid));
+      batch.delete(doc(db, "users", user.uid));
+      
+      // 2. Commit the full cleanup batch
+      await batch.commit();
       
       try {
         // Delete user from Firebase Auth

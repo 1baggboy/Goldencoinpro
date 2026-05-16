@@ -110,6 +110,7 @@ authRouter.post('/welcome', authenticate, async (req: AuthRequest, res) => {
 
 authRouter.post('/login-notification', authenticate, async (req: AuthRequest, res) => {
   try {
+    if (!db) return res.status(500).json({ error: "Firebase DB not initialized" });
     const { deviceDetails = {} } = req.body;
     const userDoc = await db!.collection('users').doc(req.user!.userId).get();
     if (!userDoc.exists) throw new Error("User not found");

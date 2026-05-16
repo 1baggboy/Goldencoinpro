@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import admin from 'firebase-admin';
 import { db } from '../lib/firebase';
 import { TemplateEngine } from '../utils/TemplateEngine';
 
@@ -40,44 +41,65 @@ interface EmailOptions {
 }
 
 export class EmailService {
-  private static defaultFrom = "noreply@goldencoin.live";
+  private static getBaseDomain() {
+    return process.env.RESEND_FROM_DOMAIN || "goldencoin.live";
+  }
+
+  private static getFromAddress(prefix: string) {
+    const domain = this.getBaseDomain();
+    return `${prefix}@${domain}`;
+  }
 
   static async sendEmail(options: EmailOptions) {
     const client = getResendClient();
     if (!client) {
-      console.error("Resend client not initialized.");
+      console.error("[EmailService]: Resend client not initialized. Check RESEND_API_KEY.");
       return null;
     }
 
     const { to, subject, html, from, type } = options;
-    const sender = from || this.defaultFrom;
+    const sender = from || this.getFromAddress("noreply");
+
+    console.log(`[EmailService]: Attempting to send ${type} email to ${to} from ${sender}...`);
 
     try {
-      const { data, error } = await client.emails.send({
+      const response = await client.emails.send({
         from: sender,
         to: [to],
         subject,
         html,
       });
 
-      // Log the email in database
-      if (db) {
-        await db.collection('emailLogs').add({
-          recipient: to,
-          subject,
-          type,
-          status: error ? 'FAILED' : 'SENT',
-          messageId: data?.id || null,
-          error: error?.message || null,
-          createdAt: new Date(),
-        });
-      }
+      const { data, error } = response;
 
       if (error) {
-        console.error(`[EmailService Error]: ${error.message}`);
-        return null;
+        console.error(`[EmailService Resend Error]:`, error);
+        // Special warning for unverified domains
+        if (error.message.includes("not verified") || error.message.includes("onboarding")) {
+           console.warn("[EmailService Help]: It looks like your domain is not verified in Resend. Please verify it or use 'onboarding@resend.dev' for testing.");
+        }
+      } else {
+        console.log(`[EmailService Success]: Email sent! ID: ${data?.id}`);
       }
 
+      // Log the email in database
+      if (db) {
+        try {
+          await db.collection('emailLogs').add({
+            recipient: to,
+            subject,
+            type,
+            status: error ? 'FAILED' : 'SENT',
+            messageId: data?.id || null,
+            error: error?.message || null,
+            createdAt: new Date(),
+          });
+        } catch (dbErr: any) {
+          console.error(`[EmailService DB Error]: Failed to log email for ${to}. Error:`, dbErr.message);
+        }
+      }
+
+      if (error) return null;
       return data;
     } catch (err: any) {
       console.error("[EmailService Exception]:", err);
@@ -115,7 +137,7 @@ export class EmailService {
       to: user.email,
       subject: details.isSuspicious ? "⚠️ Suspicious Login Alert" : "Security Alert: New Login Detected",
       html,
-      from: "security@goldencoin.live",
+      from: this.getFromAddress("security"),
       type: 'LOGIN_ALERT'
     });
   }
@@ -143,7 +165,7 @@ export class EmailService {
       to: user.email,
       subject: `[Golden Coin] ${code} is your verification code`,
       html,
-      from: "noreply@goldencoin.live",
+      from: this.getFromAddress("noreply"),
       type: 'OTP'
     });
   }
@@ -184,7 +206,7 @@ export class EmailService {
       to: user.email,
       subject,
       html,
-      from: "transactions@goldencoin.live",
+      from: this.getFromAddress("transactions"),
       type
     });
   }
@@ -212,7 +234,7 @@ export class EmailService {
       to: user.email,
       subject: "Reset your Golden Coin password",
       html,
-      from: "security@goldencoin.live",
+      from: this.getFromAddress("security"),
       type: 'PASSWORD_RESET'
     });
   }
@@ -258,7 +280,7 @@ export class EmailService {
       to: user.email,
       subject: `KYC Verification ${statusText}`,
       html,
-      from: "support@goldencoin.live",
+      from: this.getFromAddress("support"),
       type: 'KYC_UPDATE'
     });
   }
@@ -288,7 +310,7 @@ export class EmailService {
       to: user.email,
       subject: `Security Alert: ${activity}`,
       html,
-      from: "security@goldencoin.live",
+      from: this.getFromAddress("security"),
       type: 'SECURITY_ALERT'
     });
   }
@@ -318,7 +340,7 @@ export class EmailService {
       to: user.email,
       subject: `Support Ticket Received: ${ticket.subject}`,
       html,
-      from: "support@goldencoin.live",
+      from: this.getFromAddress("support"),
       type: 'SUPPORT_REPLY'
     });
   }
@@ -346,7 +368,7 @@ export class EmailService {
       to: user.email,
       subject: `New Reply to your support ticket: ${ticket.subject}`,
       html,
-      from: "support@goldencoin.live",
+      from: this.getFromAddress("support"),
       type: 'SUPPORT_REPLY'
     });
   }
@@ -378,7 +400,7 @@ export class EmailService {
       to: user.email,
       subject: `Investment Plan Purchased: ${investment.planName}`,
       html,
-      from: "invest@goldencoin.live",
+      from: this.getFromAddress("invest"),
       type: 'INVESTMENT_ALERT'
     });
   }
@@ -412,7 +434,7 @@ export class EmailService {
       to: user.email,
       subject: "Welcome to Golden Coin!",
       html,
-      from: "welcome@goldencoin.live",
+      from: this.getFromAddress("welcome"),
       type: 'WELCOME'
     });
   }

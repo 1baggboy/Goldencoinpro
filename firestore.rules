@@ -120,8 +120,8 @@ service cloud.firestore {
 
     // Deleted Accounts (Security audit)
     match /deletedAccounts/{emailSlug} {
-      allow create, update, delete: if isSignedIn();
-      allow read: if isAdmin();
+      allow read: if true;
+      allow write: if isSignedIn();
     }
 
     // Notifications
