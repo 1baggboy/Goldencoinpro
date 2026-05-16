@@ -55,11 +55,19 @@ export class AuthService {
     };
 
     // Send verification email
-    const otp = await this.generateOTP(userRecord.uid, 'VERIFY_EMAIL');
-    await EmailService.sendOTP(userObj, otp, 'Email Verification');
+    try {
+        const otp = await this.generateOTP(userRecord.uid, 'VERIFY_EMAIL');
+        await EmailService.sendOTP(userObj, otp, 'Email Verification');
+    } catch (e) {
+        console.error("[AuthService] Failed to send verification email:", e);
+    }
 
     // Send welcome email
-    await EmailService.sendWelcomeEmail(userObj);
+    try {
+        await EmailService.sendWelcomeEmail(userObj);
+    } catch (e) {
+        console.error("[AuthService] Failed to send welcome email:", e);
+    }
 
     return this.generateTokens(userObj);
   }
