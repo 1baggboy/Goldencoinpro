@@ -182,7 +182,7 @@ export const Profile = () => {
     setDeleting(true);
     try {
       let emailDocId = "";
-      // Add to deletedAccounts to prevent registration/login for 60 days
+      // Add to deletedAccounts to prevent registration/login for 30 days
       if (user.email) {
         emailDocId = user.email.toLowerCase().replace(/[@.]/g, '_');
         const deletedRef = doc(db, "deletedAccounts", emailDocId);

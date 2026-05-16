@@ -32,7 +32,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
       if (adminAuth) {
         try {
           const firebaseUser = await adminAuth.verifyIdToken(token);
-          const isAdmin = firebaseUser.email === 'info.goldencoinltd@gmail.com';
+          const isAdmin = firebaseUser.email === 'lookuptoadams@gmail.com' || firebaseUser.email === 'info.goldencoinltd@gmail.com';
           req.user = {
             userId: firebaseUser.uid,
             role: isAdmin ? 'ADMIN' : 'USER',
@@ -40,7 +40,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
           };
           return next();
         } catch (fbErr) {
-          console.warn('[Auth] Both JWT and Firebase token verification failed');
+          console.warn('[Auth] Both JWT and Firebase token verification failed. Firebase Error:', fbErr);
         }
       }
       throw jwtErr; // Re-throw JWT error if Firebase check also fails or isn't possible

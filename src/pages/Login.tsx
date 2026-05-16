@@ -151,7 +151,7 @@ export const Login = () => {
         console.warn("Persistence error:", pErr);
       }
 
-      // Check for 60 days deletion cooldown
+      // Check for 30 days deletion cooldown
       try {
         const emailDocId = email.toLowerCase().replace(/[@.]/g, '_');
         const delSnap = await getDoc(doc(db, "deletedAccounts", emailDocId));
@@ -161,8 +161,8 @@ export const Login = () => {
           const now = Date.now();
           const diffDays = (now - lastDeletedAt) / (1000 * 60 * 60 * 24);
           
-          if (diffDays < 60) {
-            setError(`This account is scheduled for deletion or was recently deleted. You cannot access it for 60 days.`);
+          if (diffDays < 30) {
+            setError(`This account was recently deleted. You cannot access it or create a new one with this email for 30 days.`);
             setLoading(false);
             setIsLoggingIn(false);
             return;

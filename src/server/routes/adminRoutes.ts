@@ -29,7 +29,7 @@ adminRouter.post('/kyc/approve', authenticate, authorizeAdmin, async (req, res) 
     if (!userSnap.exists) return res.status(404).json({ error: "User not found" });
     const user = { ...userSnap.data(), id: userId } as any;
 
-    await userRef.update({ kycStatus: 'verified' });
+    await userRef.set({ kycStatus: 'verified' }, { merge: true });
     
     // Update kycSubmission doc
     const kycSnap = await db.collection('kyc_submissions')
@@ -39,7 +39,7 @@ adminRouter.post('/kyc/approve', authenticate, authorizeAdmin, async (req, res) 
       .get();
     
     if (!kycSnap.empty) {
-      await kycSnap.docs[0].ref.update({ status: 'verified', updatedAt: new Date() });
+      await kycSnap.docs[0].ref.set({ status: 'verified', updatedAt: new Date() }, { merge: true });
     }
 
     await EmailService.sendKYCAlert(user, 'verified');
@@ -60,7 +60,7 @@ adminRouter.post('/kyc/reject', authenticate, authorizeAdmin, async (req, res) =
     if (!userSnap.exists) return res.status(404).json({ error: "User not found" });
     const user = { ...userSnap.data(), id: userId } as any;
 
-    await userRef.update({ kycStatus: 'rejected' });
+    await userRef.set({ kycStatus: 'rejected' }, { merge: true });
 
     // Update kycSubmission doc
     const kycSnap = await db.collection('kyc_submissions')
@@ -70,7 +70,7 @@ adminRouter.post('/kyc/reject', authenticate, authorizeAdmin, async (req, res) =
       .get();
     
     if (!kycSnap.empty) {
-      await kycSnap.docs[0].ref.update({ status: 'rejected', updatedAt: new Date(), rejectionReason: reason });
+      await kycSnap.docs[0].ref.set({ status: 'rejected', updatedAt: new Date(), rejectionReason: reason }, { merge: true });
     }
 
     await EmailService.sendKYCAlert(user, 'rejected', reason);
@@ -120,7 +120,7 @@ adminRouter.post('/users/update-balance', authenticate, authorizeAdmin, async (r
     else if (action === 'subtract') newBalance -= amount;
     else if (action === 'set') newBalance = amount;
     
-    await userRef.update({ balance: newBalance, updatedAt: new Date() });
+    await userRef.set({ balance: newBalance, updatedAt: new Date() }, { merge: true });
 
     await EmailService.sendSecurityAlert(user, `Your account balance was adjusted by an administrator. New balance: $${newBalance.toLocaleString()}`);
     
@@ -140,7 +140,7 @@ adminRouter.post('/users/suspend', authenticate, authorizeAdmin, async (req, res
     if (!userSnap.exists) return res.status(404).json({ error: "User not found" });
     
     const user = { ...userSnap.data(), id: userId } as any;
-    await userRef.update({ isSuspended: true, updatedAt: new Date() });
+    await userRef.set({ isSuspended: true, updatedAt: new Date() }, { merge: true });
 
     await EmailService.sendSecurityAlert(user, `Your account has been suspended. Reason: ${reason || 'Violation of terms'}. Please contact support for more details.`);
     
@@ -160,7 +160,7 @@ adminRouter.post('/users/unsuspend', authenticate, authorizeAdmin, async (req, r
     if (!userSnap.exists) return res.status(404).json({ error: "User not found" });
     
     const user = { ...userSnap.data(), id: userId } as any;
-    await userRef.update({ isSuspended: false, updatedAt: new Date() });
+    await userRef.set({ isSuspended: false, updatedAt: new Date() }, { merge: true });
 
     await EmailService.sendSecurityAlert(user, "Your account suspension has been lifted. You can now access your dashboard again.");
     

@@ -74,7 +74,7 @@ export const Register = () => {
         console.warn("Persistence error:", pErr);
       }
       
-      // Check for 60 days deletion cooldown
+      // Check for 30 days deletion cooldown
       try {
         const emailDocId = email.toLowerCase().replace(/[@.]/g, '_');
         const delSnap = await getDoc(doc(db, "deletedAccounts", emailDocId));
@@ -84,8 +84,8 @@ export const Register = () => {
           const now = Date.now();
           const diffDays = (now - lastDeletedAt) / (1000 * 60 * 60 * 24);
           
-          if (diffDays < 60) {
-            setError(`This email was recently used on a deleted account. You must wait ${Math.ceil(60 - diffDays)} more days before registering again.`);
+          if (diffDays < 30) {
+            setError(`This email was recently used on a deleted account. You must wait ${Math.ceil(30 - diffDays)} more days before registering again.`);
             setLoading(false);
             setIsRegistering(false);
             return;
