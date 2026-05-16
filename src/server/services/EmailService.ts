@@ -418,8 +418,9 @@ export class EmailService {
   }
 
   static async sendWelcomeEmail(user: any) {
+    const displayName = user.firstName || user.displayName || 'User';
     const content = `
-      <p>Hello ${user.firstName || 'User'},</p>
+      <p>Hello ${displayName},</p>
       <p>We are absolutely thrilled to welcome you to <strong>Golden Coin</strong>. You've taken your first step towards smarter, high-yield digital asset investments.</p>
       <p>With your new account, you can access premium investment strategies, secure asset growth, and professional-grade financial tools.</p>
       <div style="background-color: #f9f9f9; padding: 25px; border-radius: 12px; margin: 30px 0;">
@@ -439,7 +440,7 @@ export class EmailService {
     const html = TemplateEngine.render({
       title: "Welcome to the Future of Investing",
       content,
-      preheader: `Welcome to Golden Coin, ${user.firstName}! Let's grow your wealth together.`
+      preheader: `Welcome to Golden Coin, ${displayName}! Let's grow your wealth together.`
     });
 
     return this.sendEmail({

@@ -50,9 +50,9 @@ export class AuthService {
 
     // Update global user count
     try {
-      await db.collection('system').doc('stats').update({
+      await db.collection('system').doc('stats').set({
         totalUsers: admin.firestore.FieldValue.increment(1)
-      });
+      }, { merge: true });
     } catch (e) {
       console.error("[AuthService] Failed to update stats:", e);
     }

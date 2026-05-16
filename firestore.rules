@@ -140,6 +140,7 @@ service cloud.firestore {
     // System config & stats
     match /system/stats {
       allow read: if true;
+      allow write: if isAdmin();
     }
     match /system/{docId} {
       allow read: if isSignedIn();
