@@ -5,7 +5,7 @@ import { doc, setDoc, getDocs, getDoc, query, collection, where, updateDoc, incr
 import { auth, db } from "../firebase";
 import { APP_CONFIG } from "../config";
 import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
-import { PasswordStrengthIndicator } from "../components/PasswordStrengthIndicator";
+import { PasswordStrengthIndicator } from "../PasswordStrengthIndicator";
 import { Mail, Lock, Eye, EyeOff, User, ArrowRight, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useTheme } from "./ThemeContext";

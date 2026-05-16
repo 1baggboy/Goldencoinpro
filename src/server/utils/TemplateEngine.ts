@@ -67,7 +67,7 @@ export class TemplateEngine {
           <!-- Branding / Logo -->
           <tr>
             <td align="center" style="padding: 20px;">
-               <img src="https://lh3.googleusercontent.com/d/1dc2XZNyptCtTwx8E8-CzPU_o75jokDgF" alt="Golden Coin" width="120" style="display: block; border: 0;">
+               <img src="https://res.cloudinary.com/dctaerfma/image/upload/v1778958362/Logo_rha4xt.jpg" alt="Golden Coin" width="120" style="display: block; border: 0;">
             </td>
           </tr>
           <!-- Header -->
