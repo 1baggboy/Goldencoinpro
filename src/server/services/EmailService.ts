@@ -78,6 +78,7 @@ export class EmailService {
         if (error.message.includes("not verified") || error.message.includes("onboarding")) {
            console.warn("[EmailService Help]: It looks like your domain is not verified in Resend. Please verify it or use 'onboarding@resend.dev' for testing.");
         }
+        throw new Error(error.message);
       } else {
         console.log(`[EmailService Success]: Email sent! ID: ${data?.id}`);
       }
@@ -89,9 +90,8 @@ export class EmailService {
             recipient: to,
             subject,
             type,
-            status: error ? 'FAILED' : 'SENT',
+            status: 'SENT',
             messageId: data?.id || null,
-            error: error?.message || null,
             createdAt: new Date(),
           });
         } catch (dbErr: any) {
@@ -99,11 +99,23 @@ export class EmailService {
         }
       }
 
-      if (error) return null;
       return data;
     } catch (err: any) {
       console.error("[EmailService Exception]:", err);
-      return null;
+      // Log failure in DB
+      if (db) {
+        try {
+          await db.collection('emailLogs').add({
+            recipient: to,
+            subject,
+            type,
+            status: 'FAILED',
+            error: err.message || JSON.stringify(err),
+            createdAt: new Date(),
+          });
+        } catch (dbErr: any) {}
+      }
+      throw err;
     }
   }
 

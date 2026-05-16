@@ -172,22 +172,8 @@ export const Register = () => {
         }
       }
 
-      // Update global user count
-      try {
-        const statsRef = doc(db, "system", "stats");
-        await updateDoc(statsRef, {
-          totalUsers: increment(1)
-        });
-      } catch (err: any) {
-        // If it doesn't exist, try creating it. Ignore if it fails due to existing.
-        try {
-          const statsRef = doc(db, "system", "stats");
-          await setDoc(statsRef, { totalUsers: 1421 });
-        } catch (e) {
-          console.error("Failed to initialize stats", e);
-        }
-      }
-
+      // Update global user count - now handled in AuthService.register
+       
       // Track registration device
       try {
         let deviceId = localStorage.getItem('goldencoin_device_id');
@@ -212,13 +198,7 @@ export const Register = () => {
         });
         
         // Also send welcome email
-        await fetch('/api/auth/welcome', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${idToken}`
-          }
-        });
+        /* Welcome email is sent automatically in AuthService.register */
 
       } catch (dErr) {
         console.warn("Initial tracking/welcome failed:", dErr);

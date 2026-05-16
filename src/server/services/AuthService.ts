@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import fetch from 'node-fetch'; // need to make sure this is available or use global fetch
 import { EmailService } from './EmailService';
 import { auth, db } from '../lib/firebase';
+import admin from 'firebase-admin';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_change_me';
 const TOKEN_EXPIRY = '1h';
@@ -46,6 +47,15 @@ export class AuthService {
       createdAt: new Date(),
       updatedAt: new Date(),
     });
+
+    // Update global user count
+    try {
+      await db.collection('system').doc('stats').update({
+        totalUsers: admin.firestore.FieldValue.increment(1)
+      });
+    } catch (e) {
+      console.error("[AuthService] Failed to update stats:", e);
+    }
 
     const userObj = {
       id: userRecord.uid,
