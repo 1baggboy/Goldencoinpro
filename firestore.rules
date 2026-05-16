@@ -55,6 +55,7 @@ service cloud.firestore {
           'referralBonusEarned', 'status', 'referralCode', 'referredBy', 'hasTraded'
         ])
       ));
+      allow delete: if isOwner(userId) || isAdmin();
     }
 
     // Transactions collection
@@ -115,7 +116,7 @@ service cloud.firestore {
 
     // Deleted Accounts (Security audit)
     match /deletedAccounts/{emailSlug} {
-      allow create: if isSignedIn();
+      allow create, update, delete: if isSignedIn();
       allow read: if isAdmin();
     }
 

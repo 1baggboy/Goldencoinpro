@@ -181,9 +181,10 @@ export const Profile = () => {
 
     setDeleting(true);
     try {
+      let emailDocId = "";
       // Add to deletedAccounts to prevent registration/login for 60 days
       if (user.email) {
-        const emailDocId = user.email.toLowerCase().replace(/[@.]/g, '_');
+        emailDocId = user.email.toLowerCase().replace(/[@.]/g, '_');
         const deletedRef = doc(db, "deletedAccounts", emailDocId);
         await setDoc(deletedRef, {
           email: user.email,
@@ -191,11 +192,21 @@ export const Profile = () => {
         });
       }
 
-      // Delete user document from Firestore
+      // Delete user document from Firestore (cache it first to restore if Firebase Auth fails)
+      const cachedProfile = { ...profile };
       await deleteDoc(doc(db, "users", user.uid));
       
-      // Delete user from Firebase Auth
-      await deleteUser(user);
+      try {
+        // Delete user from Firebase Auth
+        await deleteUser(user);
+      } catch (authError: any) {
+        // If Auth fails (e.g., requires-recent-login), restore the Firestore profile so we don't leave the app in a broken state
+        await setDoc(doc(db, "users", user.uid), cachedProfile);
+        if (emailDocId) {
+          await deleteDoc(doc(db, "deletedAccounts", emailDocId));
+        }
+        throw authError; // rethrow to be caught by the outer catch
+      }
       
       // Redirect to home
       window.location.replace("/");
