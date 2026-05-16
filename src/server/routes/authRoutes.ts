@@ -110,18 +110,36 @@ authRouter.post('/welcome', authenticate, async (req: AuthRequest, res) => {
 
 authRouter.post('/login-notification', authenticate, async (req: AuthRequest, res) => {
   try {
-    const { deviceDetails } = req.body;
+    const { deviceDetails = {} } = req.body;
     const userDoc = await db!.collection('users').doc(req.user!.userId).get();
     if (!userDoc.exists) throw new Error("User not found");
     const userData = userDoc.data() as any;
+
+    const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'Unknown IP') as string;
+    const location = await AuthService.getLocationFromIP(ip);
+    
+    const enrichedDeviceDetails = {
+      ...deviceDetails,
+      ip,
+      location,
+      browser: deviceDetails.browser || 'Unknown',
+      os: deviceDetails.os || 'Unknown',
+      time: deviceDetails.time || new Date().toLocaleString()
+    };
 
     await EmailService.sendLoginAlert({
       id: req.user!.userId,
       email: userData.email,
       firstName: userData.firstName || userData.name?.split(' ')[0] || 'User',
-    }, deviceDetails);
+    }, enrichedDeviceDetails);
 
-    res.json({ success: true });
+    res.json({ 
+      success: true, 
+      ip, 
+      location,
+      browser: enrichedDeviceDetails.browser,
+      os: enrichedDeviceDetails.os
+    });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }

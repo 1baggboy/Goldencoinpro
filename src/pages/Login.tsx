@@ -40,6 +40,10 @@ export const Login = () => {
   const trackDeviceAndNotify = async (uid: string, userEmail: string) => {
     try {
       const now = new Date();
+      const currentUser = auth.currentUser;
+      if (!currentUser) return;
+      
+      const idToken = await currentUser.getIdToken();
       
       // 1. Get or create persistent device ID
       let deviceId = localStorage.getItem('goldencoin_device_id');
@@ -50,30 +54,46 @@ export const Login = () => {
         localStorage.setItem('goldencoin_device_id', deviceId);
       }
 
-      // 2. Call backend to capture fingerprint and SEND EMAIL (for every login as requested)
+      // 2. Call backend to capture fingerprint and SEND EMAIL
       console.log(`[Security] Triggering login notification for ${userEmail}...`);
+      
+      // Map navigator properties for deviceDetails
+      const browserName = navigator.userAgent.includes("Chrome") ? "Chrome" : 
+                         navigator.userAgent.includes("Firefox") ? "Firefox" : 
+                         navigator.userAgent.includes("Safari") ? "Safari" : "Unknown Browser";
+      const osName = navigator.userAgent.includes("Windows") ? "Windows" : 
+                    navigator.userAgent.includes("Mac") ? "MacOS" : 
+                    navigator.userAgent.includes("Linux") ? "Linux" : "Unknown OS";
+
       const res = await fetch('/api/auth/login-notification', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
         body: JSON.stringify({
-          email: userEmail,
-          date: now.toLocaleDateString(),
-          time: now.toLocaleTimeString(),
-          userAgent: navigator.userAgent,
-          sendEmail: true // Always send email as per requirement
+          deviceDetails: {
+            deviceId,
+            browser: browserName,
+            os: osName,
+            deviceString: `${browserName} on ${osName}`,
+            userAgent: navigator.userAgent,
+            time: now.toLocaleString()
+          }
         })
       });
       
       const data = await res.json();
       
       if (data.success) {
-        const { browser, os, ip, location, messageId } = data;
-        const deviceString = `${browser} ${os}`;
-        
-        console.log(`%c[Security] Alert email status: ${data.emailSent ? "Sent (" + messageId + ")" : "Skipped"}`, "color: green; font-weight: bold;");
+        console.log(`%c[Security] Alert email triggered successfully`, "color: green; font-weight: bold;");
 
         // 3. Update or Add device in Firestore
         const devicesRef = collection(db, "users", uid, "devices");
+        // Get IP and location from backend response if available, or use defaults
+        const { browser = browserName, os = osName, ip = "Unknown", location = "Unknown" } = data;
+        const deviceString = `${browser} ${os}`;
+        
         const snap = await getDocs(devicesRef);
         const devices = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
         
