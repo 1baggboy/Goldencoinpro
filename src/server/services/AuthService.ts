@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
+import fetch from 'node-fetch'; // need to make sure this is available or use global fetch
 import { EmailService } from './EmailService';
 import { auth, db } from '../lib/firebase';
 
@@ -7,6 +8,20 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_change_me';
 const TOKEN_EXPIRY = '1h';
 
 export class AuthService {
+  static async getLocationFromIP(ip: string) {
+    if (ip === '::1' || ip === '127.0.0.1' || ip.includes('Unknown')) return 'Localhost';
+    try {
+      const resp = await fetch(`http://ip-api.com/json/${ip}`);
+      const data = await resp.json() as any;
+      if (data.status === 'success') {
+        return `${data.city}, ${data.country}`;
+      }
+    } catch (err) {
+      console.warn("Geo lookup failed");
+    }
+    return 'Unknown Location';
+  }
+
   static async register(data: any) {
     if (!auth || !db) throw new Error("Firebase Admin not initialized");
     const { email, password, firstName, lastName } = data;
@@ -68,14 +83,18 @@ export class AuthService {
       role: userData.role || 'USER'
     };
 
-    // Detect new device
+    // Detect new device or suspicious login
     const deviceQuery = await db.collection('devices')
       .where('userId', '==', uid)
       .where('deviceId', '==', deviceDetails.deviceId)
       .limit(1)
       .get();
 
+    let isNewDevice = false;
+    let isSuspicious = false;
+
     if (deviceQuery.empty) {
+      isNewDevice = true;
       await db.collection('devices').add({
         userId: uid,
         deviceId: deviceDetails.deviceId,
@@ -88,14 +107,34 @@ export class AuthService {
         lastLogin: new Date(),
         isTrusted: false
       });
-      // Send login alert for new device
-      await EmailService.sendLoginAlert(userObj, deviceDetails);
     } else {
-      const deviceIdDb = deviceQuery.docs[0].id;
-      await db.collection('devices').doc(deviceIdDb).update({
+      const deviceDoc = deviceQuery.docs[0];
+      const deviceData = deviceDoc.data();
+      
+      // Suspicious check: different IP/Location
+      if (deviceData.ip !== deviceDetails.ip) {
+        isSuspicious = true;
+      }
+
+      await deviceDoc.ref.update({
         lastLogin: new Date(),
         ip: deviceDetails.ip,
         location: deviceDetails.location
+      });
+    }
+
+    if (isNewDevice || isSuspicious) {
+      await EmailService.sendLoginAlert(userObj, {
+        ...deviceDetails,
+        time: new Date().toLocaleString(),
+        isSuspicious
+      });
+      
+      await db.collection('securityLogs').add({
+        userId: uid,
+        type: isSuspicious ? 'SUSPICIOUS_LOGIN' : 'NEW_DEVICE_LOGIN',
+        details: deviceDetails,
+        createdAt: new Date()
       });
     }
 
@@ -110,7 +149,9 @@ export class AuthService {
     return this.generateTokens(userObj);
   }
 
-  private static generateTokens(user: any) {
+  private static async generateTokens(user: any) {
+    if (!db) throw new Error("Firebase Admin not initialized");
+    
     const accessToken = jwt.sign(
       { userId: user.id, role: user.role, email: user.email },
       JWT_SECRET,
@@ -119,9 +160,68 @@ export class AuthService {
     
     const refreshToken = uuidv4();
     
+    // Store session
+    await db.collection('sessions').add({
+      userId: user.id,
+      refreshToken,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      createdAt: new Date()
+    });
+    
     return { accessToken, refreshToken, user: { 
       id: user.id, email: user.email, firstName: user.firstName, role: user.role 
     }};
+  }
+
+  static async refreshToken(oldRefreshToken: string) {
+    if (!db) throw new Error("Firebase Admin not initialized");
+    
+    const sessionQuery = await db.collection('sessions')
+      .where('refreshToken', '==', oldRefreshToken)
+      .limit(1)
+      .get();
+
+    if (sessionQuery.empty) throw new Error("Invalid refresh token");
+
+    const sessionDoc = sessionQuery.docs[0];
+    const sessionData = sessionDoc.data();
+
+    if (sessionData.expiresAt.toDate() < new Date()) {
+      await sessionDoc.ref.delete();
+      throw new Error("Refresh token expired");
+    }
+
+    const userDoc = await db.collection('users').doc(sessionData.userId).get();
+    if (!userDoc.exists) throw new Error("User not found");
+    const userData = userDoc.data() as any;
+
+    const userObj = {
+      id: sessionData.userId,
+      email: userData.email,
+      firstName: userData.firstName,
+      role: userData.role || 'USER'
+    };
+
+    // Generate new access token
+    const accessToken = jwt.sign(
+      { userId: userObj.id, role: userObj.role, email: userObj.email },
+      JWT_SECRET,
+      { expiresIn: TOKEN_EXPIRY }
+    );
+
+    return { accessToken };
+  }
+
+  static async logout(refreshToken: string) {
+    if (!db) throw new Error("Firebase Admin not initialized");
+    const sessionQuery = await db.collection('sessions')
+      .where('refreshToken', '==', refreshToken)
+      .get();
+    
+    for (const doc of sessionQuery.docs) {
+      await doc.ref.delete();
+    }
+    return { success: true };
   }
 
   static async generateOTP(userId: string, type: string) {

@@ -62,5 +62,56 @@ export class InvestmentService {
 
     return investment;
   }
+
+  static async processMaturity() {
+    if (!db) return;
+    
+    const now = new Date();
+    const snap = await db.collection('investments')
+      .where('status', '==', 'ACTIVE')
+      .where('endDate', '<=', now)
+      .get();
+
+    console.log(`[Investment Maturity] Found ${snap.docs.length} investments to mature`);
+
+    for (const doc of snap.docs) {
+      const inv = doc.data();
+      const userId = inv.userId;
+      
+      const userRef = db.collection('users').doc(userId);
+      const userSnap = await userRef.get();
+      
+      if (userSnap.exists) {
+        const userData = userSnap.data() as any;
+        const newBalance = (userData.balance || 0) + (inv.expectedReturn || 0);
+        
+        await userRef.update({ balance: newBalance });
+        await doc.ref.update({ status: 'COMPLETED', updatedAt: new Date() });
+
+        await EmailService.sendEmail({
+          to: userData.email,
+          subject: "Investment Maturity: Payout Successful",
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; overflow: hidden;">
+              <div style="background-color: #28a745; padding: 20px; text-align: center;">
+                <h1 style="color: #fff; margin: 0;">Investment Matured</h1>
+              </div>
+              <div style="padding: 30px; color: #333;">
+                <p>Hello ${userData.firstName || 'User'},</p>
+                <p>Your investment in <strong>${inv.planName}</strong> has reached maturity.</p>
+                <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                  <p><strong>Investment Amount:</strong> $${inv.amount.toLocaleString()}</p>
+                  <p><strong>Total ROI:</strong> ${inv.roiPercentage}%</p>
+                  <p><strong>Payout Amount:</strong> $${inv.expectedReturn.toLocaleString()}</p>
+                </div>
+                <p>The funds have been credited to your balance.</p>
+              </div>
+            </div>
+          `,
+          type: 'INVESTMENT_ALERT'
+        });
+      }
+    }
+  }
 }
 

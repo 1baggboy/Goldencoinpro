@@ -4,6 +4,7 @@ import { createServer as createViteServer } from "vite";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import nodeCron from "node-cron";
 
 // Routers
 import { authRouter } from "./src/server/routes/authRoutes";
@@ -13,6 +14,7 @@ import { investmentRouter } from "./src/server/routes/investmentRoutes";
 import { supportRouter } from "./src/server/routes/supportRoutes";
 import { adminRouter } from "./src/server/routes/adminRoutes";
 import { db } from "./src/server/lib/firebase";
+import { InvestmentService } from "./src/server/services/InvestmentService";
 
 // Rate limiting
 const globalLimiter = rateLimit({
@@ -66,6 +68,12 @@ async function startServer() {
   setInterval(updateMarketData, 30000);
 
   app.get("/api/market/prices", (req, res) => res.json(globalMarketDataCache || {}));
+  
+  // Cron Jobs
+  nodeCron.schedule('0 * * * *', () => {
+    console.log('[Cron] Running investment maturity check...');
+    InvestmentService.processMaturity().catch(console.error);
+  });
 
   // Mount API Routers
   app.use("/api/auth", globalLimiter, authRouter);

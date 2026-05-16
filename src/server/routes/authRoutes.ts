@@ -27,6 +27,7 @@ authRouter.post('/login', async (req, res) => {
   try {
     const { email, idToken, userAgent } = req.body;
     const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'Unknown IP') as string;
+    const location = await AuthService.getLocationFromIP(ip);
     
     const parser = new UAParser(userAgent || req.headers['user-agent'] as string);
     const deviceDetails = {
@@ -35,7 +36,7 @@ authRouter.post('/login', async (req, res) => {
       browser: parser.getBrowser().name,
       os: parser.getOS().name,
       ip,
-      location: "Detected via IP", // In real app, call GeoAPI
+      location,
       userAgent: userAgent || req.headers['user-agent']
     };
 
@@ -70,6 +71,26 @@ authRouter.post('/verify-email', authenticate, async (req: AuthRequest, res) => 
   try {
     const { code } = req.body;
     const result = await AuthService.verifyEmail(req.user!.userId, code);
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+authRouter.post('/refresh', async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    const result = await AuthService.refreshToken(refreshToken);
+    res.json(result);
+  } catch (err: any) {
+    res.status(401).json({ error: err.message });
+  }
+});
+
+authRouter.post('/logout', async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    const result = await AuthService.logout(refreshToken);
     res.json(result);
   } catch (err: any) {
     res.status(400).json({ error: err.message });
