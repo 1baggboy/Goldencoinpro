@@ -19,7 +19,8 @@ export class TemplateEngine {
       email
     } = options;
 
-    const unsubscribeUrl = `${process.env.FRONTEND_URL}/unsubscribe?email=${encodeURIComponent(email)}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'https://goldencoin.live';
+    const unsubscribeUrl = `${frontendUrl}/unsubscribe?email=${encodeURIComponent(email)}`;
 
     return `
 <!DOCTYPE html>

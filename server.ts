@@ -16,6 +16,7 @@ import { supportRouter } from "./src/server/routes/supportRoutes";
 import { adminRouter } from "./src/server/routes/adminRoutes";
 import { db } from "./src/server/lib/firebase";
 import { InvestmentService } from "./src/server/services/InvestmentService";
+import { EmailService } from "./src/server/services/EmailService";
 
 // Rate limiting
 const globalLimiter = rateLimit({
@@ -88,11 +89,26 @@ async function startServer() {
   app.post("/api/newsletter/subscribe", async (req, res) => {
     try {
       const { email } = req.body;
-      if (!db) return res.status(500).json({ error: "Firebase DB not initialized" });
+      console.log(`[Newsletter] Attempting subscribe: ${email}`);
+      if (!db || typeof db.collection !== 'function') {
+        const errorMsg = "[Newsletter] DB not initialized properly";
+        console.error(errorMsg);
+        return res.status(500).json({ error: errorMsg });
+      }
+      
       await db.collection("newsletters").add({ email, isSubscribed: true, createdAt: new Date() });
+      console.log(`[Newsletter] Subscribed: ${email}`);
+      try {
+        await EmailService.sendNewsletterEmail(email);
+        console.log(`[Newsletter] Welcome email sent to: ${email}`);
+      } catch (emailErr) {
+        console.error(`[Newsletter] Failed to send welcome email to ${email}:`, emailErr);
+        // Don't fail the request if just the email failed, subscription was successful
+      }
       res.json({ success: true, message: "Subscribed successfully" });
     } catch(err: any) {
-      res.status(400).json({ error: err.message });
+      console.error("[NewsletterSubscribe Error]", err);
+      res.status(400).json({ error: err.message || "Unknown error" });
     }
   });
 

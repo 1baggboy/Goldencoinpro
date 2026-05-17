@@ -50,6 +50,10 @@ export class EmailService {
     return `${prefix}@${domain}`;
   }
 
+  private static getFrontendUrl() {
+    return process.env.FRONTEND_URL || 'https://goldencoin.live';
+  }
+
   static async sendEmail(options: EmailOptions) {
     const client = getResendClient();
     if (!client) {
@@ -134,9 +138,9 @@ export class EmailService {
       </div>
       <p>If this was not you, please secure your account immediately by changing your password and enabling 2FA.</p>
       <div style="text-align: center; margin: 35px 0;">
-        <a href="${process.env.FRONTEND_URL}/profile/security" class="hover-bg-gold" style="background-color: #C9A96E; color: #0B0B0B; padding: 14px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Secure My Account</a>
+        <a href="${this.getFrontendUrl()}/profile/security" class="hover-bg-gold" style="background-color: #C9A96E; color: #0B0B0B; padding: 14px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Secure My Account</a>
       </div>
-      <p style="font-size: 14px; color: #666;">You can also <a href="${process.env.FRONTEND_URL}/revoke-session?id=${details.deviceId}" style="color: #C9A96E;">revoke this session</a> directly.</p>
+      <p style="font-size: 14px; color: #666;">You can also <a href="${this.getFrontendUrl()}/revoke-session?id=${details.deviceId}" style="color: #C9A96E;">revoke this session</a> directly.</p>
     `;
 
     const html = TemplateEngine.render({
@@ -202,7 +206,7 @@ export class EmailService {
       </div>
       <p>You can view full details in your transaction history.</p>
       <div style="text-align: center; margin-top: 30px;">
-        <a href="${process.env.FRONTEND_URL}/transactions" style="background-color: #0B0B0B; color: #fff; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">View History</a>
+        <a href="${this.getFrontendUrl()}/transactions" style="background-color: #0B0B0B; color: #fff; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">View History</a>
       </div>
     `;
 
@@ -227,7 +231,7 @@ export class EmailService {
   }
 
   static async sendPasswordReset(user: any, token: string) {
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    const resetLink = `${this.getFrontendUrl()}/reset-password?token=${token}`;
     const content = `
       <p>Hello ${user.firstName || 'User'},</p>
       <p>We received a request to reset your password for your Golden Coin account. If you did not make this request, you can safely ignore this email.</p>
@@ -279,7 +283,7 @@ export class EmailService {
       <p>Hello ${user.firstName || 'User'},</p>
       ${message}
       <div style="text-align: center; margin-top: 35px;">
-        <a href="${process.env.FRONTEND_URL}/kyc" style="background-color: #0B0B0B; color: #fff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+        <a href="${this.getFrontendUrl()}/kyc" style="background-color: #0B0B0B; color: #fff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
           ${status === 'REJECTED' ? 'Submit Again' : 'Go to KYC Dashboard'}
         </a>
       </div>
@@ -312,7 +316,7 @@ export class EmailService {
       <p>If you made this change, you can safely ignore this email.</p>
       <p style="color: #d9534f; font-weight: bold;">If you did NOT make this change, please secure your account immediately.</p>
       <div style="text-align: center; margin-top: 35px;">
-        <a href="${process.env.FRONTEND_URL}/profile/security" class="hover-bg-gold" style="background-color: #C9A96E; color: #0B0B0B; padding: 14px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Secure Account</a>
+        <a href="${this.getFrontendUrl()}/profile/security" class="hover-bg-gold" style="background-color: #C9A96E; color: #0B0B0B; padding: 14px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Secure Account</a>
       </div>
     `;
 
@@ -344,7 +348,7 @@ export class EmailService {
       </div>
       <p>You can track the progress of your ticket directly in your Golden Coin support panel.</p>
       <div style="text-align: center; margin-top: 35px;">
-        <a href="${process.env.FRONTEND_URL}/support" style="background-color: #0B0B0B; color: #fff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Go to Support</a>
+        <a href="${this.getFrontendUrl()}/support" style="background-color: #0B0B0B; color: #fff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Go to Support</a>
       </div>
     `;
 
@@ -373,7 +377,7 @@ export class EmailService {
       </div>
       <p>Please log in to your dashboard to view the full conversation and reply.</p>
       <div style="text-align: center; margin-top: 35px;">
-        <a href="${process.env.FRONTEND_URL}/support" class="hover-bg-gold" style="background-color: #C9A96E; color: #0B0B0B; padding: 14px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">View Conversation</a>
+        <a href="${this.getFrontendUrl()}/support" class="hover-bg-gold" style="background-color: #C9A96E; color: #0B0B0B; padding: 14px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">View Conversation</a>
       </div>
     `;
 
@@ -406,7 +410,7 @@ export class EmailService {
       </div>
       <p>Your profits will be automatically credited to your main balance upon maturity.</p>
       <div style="text-align: center; margin-top: 35px;">
-        <a href="${process.env.FRONTEND_URL}/invest" style="background-color: #0B0B0B; color: #fff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Manage Investments</a>
+        <a href="${this.getFrontendUrl()}/invest" style="background-color: #0B0B0B; color: #fff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Manage Investments</a>
       </div>
     `;
 
@@ -442,7 +446,7 @@ export class EmailService {
       </div>
       <p>If you need any guidance, our 24/7 concierge support is just a ticket away.</p>
       <div style="text-align: center; margin: 40px 0;">
-        <a href="${process.env.FRONTEND_URL}/dashboard" class="hover-bg-gold" style="background-color: #C9A96E; color: #0B0B0B; padding: 15px 35px; text-decoration: none; border-radius: 8px; font-weight: 800; display: inline-block; font-size: 18px;">Start Investing Now</a>
+        <a href="${this.getFrontendUrl()}/dashboard" class="hover-bg-gold" style="background-color: #C9A96E; color: #0B0B0B; padding: 15px 35px; text-decoration: none; border-radius: 8px; font-weight: 800; display: inline-block; font-size: 18px;">Start Investing Now</a>
       </div>
     `;
 
@@ -459,6 +463,32 @@ export class EmailService {
       html,
       from: this.getFromAddress("welcome"),
       type: 'WELCOME'
+    });
+  }
+
+  static async sendNewsletterEmail(email: string) {
+    const content = `
+      <p>Hello,</p>
+      <p>Thank you for subscribing to the Golden Coin newsletter!</p>
+      <p>You will receive the latest updates, digital asset insights, and special announcements directly to your inbox.</p>
+      <div style="text-align: center; margin: 40px 0;">
+        <a href="${process.env.FRONTEND_URL || 'https://goldencoin.live'}/dashboard" style="background-color: #C9A96E; color: #0B0B0B; padding: 15px 35px; text-decoration: none; border-radius: 8px; font-weight: 800; display: inline-block; font-size: 18px;">Visit Dashboard</a>
+      </div>
+    `;
+
+    const html = TemplateEngine.render({
+      title: "Welcome to Golden Coin Newsletter",
+      content,
+      preheader: "Thank you for subscribing to Golden Coin updates.",
+      email: email
+    });
+
+    return this.sendEmail({
+      to: email,
+      subject: "Welcome to Golden Coin Newsletter!",
+      html,
+      from: this.getFromAddress("newsletter"),
+      type: 'NEWSLETTER'
     });
   }
 }
