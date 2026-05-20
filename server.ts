@@ -101,11 +101,15 @@ async function startServer() {
       try {
         await EmailService.sendNewsletterEmail(email);
         console.log(`[Newsletter] Welcome email sent to: ${email}`);
+        res.json({ success: true, message: "Subscribed successfully" });
       } catch (emailErr) {
         console.error(`[Newsletter] Failed to send welcome email to ${email}:`, emailErr);
-        // Don't fail the request if just the email failed, subscription was successful
+        // If DB update succeeded but email failed, inform user of potential issue
+        res.status(200).json({ 
+          success: true, 
+          message: "Subscribed, but confirmation email could not be sent. Please check your spam folder or contact support." 
+        });
       }
-      res.json({ success: true, message: "Subscribed successfully" });
     } catch(err: any) {
       console.error("[NewsletterSubscribe Error]", err);
       res.status(400).json({ error: err.message || "Unknown error" });
@@ -115,16 +119,24 @@ async function startServer() {
   app.post("/api/unsubscribe", async (req, res) => {
     try {
       const { email } = req.body;
-      if (!db) return res.status(500).json({ error: "Firebase DB not initialized" });
-      const q = db.collection("newsletters").where("email", "==", email);
-      const snap = await q.get();
-      if (snap.empty) return res.status(404).json({ error: "Not found" });
-      for (const doc of snap.docs) {
+      if (!db || typeof db.collection !== 'function') return res.status(500).json({ error: "Firebase DB not initialized" });
+      
+      // Unsubscribe from Newsletter
+      const newsSnap = await db.collection("newsletters").where("email", "==", email).get();
+      for (const doc of newsSnap.docs) {
         await doc.ref.update({ isSubscribed: false });
       }
+
+      // Unsubscribe registered user from Notifications
+      const userSnap = await db.collection("users").where("email", "==", email).get();
+      for (const doc of userSnap.docs) {
+        await doc.ref.update({ notificationsEnabled: false });
+      }
+
       res.json({ success: true, message: "Unsubscribed" });
     } catch(err: any) {
-      res.status(400).json({ error: err.message });
+      console.error("[Unsubscribe Error]", err);
+      res.status(400).json({ error: err.message || "Unknown error" });
     }
   });
 

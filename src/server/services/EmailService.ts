@@ -45,20 +45,23 @@ export class EmailService {
     return process.env.RESEND_FROM_DOMAIN || "goldencoin.live";
   }
 
-  private static getFromAddress(prefix: string) {
+  private static getFromAddress(prefix: string, displayName?: string) {
     const domain = this.getBaseDomain();
-    return `${prefix}@${domain}`;
+    const email = `${prefix}@${domain}`;
+    return displayName ? `${displayName} <${email}>` : email;
   }
 
   private static getFrontendUrl() {
-    return process.env.FRONTEND_URL || 'https://goldencoin.live';
+    const url = process.env.FRONTEND_URL || 'https://goldencoin.live';
+    return url.endsWith('/') ? url.slice(0, -1) : url;
   }
 
   static async sendEmail(options: EmailOptions) {
     const client = getResendClient();
     if (!client) {
-      console.error("[EmailService]: Resend client not initialized. Check RESEND_API_KEY.");
-      return null;
+      const errorMsg = "[EmailService]: Resend client not initialized. Check RESEND_API_KEY.";
+      console.error(errorMsg);
+      throw new Error(errorMsg);
     }
 
     const { to, subject, html, from, type } = options;
@@ -154,7 +157,7 @@ export class EmailService {
       to: user.email,
       subject: details.isSuspicious ? "⚠️ Suspicious Login Alert" : "Security Alert: New Login Detected",
       html,
-      from: this.getFromAddress("security"),
+      from: this.getFromAddress("security", "Goldencoin Security"),
       type: 'LOGIN_ALERT'
     });
   }
@@ -183,7 +186,7 @@ export class EmailService {
       to: user.email,
       subject: `[Golden Coin] ${code} is your verification code`,
       html,
-      from: this.getFromAddress("noreply"),
+      from: this.getFromAddress("noreply", "Goldencoin"),
       type: 'OTP'
     });
   }
@@ -225,7 +228,7 @@ export class EmailService {
       to: user.email,
       subject,
       html,
-      from: this.getFromAddress("transactions"),
+      from: this.getFromAddress("transactions", "Goldencoin Transactions"),
       type
     });
   }
@@ -254,7 +257,7 @@ export class EmailService {
       to: user.email,
       subject: "Reset your Golden Coin password",
       html,
-      from: this.getFromAddress("security"),
+      from: this.getFromAddress("security", "Goldencoin Security"),
       type: 'PASSWORD_RESET'
     });
   }
@@ -301,7 +304,7 @@ export class EmailService {
       to: user.email,
       subject: `KYC Verification ${statusText}`,
       html,
-      from: this.getFromAddress("support"),
+      from: this.getFromAddress("support", "Goldencoin Support"),
       type: 'KYC_UPDATE'
     });
   }
@@ -332,7 +335,7 @@ export class EmailService {
       to: user.email,
       subject: `Security Alert: ${activity}`,
       html,
-      from: this.getFromAddress("security"),
+      from: this.getFromAddress("security", "Goldencoin Security"),
       type: 'SECURITY_ALERT'
     });
   }
@@ -363,7 +366,7 @@ export class EmailService {
       to: user.email,
       subject: `Support Ticket Received: ${ticket.subject}`,
       html,
-      from: this.getFromAddress("support"),
+      from: this.getFromAddress("support", "Goldencoin Support"),
       type: 'SUPPORT_REPLY'
     });
   }
@@ -392,7 +395,7 @@ export class EmailService {
       to: user.email,
       subject: `New Reply to your support ticket: ${ticket.subject}`,
       html,
-      from: this.getFromAddress("support"),
+      from: this.getFromAddress("support", "Goldencoin Support"),
       type: 'SUPPORT_REPLY'
     });
   }
@@ -425,7 +428,7 @@ export class EmailService {
       to: user.email,
       subject: `Investment Plan Purchased: ${investment.planName}`,
       html,
-      from: this.getFromAddress("invest"),
+      from: this.getFromAddress("invest", "Goldencoin Investment"),
       type: 'INVESTMENT_ALERT'
     });
   }
@@ -461,7 +464,7 @@ export class EmailService {
       to: user.email,
       subject: "Welcome to Golden Coin!",
       html,
-      from: this.getFromAddress("welcome"),
+      from: this.getFromAddress("welcome", "Goldencoin"),
       type: 'WELCOME'
     });
   }
@@ -469,10 +472,11 @@ export class EmailService {
   static async sendNewsletterEmail(email: string) {
     const content = `
       <p>Hello,</p>
-      <p>Thank you for subscribing to the Golden Coin newsletter!</p>
-      <p>You will receive the latest updates, digital asset insights, and special announcements directly to your inbox.</p>
+      <p><strong>Success!</strong> You have successfully subscribed to the Golden Coin newsletter.</p>
+      <p>You will now receive regular updates, expert digital asset insights, and special announcements directly to your inbox, keeping you informed of all the latest opportunities.</p>
+      <p>Thank you for joining our community.</p>
       <div style="text-align: center; margin: 40px 0;">
-        <a href="${process.env.FRONTEND_URL || 'https://goldencoin.live'}/dashboard" style="background-color: #C9A96E; color: #0B0B0B; padding: 15px 35px; text-decoration: none; border-radius: 8px; font-weight: 800; display: inline-block; font-size: 18px;">Visit Dashboard</a>
+        <a href="${this.getFrontendUrl()}/dashboard" style="background-color: #C9A96E; color: #0B0B0B; padding: 15px 35px; text-decoration: none; border-radius: 8px; font-weight: 800; display: inline-block; font-size: 18px;">Visit Dashboard</a>
       </div>
     `;
 
@@ -487,7 +491,7 @@ export class EmailService {
       to: email,
       subject: "Welcome to Golden Coin Newsletter!",
       html,
-      from: this.getFromAddress("newsletter"),
+      from: this.getFromAddress("newsletter", "Goldencoin Newsletter"),
       type: 'NEWSLETTER'
     });
   }
