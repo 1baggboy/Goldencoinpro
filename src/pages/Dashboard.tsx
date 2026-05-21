@@ -15,7 +15,9 @@ import {
   Inbox,
   Sparkles,
   BrainCircuit,
+  Search,
 } from "lucide-react";
+import { SearchPanel, SearchItem } from "../components/SearchPanel";
 import { getMarketInsight, MarketInsight, getDailyStrategy, DailyStrategy } from "../services/geminiService";
 import {
   AreaChart,
@@ -69,6 +71,26 @@ export const Dashboard = () => {
   const [dailyStrategy, setDailyStrategy] = useState<DailyStrategy | null>(null);
   const [latency, setLatency] = useState<number>(0);
   const [tps, setTps] = useState<number>(0);
+  const [isDashboardSearchOpen, setIsDashboardSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        event.preventDefault();
+        setIsDashboardSearchOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const dashboardSearchItems: SearchItem[] = [
+    { name: "Transactions", path: "/transactions" },
+    { name: "Deposit", path: "/deposit" },
+    { name: "Withdraw", path: "/withdraw" },
+    { name: "Invest", path: "/invest" },
+    { name: "Profile", path: "/profile" },
+  ];
 
   // Define fetching functions in component scope so they can be reused
   const fetchInsight = async (force = false) => {
@@ -301,6 +323,12 @@ export const Dashboard = () => {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-12 text-[#0B0B0B] dark:text-white font-sans transition-all duration-300 w-full">
+      <SearchPanel 
+        isOpen={isDashboardSearchOpen} 
+        onClose={() => setIsDashboardSearchOpen(false)} 
+        items={dashboardSearchItems}
+        title="the dashboard"
+      />
       <ReactTooltip id="dashboard-tooltip" className="z-50" />
       {/* Header */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 lg:gap-6">
@@ -318,6 +346,12 @@ export const Dashboard = () => {
           </p>
         </div>
         <div className="flex items-center gap-3 lg:gap-4">
+          <button
+              onClick={() => setIsDashboardSearchOpen(true)}
+              className="p-4 bg-slate-200 dark:bg-slate-900 border border-[#C9A96E]/20 rounded-2xl flex items-center justify-center hover:bg-slate-300 dark:hover:bg-slate-800 transition-all text-[#C9A96E]"
+          >
+              <Search size={18} />
+          </button>
           <Link
             to="/deposit"
             className="flex-1 sm:flex-none px-6 lg:px-8 py-3 lg:py-4 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl lg:rounded-2xl hover:bg-[#D4B985] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#C9A96E]/20"

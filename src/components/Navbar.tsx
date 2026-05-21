@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Bell, Search, User, Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
@@ -10,19 +10,51 @@ import { usePrices } from "../PriceContext";
 import { ThemeToggle } from "./ThemeToggle";
 import { NotificationDropdown } from "../pages/NotificationDropdown";
 import { Logo } from "./Logo";
+import { SearchPanel } from "./SearchPanel";
 
 export const Navbar = ({ onMenuClick }: { onMenuClick?: () => void }) => {
   const { profile } = useAuth();
   const { unreadCount } = useNotifications();
   const { prices } = usePrices();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        event.preventDefault();
+        setIsSearchOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const btcPrice = prices?.btc?.usd || 0;
   const btcChange = prices?.btc?.change || 0;
 
+  const globalSearchItems = [
+    { name: "Dashboard", path: "/dashboard" },
+    { name: "Transactions", path: "/transactions" },
+    { name: "Deposit", path: "/deposit" },
+    { name: "Withdraw", path: "/withdraw" },
+    { name: "KYC", path: "/kyc" },
+    { name: "Invest", path: "/invest" },
+    { name: "Profile", path: "/profile" },
+    { name: "FAQ", path: "/faq" },
+    { name: "Contact", path: "/contact" },
+    { name: "Features", path: "/features" },
+    { name: "Security", path: "/security" },
+  ];
+
   return (
     <header className="h-20 lg:h-24 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-[#C9A96E]/10 px-6 lg:px-12 flex items-center justify-between sticky top-0 z-50">
+      <SearchPanel 
+        isOpen={isSearchOpen} 
+        onClose={() => setIsSearchOpen(false)} 
+        items={globalSearchItems}
+        title="the website"
+      />
       <div className="flex items-center gap-3 sm:gap-4 flex-1">
         <button 
           type="button"
@@ -58,29 +90,13 @@ export const Navbar = ({ onMenuClick }: { onMenuClick?: () => void }) => {
       </div>
 
       <div className="hidden lg:flex items-center relative gap-4">
-        <motion.div 
-          initial={false}
-          animate={{ width: isSearchExpanded ? 400 : 48 }}
-          className={cn(
-            "flex items-center bg-gray-100 dark:bg-slate-900 h-12 rounded-2xl border border-[#C9A96E]/10 overflow-hidden transition-all duration-300 shadow-sm",
-            isSearchExpanded && "w-[400px] xl:w-[500px] border-[#C9A96E]/40 ring-1 ring-[#C9A96E]/20"
-          )}
+        <button 
+          type="button"
+          onClick={() => setIsSearchOpen(true)}
+          className="w-12 h-12 flex items-center justify-center text-gray-500 hover:text-[#C9A96E] bg-gray-100 dark:bg-slate-900 rounded-2xl border border-[#C9A96E]/10 transition-colors shrink-0 shadow-sm hover:border-[#C9A96E]/40"
         >
-          <button 
-            type="button"
-            onClick={() => setIsSearchExpanded(!isSearchExpanded)}
-            className="w-12 h-12 flex items-center justify-center text-gray-500 hover:text-[#C9A96E] transition-colors shrink-0"
-          >
-            <Search size={20} />
-          </button>
-          <div className={cn("flex-1 pr-4 overflow-hidden transition-opacity duration-300", isSearchExpanded ? "opacity-100" : "opacity-0 invisible")}>
-            <input
-              type="text"
-              placeholder="Search assets, help..."
-              className="bg-transparent border-none outline-none text-sm w-full text-gray-900 dark:text-gray-200 placeholder:text-gray-400 font-medium"
-            />
-          </div>
-        </motion.div>
+          <Search size={20} />
+        </button>
       </div>
 
       <div className="flex items-center gap-4 sm:gap-6 md:gap-10">

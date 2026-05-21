@@ -1,17 +1,46 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { Search } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { Logo } from "./Logo";
 import { Footer } from "./Footer";
 import { NewsletterSubscription } from "./NewsletterSubscription";
 import { useAuth } from "../AuthContext";
 import { motion } from "motion/react";
+import { SearchPanel } from "./SearchPanel";
 
 export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        event.preventDefault();
+        setIsSearchOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const searchItems = [
+    { name: "Features", path: "/features" },
+    { name: "Security", path: "/security" },
+    { name: "FAQ", path: "/faq" },
+    { name: "About", path: "/about" },
+    { name: "Login", path: "/login" },
+    { name: "Register", path: "/register" },
+  ];
 
   return (
     <div className="min-h-screen font-sans transition-colors duration-300 bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white">
+      <SearchPanel 
+        isOpen={isSearchOpen} 
+        onClose={() => setIsSearchOpen(false)} 
+        items={searchItems}
+        title="the website"
+      />
       {/* Navigation */}
       <nav className="h-20 border-b px-6 md:px-12 flex items-center justify-between sticky top-0 backdrop-blur-md z-50 border-[#C9A96E]/20 bg-slate-50/80 dark:border-[#C9A96E]/10 dark:bg-slate-950/80">
         <div className="flex items-center gap-3">
@@ -24,6 +53,13 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
           <Link to="/about" className="hover:text-[#C9A96E] transition-colors">About</Link>
         </div>
         <div className="flex items-center gap-4">
+          <button 
+            type="button"
+            onClick={() => setIsSearchOpen(true)}
+            className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-[#C9A96E] bg-gray-100 dark:bg-slate-900 rounded-xl border border-[#C9A96E]/10 transition-colors shadow-sm hover:border-[#C9A96E]/40"
+          >
+            <Search size={18} />
+          </button>
           <ThemeToggle />
           {user ? (
             <Link to="/dashboard" className="px-5 py-2.5 bg-[#C9A96E] text-slate-950 font-bold rounded-lg hover:bg-[#D4B985] transition-all text-sm">

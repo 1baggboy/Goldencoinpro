@@ -43,31 +43,35 @@ export const SupportWidget: React.FC<{
     if (onClose) onClose();
   };
 
-  // Handle Anonymous Auth for guests
+  // Handle Anonymous Auth for guests & clear cache when not signed in
   useEffect(() => {
     if (targetUserId) {
       setChatUserId(targetUserId);
     } else if (authUser) {
       setChatUserId(authUser.uid);
-    } else if (isOpen) {
-      const unsub = onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          setChatUserId(user.uid);
-        } else {
-          try {
-            const cred = await signInAnonymously(auth);
-            setChatUserId(cred.user.uid);
-          } catch (error: any) {
-            console.warn("Guest chat unavailable:", error.message);
+    } else {
+      if (!isOpen) {
+        setChatUserId(null);
+      } else {
+        const unsub = onAuthStateChanged(auth, async (user) => {
+          if (user) {
+            setChatUserId(user.uid);
+          } else {
+            try {
+              const cred = await signInAnonymously(auth);
+              setChatUserId(cred.user.uid);
+            } catch (error: any) {
+              console.warn("Guest chat unavailable:", error.message);
+            }
           }
-        }
-      });
-      return () => unsub();
+        });
+        return () => unsub();
+      }
     }
   }, [authUser, targetUserId, isOpen]);
 
   useEffect(() => {
-    if (!isOpen || !effectiveUserId) return;
+    if (!isOpen || !effectiveUserId || !auth.currentUser) return;
 
     const q = query(
       collection(db, "support_chats"),
@@ -82,7 +86,7 @@ export const SupportWidget: React.FC<{
     });
 
     return () => unsub();
-  }, [effectiveUserId, isOpen]);
+  }, [effectiveUserId, isOpen, auth.currentUser]);
 
   useEffect(() => {
     const handleOpenSupport = (e: any) => {
@@ -95,9 +99,9 @@ export const SupportWidget: React.FC<{
     return () => window.removeEventListener('open-support', handleOpenSupport);
   }, []);
 
-  // Listen for unread messages
+  // Listen for unread messages only when signed in to prevent permission checks failing
   useEffect(() => {
-    if (!effectiveUserId) return;
+    if (!effectiveUserId || !auth.currentUser) return;
 
     const q = query(
       collection(db, "support_chats"),
@@ -111,10 +115,10 @@ export const SupportWidget: React.FC<{
     }, (error) => handleFirestoreError(error, OperationType.LIST, "support_chats"));
 
     return () => unsub();
-  }, [effectiveUserId, isAdminMode]);
+  }, [effectiveUserId, isAdminMode, auth.currentUser]);
 
   useEffect(() => {
-    if (isOpen && unreadCount > 0 && effectiveUserId) {
+    if (isOpen && unreadCount > 0 && effectiveUserId && auth.currentUser) {
       const q = query(
         collection(db, "support_chats"),
         where("userId", "==", effectiveUserId),
@@ -128,7 +132,7 @@ export const SupportWidget: React.FC<{
         });
       }).catch(err => console.error("Error marking as read:", err));
     }
-  }, [isOpen, unreadCount, effectiveUserId, isAdminMode]);
+  }, [isOpen, unreadCount, effectiveUserId, isAdminMode, auth.currentUser]);
 
   useEffect(() => {
     if (scrollRef.current) {
