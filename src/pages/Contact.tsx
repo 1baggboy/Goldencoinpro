@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { SupportWidget } from "../components/SupportWidget";
+import { NewsletterSubscription } from "../components/NewsletterSubscription";
 import { Footer } from "../components/Footer";
 import { Logo } from "../components/Logo";
 import { db } from "../firebase";
@@ -174,6 +175,7 @@ export const Contact = () => {
         </div>
       </main>
 
+      <NewsletterSubscription />
       <SupportWidget />
     </PublicLayout>
   );

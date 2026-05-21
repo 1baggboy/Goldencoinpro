@@ -464,13 +464,13 @@ export const UserDetail = () => {
             <StatCard 
               title="Current Balance" 
               value={`$${usdBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} 
-              subValue={`${userProfile.btcBalance?.toFixed(4)} BTC`}
+              subValue={`${Number(userProfile.btcBalance || 0).toFixed(4)} BTC`}
               icon={Wallet}
               color="gold"
             />
             <StatCard 
               title="Trading Balance" 
-              value={`${userProfile.tradingBalanceBtc?.toFixed(4) || "0.0000"} BTC`} 
+              value={`${Number(userProfile.tradingBalanceBtc || 0).toFixed(4)} BTC`} 
               subValue={`≈ $${((userProfile.tradingBalanceBtc || 0) * btcPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
               icon={Zap}
               color="gold"

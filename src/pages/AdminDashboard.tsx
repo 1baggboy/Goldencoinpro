@@ -936,8 +936,8 @@ export const AdminDashboard = () => {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
-                      <span className="text-sm font-bold text-[#C9A96E]">{u.btcBalance?.toFixed(4)} BTC</span>
-                      <span className="text-[10px] text-gray-500">≈ ${(u.btcBalance * btcPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="text-sm font-bold text-[#C9A96E]">{Number(u.btcBalance || 0).toFixed(4)} BTC</span>
+                      <span className="text-[10px] text-gray-500">≈ ${(Number(u.btcBalance || 0) * btcPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">

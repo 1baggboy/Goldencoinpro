@@ -65,7 +65,6 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
         </div>
       </main>
 
-      <NewsletterSubscription />
       <Footer />
     </div>
   );
