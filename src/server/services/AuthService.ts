@@ -144,20 +144,20 @@ export class AuthService {
       });
     }
 
-    if (isNewDevice || isSuspicious) {
-      await EmailService.sendLoginAlert(userObj, {
-        ...deviceDetails,
-        time: new Date().toLocaleString(),
-        isSuspicious
-      });
-      
-      await db.collection('securityLogs').add({
-        userId: uid,
-        type: isSuspicious ? 'SUSPICIOUS_LOGIN' : 'NEW_DEVICE_LOGIN',
-        details: deviceDetails,
-        createdAt: new Date()
-      });
-    }
+    // Always alert user of any login (new, old, suspicious, or standard) for enhanced security measures
+    await EmailService.sendLoginAlert(userObj, {
+      ...deviceDetails,
+      time: new Date().toLocaleString(),
+      isSuspicious,
+      isNewDevice
+    });
+    
+    await db.collection('securityLogs').add({
+      userId: uid,
+      type: isSuspicious ? 'SUSPICIOUS_LOGIN' : (isNewDevice ? 'NEW_DEVICE_LOGIN' : 'STANDARD_LOGIN_ALERT'),
+      details: deviceDetails,
+      createdAt: new Date()
+    });
 
     await db.collection('activityLogs').add({
       userId: uid,

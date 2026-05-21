@@ -202,10 +202,16 @@ authRouter.post('/login-notification', authenticate, async (req: AuthRequest, re
     const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'Unknown IP') as string;
     const location = await AuthService.getLocationFromIP(ip);
     
+    // Check if device already exists in firestore
+    const devicesRef = db.collection('users').doc(req.user!.userId).collection('devices');
+    const existingDeviceQuery = await devicesRef.where('deviceId', '==', deviceDetails.deviceId).get();
+    const isNewDevice = existingDeviceQuery.empty;
+
     const enrichedDeviceDetails = {
       ...deviceDetails,
       ip,
       location,
+      isNewDevice,
       browser: deviceDetails.browser || 'Unknown',
       os: deviceDetails.os || 'Unknown',
       time: deviceDetails.time || new Date().toLocaleString()

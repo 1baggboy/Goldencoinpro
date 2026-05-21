@@ -32,8 +32,8 @@ const INVESTMENT_PLANS = [
     name: "Starter Plan",
     return: 1.25, // +25%
     duration: 60, // 1 Hour
-    minAmount: 100, // USD
-    description: "Ideal for short-term growth. Target up to 25% return over a 1-hour cycle. Minimum deposit $100.",
+    minAmount: 1000, // USD
+    description: "Ideal for short-term growth. Target up to 25% return over a 1-hour cycle. Minimum deposit $1,000.",
     icon: Zap,
     color: "blue"
   },

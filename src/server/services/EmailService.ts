@@ -129,17 +129,26 @@ export class EmailService {
 
   // Domain specific email methods
   static async sendLoginAlert(user: any, details: any) {
+    const isNewDevice = details.isNewDevice !== false;
+    let deviceLabel = "new";
+    if (details.isSuspicious) {
+      deviceLabel = "unrecognized/suspicious";
+    } else if (!isNewDevice) {
+      deviceLabel = "recognized/existing";
+    }
+
     const content = `
       <p>Hello ${user.firstName || 'User'},</p>
-      <p>We detected a new login to your Golden Coin account from a ${details.isSuspicious ? '<span style="color: #d9534f; font-weight: bold;">unrecognized/suspicious</span>' : 'new'} device.</p>
+      <p>We detected a login to your Golden Coin account from a <span style="font-weight: bold; color: ${details.isSuspicious ? '#d9534f' : '#C9A96E'};">${deviceLabel}</span> device.</p>
       <div class="card" style="background-color: #f9f9f9; padding: 25px; border-radius: 12px; margin: 25px 0; border: 1px solid #eee;">
+        <p style="margin: 0 0 10px;"><strong>Status:</strong> ${details.isSuspicious ? '⚠️ Suspicious Login' : (!isNewDevice ? 'Standard Login (Recognized Device)' : 'New Device Sign-in')}</p>
         <p style="margin: 0 0 10px;"><strong>Time:</strong> ${details.time}</p>
         <p style="margin: 0 0 10px;"><strong>IP Address:</strong> ${details.ip}</p>
         <p style="margin: 0 0 10px;"><strong>Location:</strong> ${details.location}</p>
         <p style="margin: 0 0 10px;"><strong>Device:</strong> ${details.deviceString || details.device}</p>
         <p style="margin: 0;"><strong>Browser:</strong> ${details.browser}</p>
       </div>
-      <p>If this was not you, please secure your account immediately by changing your password and enabling 2FA.</p>
+      <p>If this was you, no action is needed. If this was not you, please secure your account immediately by changing your password and enabling 2FA.</p>
       <div style="text-align: center; margin: 35px 0;">
         <a href="${this.getFrontendUrl()}/profile/security" class="hover-bg-gold" style="background-color: #C9A96E; color: #0B0B0B; padding: 14px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Secure My Account</a>
       </div>
@@ -147,15 +156,15 @@ export class EmailService {
     `;
 
     const html = TemplateEngine.render({
-      title: "Security Alert: New Login",
+      title: details.isSuspicious ? "Security Alert: Suspicious Login" : "Login Alert",
       content,
-      preheader: "A new login was detected on your account.",
+      preheader: `A login was detected on your account from a ${deviceLabel} device.`,
       email: user.email
     });
 
     return this.sendEmail({
       to: user.email,
-      subject: details.isSuspicious ? "⚠️ Suspicious Login Alert" : "Security Alert: New Login Detected",
+      subject: details.isSuspicious ? "⚠️ Suspicious Login Alert" : "Login Detection Alert",
       html,
       from: this.getFromAddress("security", "Goldencoin Security"),
       type: 'LOGIN_ALERT'
