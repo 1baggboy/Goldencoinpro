@@ -219,26 +219,26 @@ export const AdminSupport = () => {
     return matchesSearch && matchesFilter;
   });
 
-  const [selectedUserDetails, setSelectedUserDetails] = useState<{name: string, isGuest: boolean} | null>(null);
+  const [selectedUserDetails, setSelectedUserDetails] = useState<{name: string, friendlyId: string | null, isGuest: boolean} | null>(null);
 
   useEffect(() => {
     if (selectedChatId) {
       const existing = chats.find(c => c.userId === selectedChatId);
       if (existing) {
-        setSelectedUserDetails({ name: existing.userName, isGuest: false });
+        setSelectedUserDetails({ name: existing.userName, friendlyId: null, isGuest: false });
       } else {
         // Fetch from users collection
         if (selectedChatId.length > 20) { // rough check for firebase auth uid
-          getDocs(query(collection(db, "users"), where("id", "==", selectedChatId))).then(snap => {
+          getDocs(query(collection(db, "users"), where("uid", "==", selectedChatId))).then(snap => {
             if (!snap.empty) {
               const u = snap.docs[0].data();
-              setSelectedUserDetails({ name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || 'User', isGuest: false });
+              setSelectedUserDetails({ name: u.displayName || 'User', friendlyId: u.friendlyId || null, isGuest: false });
             } else {
-              setSelectedUserDetails({ name: "Guest User", isGuest: true });
+              setSelectedUserDetails({ name: "Guest User", friendlyId: null, isGuest: true });
             }
-          }).catch(() => setSelectedUserDetails({ name: "Guest User", isGuest: true }));
+          }).catch(() => setSelectedUserDetails({ name: "Guest User", friendlyId: null, isGuest: true }));
         } else {
-          setSelectedUserDetails({ name: "Guest User", isGuest: true });
+          setSelectedUserDetails({ name: "Guest User", friendlyId: null, isGuest: true });
         }
       }
     } else {
@@ -364,7 +364,7 @@ export const AdminSupport = () => {
                   </div>
                   <div>
                     <h3 className="font-bold text-white text-lg">{selectedUserDetails?.name || "Guest User"}</h3>
-                    <p className="text-xs text-gray-500 font-mono">{selectedChatId}</p>
+                    <p className="text-xs text-gray-500 font-mono">User ID: {selectedUserDetails?.friendlyId || selectedChatId}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">

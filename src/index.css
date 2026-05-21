@@ -12,6 +12,7 @@
     @apply antialiased text-slate-900;
     /* Default mobile scaling (80%) */
     zoom: 80%;
+    height: 800px;
   }
 
   @media (min-width: 1024px) {

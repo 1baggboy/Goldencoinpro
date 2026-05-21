@@ -14,8 +14,8 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { SupportWidget } from "../components/SupportWidget";
 import { NewsletterSubscription } from "../components/NewsletterSubscription";
+import { SupportWidget } from "../components/SupportWidget";
 import { Footer } from "../components/Footer";
 import { Logo } from "../components/Logo";
 import { db } from "../firebase";

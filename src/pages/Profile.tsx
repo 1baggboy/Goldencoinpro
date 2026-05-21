@@ -338,8 +338,8 @@ export const Profile = () => {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-500">Account ID</span>
-                <span className="text-[10px] font-mono text-gray-500">{user?.uid.substring(0, 12)}...</span>
+                <span className="text-xs text-gray-500">User ID</span>
+                <span className="text-[10px] font-mono text-gray-500">{profile?.friendlyId || user?.uid.substring(0, 12)}...</span>
               </div>
             </div>
           </div>

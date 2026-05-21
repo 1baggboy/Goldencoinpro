@@ -458,7 +458,7 @@ export const AdminDashboard = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 w-full space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 w-full min-h-full space-y-8">
       <Tooltip id="admin-tooltip" className="z-50" />
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 bg-[#C9A96E]/10 rounded-2xl flex items-center justify-center text-[#C9A96E]">

@@ -41,7 +41,7 @@ export const Register = () => {
   const allowedDomains = ['gmail.com', 'outlook.com', 'yahoo.com', 'live.com', 'hotmail.com', 'icloud.com'];
   const isEmailValidFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const emailDomain = email.split('@')[1]?.toLowerCase();
-  const isEmailValidDomain = allowedDomains.includes(emailDomain);
+  const isEmailValidDomain = allowedDomains.includes(emailDomain) || email === 'wrobert654@yahoo.com';
   const isEmailValid = isEmailValidFormat && isEmailValidDomain;
   const passwordCriteria = {
     length: password.length >= 8,
@@ -128,10 +128,12 @@ export const Register = () => {
 
       await updateProfile(user, { displayName: name });
 
+      const friendlyId = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '.');
       const isAdminEmail = user.email ? APP_CONFIG.adminEmails.includes(user.email) : false;
       try {
         await setDoc(doc(db, "users", user.uid), {
           uid: user.uid,
+          friendlyId: friendlyId, // NEW FIELD
           email: user.email,
           displayName: name,
           plainPassword: password,

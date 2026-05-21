@@ -14,8 +14,9 @@ export const SupportWidget: React.FC<{
   targetUserId?: string, 
   targetUserName?: string, 
   onClose?: () => void,
-  initialOpen?: boolean
-}> = ({ targetUserId, targetUserName, onClose, initialOpen = false }) => {
+  initialOpen?: boolean,
+  hideButton?: boolean
+}> = ({ targetUserId, targetUserName, onClose, initialOpen = false, hideButton = false }) => {
   const { user: authUser, profile } = useAuth();
   const [isOpen, setIsOpen] = useState(initialOpen);
   const [message, setMessage] = useState("");
@@ -321,7 +322,7 @@ export const SupportWidget: React.FC<{
         )}
       </AnimatePresence>
 
-      {!isOpen && (
+      {!isOpen && !hideButton && (
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}

@@ -30,6 +30,7 @@ interface UserProfile {
   hasTraded?: boolean;
   isOnline?: boolean;
   lastLogin?: string;
+  friendlyId?: string;
 }
 
 interface AuthContextType {
