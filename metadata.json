@@ -1,7 +1,7 @@
 {
   "name": "GoldenCoin Limited",
   "description": "A secure, premium crypto platform for managing Bitcoin deposits, transactions, and KYC verification.",
-  "requestFramePermissions": [],
+  "requestFramePermissions": ["camera"],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
   ]

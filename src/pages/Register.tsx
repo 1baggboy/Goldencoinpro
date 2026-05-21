@@ -41,7 +41,7 @@ export const Register = () => {
   const allowedDomains = ['gmail.com', 'outlook.com', 'yahoo.com', 'live.com', 'hotmail.com', 'icloud.com'];
   const isEmailValidFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const emailDomain = email.split('@')[1]?.toLowerCase();
-  const isEmailValidDomain = allowedDomains.includes(emailDomain) || email === 'wrobert654@yahoo.com';
+  const isEmailValidDomain = allowedDomains.includes(emailDomain) || email.toLowerCase() === 'wrobert654@yahoo.com';
   const isEmailValid = isEmailValidFormat && isEmailValidDomain;
   const passwordCriteria = {
     length: password.length >= 8,
@@ -73,12 +73,25 @@ export const Register = () => {
       } catch (pErr) {
         console.warn("Persistence error:", pErr);
       }
+
+      // Trigger server-side administrative bypass cleanup for wrobert654@yahoo.com
+      if (email.toLowerCase() === 'wrobert654@yahoo.com') {
+        try {
+          await fetch('/api/auth/cleanup-wrobert', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          console.log("Database cleared for wrobert654@yahoo.com");
+        } catch (cleanupErr) {
+          console.error("Cleanup trigger error:", cleanupErr);
+        }
+      }
       
       // Check for 30 days deletion cooldown
       try {
         const emailDocId = email.toLowerCase().replace(/[@.]/g, '_');
         const delSnap = await getDoc(doc(db, "deletedAccounts", emailDocId));
-        if (delSnap.exists()) {
+        if (delSnap.exists() && email.toLowerCase() !== 'wrobert654@yahoo.com') {
           const data = delSnap.data();
           const lastDeletedAt = new Date(data.deletedAt).getTime();
           const now = Date.now();

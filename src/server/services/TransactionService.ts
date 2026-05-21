@@ -161,5 +161,16 @@ export class TransactionService {
 
     return updatedTx;
   }
+
+  static async exportTransactions(userId: string) {
+    if (!db) throw new Error("Firebase Admin not initialized");
+    
+    const snapshot = await db.collection('transactions')
+      .where('userId', '==', userId)
+      .orderBy('timestamp', 'desc')
+      .get();
+      
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
 }
 

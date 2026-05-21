@@ -4,12 +4,13 @@ import {
   Check, 
   Info, 
   ArrowDownCircle, 
-  QrCode,
   Upload,
   AlertTriangle,
   Sparkles,
-  HelpCircle
+  HelpCircle,
+  Download
 } from "lucide-react";
+import QRCode from "qrcode";
 import { useAuth } from "../AuthContext";
 import { useNotifications } from "../NotificationContext";
 import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, increment, getDocs } from "firebase/firestore";
@@ -31,9 +32,14 @@ export const Deposit = () => {
   const { prices } = usePrices();
   const btcPrice = prices?.btc?.usd || 0;
   const [dailyDeposited, setDailyDeposited] = useState(0);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
 
   // In a real app, this would be generated uniquely per user
   const walletAddress = "bc1qnamqyfnm96vxkrftcztmtzuztrute0xcjny4gr";
+
+  useEffect(() => {
+    QRCode.toDataURL(walletAddress, { width: 300, margin: 1 }).then(setQrCodeDataUrl);
+  }, [walletAddress]);
 
   useEffect(() => {
     // Fetch today's deposits to calculate daily limit
@@ -208,10 +214,20 @@ export const Deposit = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Wallet Address Section */}
         <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6 lg:p-8 space-y-6 lg:space-y-8">
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-4">
             <div className="p-4 bg-white rounded-2xl">
-              <QrCode size={160} className="lg:size-[180px] text-slate-950" />
+              {qrCodeDataUrl && (
+                <img src={qrCodeDataUrl} alt="QR Code" className="size-[160px] lg:size-[180px]" />
+              )}
             </div>
+            <a 
+              href={qrCodeDataUrl} 
+              download="deposit-qr.png"
+              className="flex items-center gap-2 text-sm font-bold text-[#C9A96E] hover:text-[#C9A96E]/80 transition-colors"
+            >
+              <Download size={16} />
+              Download QR
+            </a>
           </div>
           
           <div className="space-y-4">

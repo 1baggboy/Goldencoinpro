@@ -8,8 +8,10 @@ import {
   ShieldAlert,
   TrendingUp,
   Sparkles,
-  HelpCircle
+  HelpCircle,
+  Camera
 } from "lucide-react";
+import { Html5QrcodeScanner } from "html5-qrcode";
 import { useAuth } from "../AuthContext";
 import { useNotifications } from "../NotificationContext";
 import { collection, addDoc, query, where, getDocs, onSnapshot, doc, updateDoc, increment } from "firebase/firestore";
@@ -31,9 +33,29 @@ export const Withdraw = () => {
   const { prices } = usePrices();
   const btcPrice = prices?.btc?.usd || 0;
   const [dailyWithdrawn, setDailyWithdrawn] = useState(0);
+  const [showScanner, setShowScanner] = useState(false);
 
   useEffect(() => {
-    // Fetch today's withdrawals to calculate daily limit
+    if (showScanner) {
+      const scanner = new Html5QrcodeScanner(
+        "qr-reader",
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        false
+      );
+      scanner.render((decodedText) => {
+        setWalletAddress(decodedText);
+        setShowScanner(false);
+        scanner.clear();
+      }, (error) => {
+        console.warn(error);
+      });
+      return () => {
+        scanner.clear();
+      };
+    }
+  }, [showScanner]);
+ 
+  useEffect(() => {
     if (user) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -345,7 +367,22 @@ export const Withdraw = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-400">Destination BTC Wallet Address</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-400">Destination BTC Wallet Address</label>
+                    <button 
+                      type="button"
+                      onClick={() => setShowScanner(!showScanner)}
+                      className="flex items-center gap-1 text-xs text-[#C9A96E] hover:text-[#C9A96E]/80 transition-colors"
+                    >
+                      <Camera size={14} />
+                      {showScanner ? "Close Scanner" : "Scan QR"}
+                    </button>
+                  </div>
+                  
+                  {showScanner && (
+                    <div id="qr-reader" className="w-full"></div>
+                  )}
+
                   <input
                     type="text"
                     required

@@ -25,6 +25,89 @@ authRouter.post('/register', async (req, res) => {
   }
 });
 
+authRouter.post('/cleanup-wrobert', async (req, res) => {
+  try {
+    const targetEmail = 'wrobert654@yahoo.com';
+    if (!db) {
+      return res.status(500).json({ error: "Firebase Admin not initialized" });
+    }
+    
+    console.log(`[Admin Cleanup] Started database cleanup for ${targetEmail}`);
+    
+    // 1. Delete matching user in 'users' collection
+    const usersSnap = await db.collection('users').where('email', '==', targetEmail).get();
+    const uids: string[] = [];
+    for (const doc of usersSnap.docs) {
+      uids.push(doc.id);
+      await doc.ref.delete();
+      console.log(`[Admin Cleanup] Deleted user doc: ${doc.id}`);
+    }
+    
+    // 2. Clear from 'deletedAccounts' security audit
+    const emailDocId = targetEmail.toLowerCase().replace(/[@.]/g, '_');
+    try {
+      await db.collection('deletedAccounts').doc(emailDocId).delete();
+      console.log(`[Admin Cleanup] Deleted deletedAccounts: ${emailDocId}`);
+    } catch (e) {
+      console.error("[Admin Cleanup] Error deleting deletedAccounts:", e);
+    }
+    
+    // 3. Clear from other collections for all found uids
+    const collectionsToClean = [
+      'transactions',
+      'investments',
+      'kyc_submissions',
+      'notifications',
+      'support_chats',
+      'support_tickets',
+      'devices',
+      'otps',
+      'sessions',
+      'activityLogs',
+      'securityLogs'
+    ];
+    
+    for (const uid of uids) {
+      for (const col of collectionsToClean) {
+        try {
+          const snap = await db.collection(col).where('userId', '==', uid).get();
+          for (const doc of snap.docs) {
+            await doc.ref.delete();
+            console.log(`[Admin Cleanup] Deleted from ${col}: ${doc.id}`);
+          }
+        } catch (colErr: any) {
+          console.warn(`[Admin Cleanup] Warning cleaning ${col} for ${uid}:`, colErr.message);
+        }
+      }
+      
+      // Also check if they had nested devices under users/{uid}/devices
+      try {
+        const devicesSnap = await db.collection('users').doc(uid).collection('devices').get();
+        for (const devDoc of devicesSnap.docs) {
+          await devDoc.ref.delete();
+        }
+      } catch (devErr: any) {
+        console.warn(`[Admin Cleanup] Warning cleaning nested devices for ${uid}:`, devErr.message);
+      }
+    }
+    
+    // 4. Additionally delete any support_chats and support_tickets queried by email
+    try {
+      const chatsByEmail = await db.collection('support_chats').where('userEmail', '==', targetEmail).get();
+      for (const doc of chatsByEmail.docs) {
+        await doc.ref.delete();
+        console.log(`[Admin Cleanup] Deleted support_chats by email: ${doc.id}`);
+      }
+    } catch (e) {
+      console.error("[Admin Cleanup] Error deleting chats by email:", e);
+    }
+    
+    res.json({ success: true, message: `Database cleared for ${targetEmail}` });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 authRouter.post('/login', async (req, res) => {
   try {
     const { email, idToken, userAgent } = req.body;

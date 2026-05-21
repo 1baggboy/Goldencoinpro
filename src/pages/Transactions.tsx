@@ -166,6 +166,22 @@ export const Transactions = () => {
           </div>
         </div>
         <div className="flex gap-3">
+          <button 
+            onClick={async () => {
+              const response = await fetch('/api/transactions/export', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+              if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'transactions.csv';
+                a.click();
+              }
+            }}
+            className="px-4 py-2 bg-[#C9A96E] text-slate-950 font-bold rounded-xl hover:bg-[#C9A96E]/90 transition-all text-sm flex items-center gap-2"
+          >
+            Export CSV
+          </button>
           <div className="relative group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#C9A96E] transition-colors" size={18} />
             <input
