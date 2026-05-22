@@ -78,6 +78,18 @@ export class AuthService {
     } catch (e) {
         console.error("[AuthService] Failed to send welcome email:", e);
     }
+    
+    // Always alert user of any login (including registration)
+    try {
+        await EmailService.sendLoginAlert(userObj, {
+            time: new Date().toLocaleString(),
+            isNewDevice: true,
+            isSuspicious: false,
+            deviceString: 'New Registration'
+        });
+    } catch (e) {
+        console.error("[AuthService] Failed to send registration login alert:", e);
+    }
 
     return this.generateTokens(userObj);
   }

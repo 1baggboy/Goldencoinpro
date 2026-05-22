@@ -16,6 +16,7 @@ import {
   Sparkles,
   BrainCircuit,
   Search,
+  RefreshCw,
 } from "lucide-react";
 import { SearchPanel, SearchItem } from "../components/SearchPanel";
 import { getMarketInsight, MarketInsight, getDailyStrategy, DailyStrategy } from "../services/geminiService";
@@ -47,6 +48,24 @@ import {
   handleFirestoreError,
   OperationType,
 } from "../lib/firestoreErrorHandler";
+import { QuickActions } from "../components/Dashboard/QuickActions";
+import { PortfolioSummary } from "../components/Dashboard/PortfolioSummary";
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-slate-900 border border-[#C9A96E]/20 p-4 rounded-lg shadow-xl backdrop-blur-md">
+        <p className="text-gray-400 text-xs mb-1">{label}</p>
+        <p className="text-[#C9A96E] font-bold text-sm">Total: ${payload[0].value.toLocaleString()}</p>
+        <div className="mt-2 pt-2 border-t border-[#C9A96E]/10 text-[10px] text-gray-500">
+            <p>Investment Returns: ${(payload[0].value * 0.15).toFixed(0)}</p>
+            <p>Deposits: ${(payload[0].value * 0.85).toFixed(0)}</p>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
 
 const data = [
   { name: "Mon", value: 4000 },
@@ -72,6 +91,7 @@ export const Dashboard = () => {
   const [latency, setLatency] = useState<number>(0);
   const [tps, setTps] = useState<number>(0);
   const [isDashboardSearchOpen, setIsDashboardSearchOpen] = useState(false);
+  const [isAutoRefreshEnabled, setIsAutoRefreshEnabled] = useState(true);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -193,7 +213,7 @@ export const Dashboard = () => {
 
   useEffect(() => {
     let interval: any;
-    if (prices) {
+    if (prices && isAutoRefreshEnabled) {
       // If we have prices (even if slightly stale or initial) and no insight, try to fetch
       // The fetchInsight function itself will check if price is valid (>0)
       if (!aiInsight && !loadingInsight) {
@@ -204,7 +224,7 @@ export const Dashboard = () => {
       interval = setInterval(() => fetchInsight(), 3 * 60 * 1000);
     }
     return () => clearInterval(interval);
-  }, [prices?.btc?.usd, aiInsight === null]); // Re-run if btc price becomes available or if insight is missing
+  }, [prices?.btc?.usd, aiInsight === null, isAutoRefreshEnabled]); // Re-run if btc price becomes available or if insight is missing
 
   useEffect(() => {
     fetchStrategy();
@@ -874,10 +894,22 @@ export const Dashboard = () => {
                   Portfolio Performance
                 </h3>
               </div>
-              <select className="bg-slate-200 dark:bg-slate-950 border border-[#C9A96E]/20 rounded-lg px-3 py-1 text-sm text-gray-600 dark:text-gray-400 outline-none focus:ring-2 focus:ring-[#C9A96E]/50 transition-all">
-                <option>Last 7 Days</option>
-                <option>Last 30 Days</option>
-              </select>
+              <div className="flex gap-4">
+                 <button 
+                    onClick={() => setIsAutoRefreshEnabled(!isAutoRefreshEnabled)}
+                    className={cn(
+                        "flex items-center gap-2 px-3 py-1 rounded-lg text-sm transition-all",
+                        isAutoRefreshEnabled ? "bg-green-500/10 text-green-500" : "bg-gray-500/10 text-gray-500"
+                    )}
+                 >
+                    <RefreshCw size={14} className={isAutoRefreshEnabled ? "animate-spin" : ""} />
+                    {isAutoRefreshEnabled ? "Auto-refresh ON" : "Auto-refresh OFF"}
+                 </button>
+                 <select className="bg-slate-200 dark:bg-slate-950 border border-[#C9A96E]/20 rounded-lg px-3 py-1 text-sm text-gray-600 dark:text-gray-400 outline-none focus:ring-2 focus:ring-[#C9A96E]/50 transition-all">
+                    <option>Last 7 Days</option>
+                    <option>Last 30 Days</option>
+                 </select>
+              </div>
             </div>
             <div className="h-[350px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -910,22 +942,7 @@ export const Dashboard = () => {
                     tickFormatter={(val) => `$${(val / 1000).toFixed(1)}k`}
                     dx={-10}
                   />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "rgba(15, 15, 15, 0.95)",
-                      borderColor: "rgba(201, 169, 110, 0.4)",
-                      borderRadius: "16px",
-                      backdropFilter: "blur(10px)",
-                      boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)",
-                      border: "1px solid rgba(201, 169, 110, 0.2)",
-                    }}
-                    itemStyle={{ color: "#C9A96E", fontWeight: "bold" }}
-                    cursor={{
-                      stroke: "#C9A96E",
-                      strokeWidth: 1,
-                      strokeDasharray: "5 5",
-                    }}
-                  />
+                  <Tooltip content={<CustomTooltip />} />
                   <Area
                     type="monotone"
                     dataKey="value"
@@ -938,6 +955,14 @@ export const Dashboard = () => {
                 </AreaChart>
               </ResponsiveContainer>
             </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <QuickActions />
+            <PortfolioSummary 
+                usdBalance={usdBalance} 
+                tradingBalanceUsd={tradingUsdBalance} 
+                btcChange={prices?.btc?.change || 0}
+            />
           </div>
         </div>
 

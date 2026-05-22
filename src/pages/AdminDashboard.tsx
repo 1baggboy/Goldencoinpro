@@ -468,7 +468,14 @@ export const AdminDashboard = () => {
           <h1 className="text-3xl font-bold text-white tracking-tight">Admin Control Panel</h1>
           <p className="text-gray-400">Manage users, deposits, and KYC verifications.</p>
         </div>
-        <div className="ml-auto relative z-10">
+        <div className="ml-auto flex items-center gap-4 relative z-10">
+          <Link
+            to="/admin/audit-logs"
+            className="px-4 py-2 bg-[#C9A96E]/10 text-[#C9A96E] border border-[#C9A96E]/20 rounded-xl text-sm font-bold hover:bg-[#C9A96E]/20 transition-all flex items-center gap-2"
+          >
+            <ShieldAlert size={18} />
+            Audit Logs
+          </Link>
           <button 
             onClick={() => setShowResetConfirmDialog(true)}
             disabled={isResetting}

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { UAParser } from 'ua-parser-js';
 import { AuthService } from '../services/AuthService';
 import { EmailService } from '../services/EmailService';
-import { db } from '../lib/firebase';
+import { db, auth } from '../lib/firebase';
 import { authenticate, AuthRequest } from '../middleware/auth';
 
 export const authRouter = Router();
@@ -33,6 +33,17 @@ authRouter.post('/cleanup-wrobert', async (req, res) => {
     }
     
     console.log(`[Admin Cleanup] Started database cleanup for ${targetEmail}`);
+    
+    // 0. Remove from Auth
+    try {
+      const user = await auth!.getUserByEmail(targetEmail);
+      await auth!.deleteUser(user.uid);
+      console.log(`[Admin Cleanup] Deleted auth user: ${user.uid}`);
+    } catch (e: any) {
+      if (e.code !== 'auth/user-not-found') {
+        console.error("[Admin Cleanup] Error deleting auth user:", e);
+      }
+    }
     
     // 1. Delete matching user in 'users' collection
     const usersSnap = await db.collection('users').where('email', '==', targetEmail).get();

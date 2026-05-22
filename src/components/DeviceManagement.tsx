@@ -20,6 +20,7 @@ export const DeviceManagement: React.FC = () => {
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
   const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null);
 
   const fetchDevices = async () => {
     const user = auth.currentUser;
@@ -51,6 +52,7 @@ export const DeviceManagement: React.FC = () => {
     if (!user) return;
 
     setRevokingId(id);
+    setConfirmRevokeId(null); // Close modal
     try {
       // Remove from database
       await deleteDoc(doc(db, "users", user.uid, "devices", id));
@@ -129,7 +131,7 @@ export const DeviceManagement: React.FC = () => {
               </div>
 
               <button
-                onClick={() => handleRevoke(device.id, device.deviceId)}
+                onClick={() => setConfirmRevokeId(device.id)}
                 disabled={revokingId === device.id}
                 className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors group-hover:opacity-100 opacity-60"
                 title="Revoke Access"
@@ -142,6 +144,42 @@ export const DeviceManagement: React.FC = () => {
               </button>
             </motion.div>
           ))}
+        </AnimatePresence>
+
+        {/* Confirmation Modal */}
+        <AnimatePresence>
+          {confirmRevokeId && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 max-w-sm w-full shadow-2xl"
+              >
+                <h3 className="text-lg font-bold text-white mb-2">Revoke Device</h3>
+                <p className="text-gray-400 text-sm mb-6">
+                  Are you sure you want to revoke access for this device? You will be signed out from it.
+                </p>
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setConfirmRevokeId(null)}
+                    className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                        const dev = devices.find(d => d.id === confirmRevokeId);
+                        if (dev) handleRevoke(dev.id, dev.deviceId);
+                    }}
+                    className="px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                  >
+                    Revoke Access
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
         </AnimatePresence>
 
         {devices.length === 0 && (

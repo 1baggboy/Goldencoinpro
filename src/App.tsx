@@ -14,6 +14,7 @@ import { KYC } from "./pages/KYC";
 import { Withdraw } from "./pages/Withdraw";
 import { AdminDashboard } from "./pages/AdminDashboard";
 import { AdminSupport } from "./pages/AdminSupport";
+import { AdminAuditLogs } from "./pages/AdminAuditLogs";
 import { UserDetail } from "./pages/UserDetail";
 import { Profile } from "./pages/Profile";
 import { Invest } from "./pages/Invest";
@@ -206,6 +207,14 @@ function AppContent({ siteLoading, setSiteLoading }: { siteLoading: boolean, set
             <ProtectedRoute adminOnly>
               <Layout>
                 <AdminSupport />
+              </Layout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin/audit-logs" element={
+            <ProtectedRoute adminOnly>
+              <Layout>
+                <AdminAuditLogs />
               </Layout>
             </ProtectedRoute>
           } />
