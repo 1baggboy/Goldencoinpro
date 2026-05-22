@@ -9,6 +9,7 @@ export interface PriceAlert {
   condition: 'above' | 'below';
   isActive: boolean;
   soundProfile?: 'default' | 'chime' | 'bell' | 'synthetic';
+  history: { timestamp: number; price: number }[];
 }
 
 interface PriceContextType {
@@ -17,9 +18,10 @@ interface PriceContextType {
   error: string | null;
   refreshPrices: () => Promise<void>;
   alerts: PriceAlert[];
-  addAlert: (alert: Omit<PriceAlert, 'id' | 'isActive'>) => void;
+  addAlert: (alert: Omit<PriceAlert, 'id' | 'isActive' | 'history'>) => void;
   removeAlert: (id: string) => void;
   toggleAlert: (id: string) => void;
+  pulsingAlertIds: string[];
 }
 
 const PriceContext = createContext<PriceContextType | undefined>(undefined);
@@ -74,8 +76,10 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const addAlert = (alert: Omit<PriceAlert, 'id' | 'isActive'>) => {
-    const newAlert = { ...alert, id: Date.now().toString(), isActive: true };
+  const [pulsingAlertIds, setPulsingAlertIds] = useState<string[]>([]);
+  
+  const addAlert = (alert: Omit<PriceAlert, 'id' | 'isActive' | 'history'>) => {
+    const newAlert = { ...alert, id: Date.now().toString(), isActive: true, history: [] };
     const newAlerts = [...alerts, newAlert];
     setAlerts(newAlerts);
     localStorage.setItem(ALERTS_CACHE_KEY, JSON.stringify(newAlerts));
@@ -112,6 +116,12 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       if (triggered) {
         alertsUpdated = true;
+        
+        // Pulse effect
+        setPulsingAlertIds(prev => [...prev, alert.id]);
+        setTimeout(() => {
+            setPulsingAlertIds(prev => prev.filter(id => id !== alert.id));
+        }, 3000);
         
         // Play synthesized sound based on profile
         try {
@@ -157,7 +167,12 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         } else {
           window.alert(`${alert.asset.toUpperCase()} price has crossed $${alert.targetPrice} (Currently $${currentPrice})`);
         }
-        return { ...alert, isActive: false };
+        
+        return { 
+            ...alert, 
+            isActive: false, 
+            history: [...alert.history, { timestamp: Date.now(), price: currentPrice }] 
+        };
       }
       return alert;
     });
@@ -213,7 +228,7 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   return (
-    <PriceContext.Provider value={{ prices, loading, error, refreshPrices, alerts, addAlert, removeAlert, toggleAlert }}>
+    <PriceContext.Provider value={{ prices, loading, error, refreshPrices, alerts, addAlert, removeAlert, toggleAlert, pulsingAlertIds }}>
       {children}
     </PriceContext.Provider>
   );

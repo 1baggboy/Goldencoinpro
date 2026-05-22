@@ -5,13 +5,16 @@ import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 
 export const PriceAlertsCard = () => {
-    const { alerts, addAlert, removeAlert, toggleAlert, prices } = usePrices();
+    const { alerts, addAlert, removeAlert, toggleAlert, prices, pulsingAlertIds } = usePrices();
     const [isAdding, setIsAdding] = useState(false);
+    const [activeTab, setActiveTab] = useState<'alerts' | 'history'>('alerts');
     const [asset, setAsset] = useState('BTC');
     const [condition, setCondition] = useState<'above' | 'below'>('above');
     const [price, setPrice] = useState('');
     const [soundProfile, setSoundProfile] = useState<'default' | 'chime' | 'bell' | 'synthetic'>('default');
     const [selectedAlerts, setSelectedAlerts] = useState<Set<string>>(new Set());
+
+    const isPulsing = pulsingAlertIds.length > 0;
 
     const handleAdd = (e: React.FormEvent) => {
         e.preventDefault();
@@ -48,7 +51,11 @@ export const PriceAlertsCard = () => {
     };
 
     return (
-        <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-[#C9A96E]/20 rounded-2xl p-4 sm:p-6 shadow-sm">
+        <motion.div 
+            className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-[#C9A96E]/20 rounded-2xl p-4 sm:p-6 shadow-sm"
+            animate={{ scale: isPulsing ? [1, 1.01, 1] : 1 }}
+            transition={{ duration: 0.5, repeat: isPulsing ? Infinity : 0 }}
+        >
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-500 dark:text-indigo-400">
@@ -56,10 +63,13 @@ export const PriceAlertsCard = () => {
                     </div>
                     <div>
                         <h3 className="font-bold text-slate-900 dark:text-white">Price Alerts</h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Get notified when assets reach a target</p>
+                        <div className="flex gap-2 mt-1">
+                            <button onClick={() => setActiveTab('alerts')} className={cn("text-xs transition-colors", activeTab === 'alerts' ? "text-indigo-500 font-bold" : "text-gray-500")}>Active Alerts</button>
+                            <button onClick={() => setActiveTab('history')} className={cn("text-xs transition-colors", activeTab === 'history' ? "text-indigo-500 font-bold" : "text-gray-500")}>History</button>
+                        </div>
                     </div>
                 </div>
-                {!isAdding && (
+                {!isAdding && activeTab === 'alerts' && (
                     <button 
                         onClick={() => setIsAdding(true)}
                         className="p-2 bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 rounded-lg transition-colors"
@@ -69,15 +79,17 @@ export const PriceAlertsCard = () => {
                 )}
             </div>
 
-            {selectedAlerts.size > 0 && (
-                <div className="flex items-center justify-between bg-indigo-500/10 rounded-xl p-3 mb-4 border border-indigo-500/20">
-                    <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{selectedAlerts.size} selected</span>
-                    <div className="flex gap-2">
-                        <button onClick={handleBulkPause} className="text-xs font-bold px-3 py-1.5 bg-yellow-500/20 text-yellow-600 rounded-lg hover:bg-yellow-500/30 transition-colors">Pause</button>
-                        <button onClick={handleBulkDelete} className="text-xs font-bold px-3 py-1.5 bg-red-500/20 text-red-600 rounded-lg hover:bg-red-500/30 transition-colors">Delete</button>
-                    </div>
-                </div>
-            )}
+            {activeTab === 'alerts' ? (
+                <>
+                    {selectedAlerts.size > 0 && (
+                        <div className="flex items-center justify-between bg-indigo-500/10 rounded-xl p-3 mb-4 border border-indigo-500/20">
+                            <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{selectedAlerts.size} selected</span>
+                            <div className="flex gap-2">
+                                <button onClick={handleBulkPause} className="text-xs font-bold px-3 py-1.5 bg-yellow-500/20 text-yellow-600 rounded-lg hover:bg-yellow-500/30 transition-colors">Pause</button>
+                                <button onClick={handleBulkDelete} className="text-xs font-bold px-3 py-1.5 bg-red-500/20 text-red-600 rounded-lg hover:bg-red-500/30 transition-colors">Delete</button>
+                            </div>
+                        </div>
+                    )}
 
             <AnimatePresence>
                 {isAdding && (
@@ -197,6 +209,24 @@ export const PriceAlertsCard = () => {
                     ))
                 )}
             </div>
+        </>
+    ) : (
+        <div className="space-y-3">
+            {[...alerts].flatMap(alert => alert.history.map(h => ({ ...h, asset: alert.asset }))).length === 0 ? (
+                 <div className="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
+                    No history yet.
+                </div>
+            ) : (
+                [...alerts].flatMap(alert => alert.history.map(h => ({ ...h, asset: alert.asset }))).sort((a,b) => b.timestamp - a.timestamp).map((h, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-slate-950 border border-gray-100 dark:border-white/5 text-sm">
+                        <span className="font-bold text-slate-900 dark:text-white">{h.asset}</span>
+                        <span className="text-gray-500 text-xs">{new Date(h.timestamp).toLocaleString()}</span>
+                        <span className="font-mono text-slate-900 dark:text-white">${h.price.toLocaleString()}</span>
+                    </div>
+                ))
+            )}
         </div>
+    )}
+        </motion.div>
     );
 };

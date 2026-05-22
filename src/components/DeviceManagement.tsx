@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { Shield, Smartphone, Globe, Clock, Trash2, CheckCircle } from 'lucide-react';
+import { Shield, Smartphone, Globe, Clock, Trash2, CheckCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useAuth } from '../AuthContext';
+import { toast } from 'sonner';
 
 interface Device {
   id: string;
@@ -17,6 +19,7 @@ interface Device {
 }
 
 export const DeviceManagement: React.FC = () => {
+  const { logout } = useAuth();
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
   const [revokingId, setRevokingId] = useState<string | null>(null);
@@ -61,11 +64,14 @@ export const DeviceManagement: React.FC = () => {
       const currentDeviceId = localStorage.getItem('goldencoin_device_id');
       if (deviceId === currentDeviceId) {
         localStorage.removeItem('goldencoin_device_id');
+        await logout(); // Actually sign out effectively
       }
 
       setDevices(prev => prev.filter(d => d.id !== id));
+      toast.success("Device revoked successfully.");
     } catch (error) {
       console.error("Error revoking device:", error);
+      toast.error("Failed to revoke device.");
     } finally {
       setRevokingId(null);
     }
@@ -98,8 +104,13 @@ export const DeviceManagement: React.FC = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[#1a1a1a] border border-white/5 rounded-xl p-4 flex items-center justify-between group hover:border-[#C9A96E]/30 transition-all"
+              className="relative bg-[#1a1a1a] border border-white/5 rounded-xl p-4 flex items-center justify-between group hover:border-[#C9A96E]/30 transition-all"
             >
+              {revokingId === device.id && (
+                <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] rounded-xl flex items-center justify-center z-10">
+                  <Loader2 className="w-8 h-8 text-[#C9A96E] animate-spin" />
+                </div>
+              )}
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-[#C9A96E]">
                   {device.os.toLowerCase().includes('windows') || device.os.toLowerCase().includes('mac') ? (
@@ -136,11 +147,7 @@ export const DeviceManagement: React.FC = () => {
                 className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors group-hover:opacity-100 opacity-60"
                 title="Revoke Access"
               >
-                {revokingId === device.id ? (
-                  <div className="w-5 h-5 border-2 border-current border-t-transparent animate-spin rounded-full"></div>
-                ) : (
-                  <Trash2 className="w-5 h-5" />
-                )}
+                 <Trash2 className="w-5 h-5" />
               </button>
             </motion.div>
           ))}
