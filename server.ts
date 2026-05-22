@@ -90,6 +90,9 @@ async function startServer() {
     try {
       const { email } = req.body;
       console.log(`[Newsletter] Attempting subscribe: ${email}`);
+      if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+      }
       if (!db || typeof db.collection !== 'function') {
         const errorMsg = "[Newsletter] DB not initialized properly";
         console.error(errorMsg);

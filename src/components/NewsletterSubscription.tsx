@@ -19,7 +19,9 @@ export const NewsletterSubscription = () => {
         toast.success("Subscribed to newsletter!");
         setEmail("");
       } else {
-        toast.error("Failed to subscribe.");
+        const errorData = await resp.json().catch(() => ({}));
+        console.error("Subscription failed:", errorData);
+        toast.error(`Failed to subscribe: ${errorData.error || 'Unknown error'}`);
       }
     } catch (e) {
       toast.error("Network error.");
