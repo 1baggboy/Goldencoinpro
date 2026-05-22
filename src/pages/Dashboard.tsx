@@ -54,10 +54,10 @@ import { PortfolioSummary } from "../components/Dashboard/PortfolioSummary";
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-slate-900 border border-[#C9A96E]/20 p-4 rounded-lg shadow-xl backdrop-blur-md">
-        <p className="text-gray-400 text-xs mb-1">{label}</p>
-        <p className="text-[#C9A96E] font-bold text-sm">Total: ${payload[0].value.toLocaleString()}</p>
-        <div className="mt-2 pt-2 border-t border-[#C9A96E]/10 text-[10px] text-gray-500">
+      <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-[#C9A96E]/20 p-4 rounded-lg shadow-xl backdrop-blur-md">
+        <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">{label}</p>
+        <p className="text-[#B89255] dark:text-[#C9A96E] font-bold text-sm">Total: ${payload[0].value.toLocaleString()}</p>
+        <div className="mt-2 pt-2 border-t border-gray-100 dark:border-[#C9A96E]/10 text-[10px] text-gray-500">
             <p>Investment Returns: ${(payload[0].value * 0.15).toFixed(0)}</p>
             <p>Deposits: ${(payload[0].value * 0.85).toFixed(0)}</p>
         </div>
@@ -92,6 +92,7 @@ export const Dashboard = () => {
   const [tps, setTps] = useState<number>(0);
   const [isDashboardSearchOpen, setIsDashboardSearchOpen] = useState(false);
   const [isAutoRefreshEnabled, setIsAutoRefreshEnabled] = useState(true);
+  const [sortCriteria, setSortCriteria] = useState<'date' | 'amount' | 'type'>('date');
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -342,7 +343,7 @@ export const Dashboard = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-12 text-[#0B0B0B] dark:text-white font-sans transition-all duration-300 w-full">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-12 text-slate-900 dark:text-gray-100 font-sans transition-all duration-300 w-full">
       <SearchPanel 
         isOpen={isDashboardSearchOpen} 
         onClose={() => setIsDashboardSearchOpen(false)} 
@@ -1025,16 +1026,32 @@ export const Dashboard = () => {
               <h3 className="text-xl font-bold text-[#0B0B0B] dark:text-white">
                 Recent Activity
               </h3>
-              <Link
-                to="/transactions"
-                className="text-sm text-[#C9A96E] hover:underline transition-all"
-              >
-                View all
-              </Link>
+              <div className="flex items-center gap-2">
+                <select 
+                    value={sortCriteria}
+                    onChange={(e) => setSortCriteria(e.target.value as any)}
+                    className="bg-slate-200 dark:bg-slate-950 border border-[#C9A96E]/20 rounded-lg px-2 py-1 text-[10px] text-gray-600 dark:text-gray-400 outline-none"
+                >
+                    <option value="date">Date</option>
+                    <option value="amount">Amount</option>
+                    <option value="type">Type</option>
+                </select>
+                <Link
+                    to="/transactions"
+                    className="text-sm text-[#C9A96E] hover:underline transition-all"
+                >
+                    View all
+                </Link>
+              </div>
             </div>
             <div className="space-y-6">
               {recentTransactions.length > 0 ? (
-                recentTransactions.map((tx) => (
+                [...recentTransactions].sort((a, b) => {
+                    if (sortCriteria === 'date') return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+                    if (sortCriteria === 'amount') return (b.amountBtc || b.amount || 0) - (a.amountBtc || a.amount || 0);
+                    if (sortCriteria === 'type') return (a.type || '').localeCompare(b.type || '');
+                    return 0;
+                }).map((tx) => (
                   <ActivityItem
                     key={tx.id}
                     type={tx.type}

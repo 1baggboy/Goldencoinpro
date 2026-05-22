@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, X, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -23,7 +23,24 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
   title
 }) => {
   const [query, setQuery] = useState('');
+  const [recentSearches, setRecentSearches] = useState<SearchItem[]>([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isOpen) {
+        setQuery('');
+        const saved = localStorage.getItem('recentSearches');
+        if (saved) {
+            setRecentSearches(JSON.parse(saved));
+        }
+    }
+  }, [isOpen]);
+
+  const addToRecent = (item: SearchItem) => {
+    const updated = [item, ...recentSearches.filter(r => r.path !== item.path)].slice(0, 5);
+    setRecentSearches(updated);
+    localStorage.setItem('recentSearches', JSON.stringify(updated));
+  };
 
   const filteredItems = items.filter(item => 
     item.name.toLowerCase().includes(query.toLowerCase())
@@ -61,21 +78,44 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
               </button>
             </div>
             <div className="max-h-96 overflow-y-auto">
-              {filteredItems.length === 0 ? (
+              {filteredItems.length === 0 && !query && recentSearches.length === 0 ? (
                 <div className="p-4 text-center text-gray-500 text-sm">No results found.</div>
               ) : (
-                filteredItems.map((item, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                        navigate(item.path);
-                        onClose();
-                    }}
-                    className="w-full text-left p-4 hover:bg-[#C9A96E]/10 transition-colors border-b border-[#C9A96E]/5 last:border-b-0 text-sm font-semibold text-gray-700 dark:text-gray-300"
-                  >
-                    {item.name}
-                  </button>
-                ))
+                <>
+                    {filteredItems.map((item, index) => (
+                      <button
+                        key={`item-${index}`}
+                        onClick={() => {
+                            addToRecent(item);
+                            navigate(item.path);
+                            onClose();
+                        }}
+                        className="w-full text-left p-4 hover:bg-[#C9A96E]/10 transition-colors border-b border-[#C9A96E]/5 last:border-b-0 text-sm font-semibold text-gray-700 dark:text-gray-300"
+                      >
+                        {item.name}
+                      </button>
+                    ))}
+                    
+                    {query === '' && recentSearches.length > 0 && (
+                        <div className="mt-4">
+                            <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">Recent Searches</div>
+                            {recentSearches.map((item, index) => (
+                                <button
+                                    key={`recent-${index}`}
+                                    onClick={() => {
+                                        addToRecent(item);
+                                        navigate(item.path);
+                                        onClose();
+                                    }}
+                                    className="w-full text-left p-4 hover:bg-[#C9A96E]/10 transition-colors border-b border-[#C9A96E]/5 last:border-b-0 text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-3"
+                                >
+                                    <Clock size={16} />
+                                    {item.name}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </>
               )}
             </div>
           </motion.div>

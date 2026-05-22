@@ -1,12 +1,27 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Wallet, TrendingUp } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { motion, useMotionValue, useTransform, animate } from 'motion/react';
 
 interface PortfolioSummaryProps {
     usdBalance: number;
     tradingBalanceUsd: number;
     btcChange: number;
 }
+
+const AnimatedTotal = ({ value }: { value: number }) => {
+    const count = useMotionValue(0);
+    const displayValue = useTransform(count, (latest) => 
+        latest.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    );
+
+    useEffect(() => {
+        const controls = animate(count, value, { duration: 1, ease: 'easeOut' });
+        return () => controls.stop();
+    }, [value, count]);
+
+    return <motion.span>{displayValue}</motion.span>;
+};
 
 export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({usdBalance, tradingBalanceUsd, btcChange}) => {
     const total = usdBalance + tradingBalanceUsd;
@@ -19,7 +34,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({usdBalance, t
         <div className="space-y-4">
             <div className="flex justify-between">
                 <span className="text-gray-500">Total Value</span>
-                <span className="font-bold text-white">${total.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                <span className="font-bold text-slate-900 dark:text-white">$<AnimatedTotal value={total} /></span>
             </div>
             <div className="flex justify-between">
                 <span className="text-gray-500">24h Change</span>
