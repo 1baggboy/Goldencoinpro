@@ -2,18 +2,37 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { fetchCryptoPrices } from "./lib/utils";
 import { APP_CONFIG } from "./config";
 
+export interface PriceAlert {
+  id: string;
+  asset: string;
+  targetPrice: number;
+  condition: 'above' | 'below';
+  isActive: boolean;
+  soundProfile?: 'default' | 'chime' | 'bell' | 'synthetic';
+}
+
 interface PriceContextType {
   prices: any;
   loading: boolean;
   error: string | null;
   refreshPrices: () => Promise<void>;
+  alerts: PriceAlert[];
+  addAlert: (alert: Omit<PriceAlert, 'id' | 'isActive'>) => void;
+  removeAlert: (id: string) => void;
+  toggleAlert: (id: string) => void;
 }
 
 const PriceContext = createContext<PriceContextType | undefined>(undefined);
 
 const CACHE_KEY = "goldencoin_market_prices";
+const ALERTS_CACHE_KEY = "goldencoin_price_alerts";
 
 export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [alerts, setAlerts] = useState<PriceAlert[]>(() => {
+    const cached = localStorage.getItem(ALERTS_CACHE_KEY);
+    return cached ? JSON.parse(cached) : [];
+  });
+
   // Try to load cached prices first for instant initialization
   const [prices, setPrices] = useState<any>(() => {
     const cached = localStorage.getItem(CACHE_KEY);
@@ -55,14 +74,120 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const addAlert = (alert: Omit<PriceAlert, 'id' | 'isActive'>) => {
+    const newAlert = { ...alert, id: Date.now().toString(), isActive: true };
+    const newAlerts = [...alerts, newAlert];
+    setAlerts(newAlerts);
+    localStorage.setItem(ALERTS_CACHE_KEY, JSON.stringify(newAlerts));
+  };
+
+  const removeAlert = (id: string) => {
+    const newAlerts = alerts.filter(a => a.id !== id);
+    setAlerts(newAlerts);
+    localStorage.setItem(ALERTS_CACHE_KEY, JSON.stringify(newAlerts));
+  };
+
+  const toggleAlert = (id: string) => {
+    const newAlerts = alerts.map(a => a.id === id ? { ...a, isActive: !a.isActive } : a);
+    setAlerts(newAlerts);
+    localStorage.setItem(ALERTS_CACHE_KEY, JSON.stringify(newAlerts));
+  };
+
+  const checkAlerts = (currentPrices: any) => {
+    if (!currentPrices) return;
+    
+    let alertsUpdated = false;
+    const updatedAlerts = alerts.map(alert => {
+      if (!alert.isActive) return alert;
+
+      const currentPrice = currentPrices[alert.asset.toLowerCase()]?.usd;
+      if (!currentPrice) return alert;
+
+      let triggered = false;
+      if (alert.condition === 'above' && currentPrice >= alert.targetPrice) {
+        triggered = true;
+      } else if (alert.condition === 'below' && currentPrice <= alert.targetPrice) {
+        triggered = true;
+      }
+
+      if (triggered) {
+        alertsUpdated = true;
+        
+        // Play synthesized sound based on profile
+        try {
+          const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          
+          if (alert.soundProfile === 'chime') {
+             osc.type = 'sine';
+             osc.frequency.setValueAtTime(880, ctx.currentTime);
+             gain.gain.setValueAtTime(0.5, ctx.currentTime);
+             gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1);
+          } else if (alert.soundProfile === 'bell') {
+             osc.type = 'triangle';
+             osc.frequency.setValueAtTime(1046, ctx.currentTime);
+             gain.gain.setValueAtTime(0.5, ctx.currentTime);
+             gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.5);
+          } else if (alert.soundProfile === 'synthetic') {
+             osc.type = 'square';
+             osc.frequency.setValueAtTime(440, ctx.currentTime);
+             osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
+             gain.gain.setValueAtTime(0.2, ctx.currentTime);
+             gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+          } else { // default
+             osc.type = 'sine';
+             osc.frequency.setValueAtTime(440, ctx.currentTime);
+             gain.gain.setValueAtTime(0.3, ctx.currentTime);
+             gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+          }
+          osc.start();
+          osc.stop(ctx.currentTime + 2);
+        } catch (e) {
+          console.warn('AudioContext not supported or blocked', e);
+        }
+
+        // Notify natively
+        if (Notification.permission === 'granted') {
+          new Notification('Golden Coin Alert', {
+            body: `${alert.asset.toUpperCase()} is ${alert.condition} $${alert.targetPrice} (Currently $${currentPrice})`
+          });
+        } else {
+          window.alert(`${alert.asset.toUpperCase()} price has crossed $${alert.targetPrice} (Currently $${currentPrice})`);
+        }
+        return { ...alert, isActive: false };
+      }
+      return alert;
+    });
+
+    if (alertsUpdated) {
+      setAlerts(updatedAlerts);
+      localStorage.setItem(ALERTS_CACHE_KEY, JSON.stringify(updatedAlerts));
+    }
+  };
+
   const refreshPrices = async () => {
     try {
       const data = await fetchCryptoPrices();
       if (data && typeof data === 'object' && data.btc) {
-        setPrices(data);
+        setPrices((prevPrices: any) => {
+          const newPrices = { ...data };
+          if (prevPrices) {
+            Object.keys(newPrices).forEach(key => {
+              if (prevPrices[key] && newPrices[key].usd !== prevPrices[key].usd) {
+                newPrices[key].direction = newPrices[key].usd > prevPrices[key].usd ? 'up' : 'down';
+              } else if (prevPrices[key]) {
+                newPrices[key].direction = prevPrices[key].direction;
+              }
+            });
+          }
+          localStorage.setItem(CACHE_KEY, JSON.stringify(newPrices));
+          return newPrices;
+        });
         setError(null);
-        // Persist to local storage for instant next-load
-        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+        checkAlerts(data);
       }
     } catch (err) {
       // Background logging is already handled in utils.ts
@@ -76,6 +201,11 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   useEffect(() => {
+    // Request notification permission if needed
+    if (Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+    
     refreshPrices();
     // Faster updates (5 seconds) for a more "live" feel, synced with backend
     const interval = setInterval(refreshPrices, 5000); 
@@ -83,7 +213,7 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   return (
-    <PriceContext.Provider value={{ prices, loading, error, refreshPrices }}>
+    <PriceContext.Provider value={{ prices, loading, error, refreshPrices, alerts, addAlert, removeAlert, toggleAlert }}>
       {children}
     </PriceContext.Provider>
   );

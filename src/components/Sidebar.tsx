@@ -29,21 +29,49 @@ export const Sidebar = ({ isOpen, onClose }: { isOpen?: boolean, onClose?: () =>
   const { isAdmin, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [unreadSupportCount, setUnreadSupportCount] = React.useState(0);
+  const [matureInvestmentsCount, setMatureInvestmentsCount] = React.useState(0);
 
   React.useEffect(() => {
-    if (!isAdmin || !auth.currentUser) return;
-    const q = query(collection(db, "support_chats"), where("sender", "==", "user"), where("read", "==", false));
-    const unsub = onSnapshot(q, (snap) => {
-      const uniqueUsers = new Set(snap.docs.map(d => d.data().userId));
-      setUnreadSupportCount(uniqueUsers.size);
-    }, (error) => handleFirestoreError(error, OperationType.LIST, "support_chats"));
-    return () => unsub();
+    if (!auth.currentUser) return;
+
+    let unsubSupport: () => void = () => {};
+    if (isAdmin) {
+      const q = query(collection(db, "support_chats"), where("sender", "==", "user"), where("read", "==", false));
+      unsubSupport = onSnapshot(q, (snap) => {
+        const uniqueUsers = new Set(snap.docs.map(d => d.data().userId));
+        setUnreadSupportCount(uniqueUsers.size);
+      }, (error) => handleFirestoreError(error, OperationType.LIST, "support_chats"));
+    }
+
+    const qInv = query(
+      collection(db, "investments"),
+      where("userId", "==", auth.currentUser.uid),
+      where("status", "==", "active")
+    );
+    const unsubInv = onSnapshot(qInv, (snap) => {
+      let count = 0;
+      const now = new Date().getTime();
+      snap.docs.forEach(d => {
+        const data = d.data();
+        if (data.startTime && data.endTime) {
+          const total = data.endTime - data.startTime;
+          const elapsed = now - data.startTime;
+          if (elapsed / total >= 0.9) count++;
+        }
+      });
+      setMatureInvestmentsCount(count);
+    }, (error) => handleFirestoreError(error, OperationType.LIST, "investments"));
+
+    return () => {
+      unsubSupport();
+      unsubInv();
+    };
   }, [isAdmin]);
 
   const menuItems: any[] = [
     { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
     { name: "Deposit BTC", icon: ArrowUpCircle, path: "/deposit" },
-    { name: "Invest BTC", icon: TrendingUp, path: "/invest" },
+    { name: "Invest BTC", icon: TrendingUp, path: "/invest", badge: matureInvestmentsCount > 0 ? "!" : undefined },
     { name: "Transactions", icon: History, path: "/transactions" },
     { name: "KYC Verification", icon: ShieldCheck, path: "/kyc" },
     { name: "Profile", icon: Settings, path: "/profile" },

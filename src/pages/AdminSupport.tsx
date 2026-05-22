@@ -12,7 +12,7 @@ import {
   X
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { collection, query, onSnapshot, orderBy, addDoc, serverTimestamp, where, doc, updateDoc, getDocs } from "firebase/firestore";
+import { collection, query, onSnapshot, orderBy, addDoc, serverTimestamp, where, doc, updateDoc, getDocs, setDoc } from "firebase/firestore";
 import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 import { db, auth } from "../firebase";
 import { useAuth } from "../AuthContext";
@@ -184,6 +184,14 @@ export const AdminSupport = () => {
         type: "info",
         read: false,
         timestamp: new Date().toISOString(),
+      });
+
+      // Clear typing indicator
+      await setDoc(doc(db, "support_chats", `${selectedChatId}_typing`), {
+        userId: selectedChatId,
+        isTyping: false,
+        sender: "admin",
+        updatedAt: serverTimestamp()
       });
 
       setReply("");
@@ -447,7 +455,17 @@ export const AdminSupport = () => {
                   <form onSubmit={handleSendReply} className="relative flex items-end gap-3">
                     <textarea 
                       value={reply}
-                      onChange={(e) => setReply(e.target.value)}
+                      onChange={(e) => {
+                        setReply(e.target.value);
+                        if (selectedChatId) {
+                          setDoc(doc(db, "support_chats", `${selectedChatId}_typing`), {
+                            userId: selectedChatId,
+                            isTyping: e.target.value.length > 0,
+                            sender: "admin",
+                            updatedAt: serverTimestamp()
+                          });
+                        }
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();

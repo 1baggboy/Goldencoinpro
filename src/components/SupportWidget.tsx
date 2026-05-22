@@ -27,6 +27,8 @@ export const SupportWidget: React.FC<{
   const [isAnonDisabled, setIsAnonDisabled] = useState(false);
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
+  const [isAITyping, setIsAITyping] = useState(false);
+  const [adminTyping, setAdminTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const isAdminMode = !!targetUserId;
@@ -73,6 +75,14 @@ export const SupportWidget: React.FC<{
   useEffect(() => {
     if (!isOpen || !effectiveUserId || !auth.currentUser) return;
 
+    const unsubTyping = onSnapshot(doc(db, "support_chats", `${effectiveUserId}_typing`), (doc) => {
+      if (doc.exists() && doc.data().isTyping && doc.data().sender === "admin") {
+         setAdminTyping(true);
+      } else {
+         setAdminTyping(false);
+      }
+    });
+
     const q = query(
       collection(db, "support_chats"),
       where("userId", "==", effectiveUserId),
@@ -85,7 +95,10 @@ export const SupportWidget: React.FC<{
       handleFirestoreError(error, OperationType.LIST, "support_chats");
     });
 
-    return () => unsub();
+    return () => {
+      unsub();
+      unsubTyping();
+    }
   }, [effectiveUserId, isOpen, auth.currentUser]);
 
   useEffect(() => {
@@ -182,6 +195,7 @@ export const SupportWidget: React.FC<{
       // AI Auto-Response Logic
       if (!isAdminMode) {
         const lastUserMessage = message;
+        setIsAITyping(true);
         // Wait a bit to simulate "thinking" or to see if an admin is active
         setTimeout(async () => {
           try {
@@ -204,6 +218,8 @@ export const SupportWidget: React.FC<{
           } catch (err: any) {
             console.error("AI Reply Error:", err);
             // Optionally notify user that AI failed
+          } finally {
+            setIsAITyping(false);
           }
         }, 1500);
       }
@@ -261,7 +277,8 @@ export const SupportWidget: React.FC<{
                   </p>
                 </div>
               ) : (
-                messages.map((msg, idx) => (
+                <>
+                  {messages.map((msg, idx) => (
                   <div 
                     key={msg.id || idx}
                     className={cn(
@@ -282,7 +299,21 @@ export const SupportWidget: React.FC<{
                       {msg.text}
                     </div>
                   </div>
-                ))
+                ))}
+
+                {(isAITyping || adminTyping) && (
+                  <div className="flex flex-col max-w-[80%] self-start">
+                    <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1 px-2">
+                       {adminTyping ? "Support Team" : "AI Concierge"}
+                    </span>
+                    <div className="bg-slate-800 text-white p-4 rounded-2xl rounded-tl-none border border-white/5 w-16 h-10 flex items-center justify-center gap-1">
+                      <motion.div className="w-1.5 h-1.5 bg-gray-400 rounded-full" animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} />
+                      <motion.div className="w-1.5 h-1.5 bg-gray-400 rounded-full" animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} />
+                      <motion.div className="w-1.5 h-1.5 bg-gray-400 rounded-full" animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} />
+                    </div>
+                  </div>
+                )}
+              </>
               )}
             </div>
 

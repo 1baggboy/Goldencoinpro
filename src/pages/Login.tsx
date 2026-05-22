@@ -241,6 +241,7 @@ export const Login = () => {
         secret: tempUser.secret
       });
 
+      // @ts-ignore: otplib version differences
       const isValid = result === true || (typeof result === 'object' && result?.valid === true);
 
       if (isValid) {

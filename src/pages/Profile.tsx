@@ -11,6 +11,7 @@ import { cn } from "../lib/utils";
 import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { DeviceManagement } from "../components/DeviceManagement";
+import { PriceAlertsCard } from "../components/Dashboard/PriceAlertsCard";
 
 export const Profile = () => {
   const { profile, user } = useAuth();
@@ -472,6 +473,9 @@ export const Profile = () => {
           </div>
         </div>
       </div>
+
+      {/* Price Alerts Section */}
+      <PriceAlertsCard />
 
       {/* Trusted Devices Section */}
       <div id="security-section" className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6 lg:p-8">

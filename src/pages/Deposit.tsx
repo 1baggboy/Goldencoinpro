@@ -299,11 +299,17 @@ export const Deposit = () => {
                     ≈ { (parseFloat(amountUsd || "0") / btcPrice).toFixed(8) } BTC
                   </div>
                 </div>
-                <p className="text-[10px] text-gray-500 px-1">
+                <p className="text-[10px] text-gray-500 px-1 mb-2">
                   Daily used: ${(dailyDeposited * btcPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / $50,000
                   <br/>
                   Remaining: ${(50000 - (dailyDeposited * btcPrice)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
+                <div className="w-full bg-slate-800 rounded-full h-1.5 mb-2 mt-1">
+                  <div 
+                    className="bg-blue-500 h-1.5 rounded-full transition-all" 
+                    style={{ width: `${Math.min(((dailyDeposited * btcPrice) / 50000) * 100, 100)}%` }}
+                  ></div>
+                </div>
               </div>
 
               <div className="space-y-2">

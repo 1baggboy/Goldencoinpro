@@ -17,6 +17,12 @@ import {
   BrainCircuit,
   Search,
   RefreshCw,
+  TrendingDown,
+  ArrowUpRight,
+  ArrowDownRight,
+  ArrowLeftRight,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { SearchPanel, SearchItem } from "../components/SearchPanel";
 import { getMarketInsight, MarketInsight, getDailyStrategy, DailyStrategy } from "../services/geminiService";
@@ -308,6 +314,19 @@ export const Dashboard = () => {
   const tradingUsdBalance =
     (profile?.tradingBalanceBtc || 0) * (prices?.btc?.usd || 0);
 
+  // Widget States
+  const [portfolioExpanded, setPortfolioExpanded] = useState(() => localStorage.getItem('portfolioExpanded') === 'true');
+  const [portfolioOrder, setPortfolioOrder] = useState(() => localStorage.getItem('portfolioOrder') || 'last'); // 'first' or 'last'
+  const [activityExpanded, setActivityExpanded] = useState(() => localStorage.getItem('activityExpanded') === 'true');
+  const [activityOrder, setActivityOrder] = useState(() => localStorage.getItem('activityOrder') || 'last'); // 'first' or 'last'
+
+  useEffect(() => {
+      localStorage.setItem('portfolioExpanded', portfolioExpanded.toString());
+      localStorage.setItem('portfolioOrder', portfolioOrder);
+      localStorage.setItem('activityExpanded', activityExpanded.toString());
+      localStorage.setItem('activityOrder', activityOrder);
+  }, [portfolioExpanded, portfolioOrder, activityExpanded, activityOrder]);
+
   const copyReferralCode = () => {
     if (profile?.referralCode) {
       navigator.clipboard.writeText(profile.referralCode);
@@ -513,150 +532,175 @@ export const Dashboard = () => {
             symbol="BTC"
             price={prices?.btc?.usd}
             change={prices?.btc?.change}
+            direction={prices?.btc?.direction}
           />
           <TickerItem
             key="eth-1"
             symbol="ETH"
             price={prices?.eth?.usd}
             change={prices?.eth?.change}
+            direction={prices?.eth?.direction}
           />
           <TickerItem
             key="sol-1"
             symbol="SOL"
             price={prices?.sol?.usd}
             change={prices?.sol?.change}
+            direction={prices?.sol?.direction}
           />
           <TickerItem
             key="ada-1"
             symbol="ADA"
             price={prices?.ada?.usd}
             change={prices?.ada?.change}
+            direction={prices?.ada?.direction}
           />
           <TickerItem
             key="xrp-1"
             symbol="XRP"
             price={prices?.xrp?.usd}
             change={prices?.xrp?.change}
+            direction={prices?.xrp?.direction}
           />
           <TickerItem
             key="bnb-1"
             symbol="BNB"
             price={prices?.bnb?.usd}
             change={prices?.bnb?.change}
+            direction={prices?.bnb?.direction}
           />
           <TickerItem
             key="doge-1"
             symbol="DOGE"
             price={prices?.doge?.usd}
             change={prices?.doge?.change}
+            direction={prices?.doge?.direction}
           />
           <TickerItem
             key="link-1"
             symbol="LINK"
             price={prices?.link?.usd}
             change={prices?.link?.change}
+            direction={prices?.link?.direction}
           />
           <TickerItem
             key="dot-1"
             symbol="DOT"
             price={prices?.dot?.usd}
             change={prices?.dot?.change}
+            direction={prices?.dot?.direction}
           />
           <TickerItem
             key="matic-1"
             symbol="MATIC"
             price={prices?.matic?.usd}
             change={prices?.matic?.change}
+            direction={prices?.matic?.direction}
           />
           <TickerItem
             key="avax-1"
             symbol="AVAX"
             price={prices?.avax?.usd}
             change={prices?.avax?.change}
+            direction={prices?.avax?.direction}
           />
           <TickerItem
             key="shib-1"
             symbol="SHIB"
             price={prices?.shib?.usd}
             change={prices?.shib?.change}
+            direction={prices?.shib?.direction}
           />
           <TickerItem
             key="trx-1"
             symbol="TRX"
             price={prices?.trx?.usd}
             change={prices?.trx?.change}
+            direction={prices?.trx?.direction}
           />
           <TickerItem
             key="ltc-1"
             symbol="LTC"
             price={prices?.ltc?.usd}
             change={prices?.ltc?.change}
+            direction={prices?.ltc?.direction}
           />
           <TickerItem
             key="near-1"
             symbol="NEAR"
             price={prices?.near?.usd}
             change={prices?.near?.change}
+            direction={prices?.near?.direction}
           />
           <TickerItem
             key="uni-1"
             symbol="UNI"
             price={prices?.uni?.usd}
             change={prices?.uni?.change}
+            direction={prices?.uni?.direction}
           />
           <TickerItem
             key="algo-1"
             symbol="ALGO"
             price={prices?.algo?.usd}
             change={prices?.algo?.change}
+            direction={prices?.algo?.direction}
           />
           <TickerItem
             key="atom-1"
             symbol="ATOM"
             price={prices?.atom?.usd}
             change={prices?.atom?.change}
+            direction={prices?.atom?.direction}
           />
           <TickerItem
             key="icp-1"
             symbol="ICP"
             price={prices?.icp?.usd}
             change={prices?.icp?.change}
+            direction={prices?.icp?.direction}
           />
           <TickerItem
             key="xlm-1"
             symbol="XLM"
             price={prices?.xlm?.usd}
             change={prices?.xlm?.change}
+            direction={prices?.xlm?.direction}
           />
           <TickerItem
             key="stx-1"
             symbol="STX"
             price={prices?.stx?.usd}
             change={prices?.stx?.change}
+            direction={prices?.stx?.direction}
           />
           <TickerItem
             key="fil-1"
             symbol="FIL"
             price={prices?.fil?.usd}
             change={prices?.fil?.change}
+            direction={prices?.fil?.direction}
           />
           <TickerItem
             key="ldo-1"
             symbol="LDO"
             price={prices?.ldo?.usd}
             change={prices?.ldo?.change}
+            direction={prices?.ldo?.direction}
           />
           <TickerItem
             key="hbar-1"
             symbol="HBAR"
             price={prices?.hbar?.usd}
             change={prices?.hbar?.change}
+            direction={prices?.hbar?.direction}
           />
           <TickerItem
             key="arb-1"
             symbol="ARB"
             price={prices?.arb?.usd}
             change={prices?.arb?.change}
+            direction={prices?.arb?.direction}
           />
           {/* Duplicate for seamless loop */}
           <TickerItem
@@ -664,150 +708,175 @@ export const Dashboard = () => {
             symbol="BTC"
             price={prices?.btc?.usd}
             change={prices?.btc?.change}
+            direction={prices?.btc?.direction}
           />
           <TickerItem
             key="eth-2"
             symbol="ETH"
             price={prices?.eth?.usd}
             change={prices?.eth?.change}
+            direction={prices?.eth?.direction}
           />
           <TickerItem
             key="sol-2"
             symbol="SOL"
             price={prices?.sol?.usd}
             change={prices?.sol?.change}
+            direction={prices?.sol?.direction}
           />
           <TickerItem
             key="ada-2"
             symbol="ADA"
             price={prices?.ada?.usd}
             change={prices?.ada?.change}
+            direction={prices?.ada?.direction}
           />
           <TickerItem
             key="xrp-2"
             symbol="XRP"
             price={prices?.xrp?.usd}
             change={prices?.xrp?.change}
+            direction={prices?.xrp?.direction}
           />
           <TickerItem
             key="bnb-2"
             symbol="BNB"
             price={prices?.bnb?.usd}
             change={prices?.bnb?.change}
+            direction={prices?.bnb?.direction}
           />
           <TickerItem
             key="doge-2"
             symbol="DOGE"
             price={prices?.doge?.usd}
             change={prices?.doge?.change}
+            direction={prices?.doge?.direction}
           />
           <TickerItem
             key="link-2"
             symbol="LINK"
             price={prices?.link?.usd}
             change={prices?.link?.change}
+            direction={prices?.link?.direction}
           />
           <TickerItem
             key="dot-2"
             symbol="DOT"
             price={prices?.dot?.usd}
             change={prices?.dot?.change}
+            direction={prices?.dot?.direction}
           />
           <TickerItem
             key="matic-2"
             symbol="MATIC"
             price={prices?.matic?.usd}
             change={prices?.matic?.change}
+            direction={prices?.matic?.direction}
           />
           <TickerItem
             key="avax-2"
             symbol="AVAX"
             price={prices?.avax?.usd}
             change={prices?.avax?.change}
+            direction={prices?.avax?.direction}
           />
           <TickerItem
             key="shib-2"
             symbol="SHIB"
             price={prices?.shib?.usd}
             change={prices?.shib?.change}
+            direction={prices?.shib?.direction}
           />
           <TickerItem
             key="trx-2"
             symbol="TRX"
             price={prices?.trx?.usd}
             change={prices?.trx?.change}
+            direction={prices?.trx?.direction}
           />
           <TickerItem
             key="ltc-2"
             symbol="LTC"
             price={prices?.ltc?.usd}
             change={prices?.ltc?.change}
+            direction={prices?.ltc?.direction}
           />
           <TickerItem
             key="near-2"
             symbol="NEAR"
             price={prices?.near?.usd}
             change={prices?.near?.change}
+            direction={prices?.near?.direction}
           />
           <TickerItem
             key="uni-2"
             symbol="UNI"
             price={prices?.uni?.usd}
             change={prices?.uni?.change}
+            direction={prices?.uni?.direction}
           />
           <TickerItem
             key="algo-2"
             symbol="ALGO"
             price={prices?.algo?.usd}
             change={prices?.algo?.change}
+            direction={prices?.algo?.direction}
           />
           <TickerItem
             key="atom-2"
             symbol="ATOM"
             price={prices?.atom?.usd}
             change={prices?.atom?.change}
+            direction={prices?.atom?.direction}
           />
           <TickerItem
             key="icp-2"
             symbol="ICP"
             price={prices?.icp?.usd}
             change={prices?.icp?.change}
+            direction={prices?.icp?.direction}
           />
           <TickerItem
             key="xlm-2"
             symbol="XLM"
             price={prices?.xlm?.usd}
             change={prices?.xlm?.change}
+            direction={prices?.xlm?.direction}
           />
           <TickerItem
             key="stx-2"
             symbol="STX"
             price={prices?.stx?.usd}
             change={prices?.stx?.change}
+            direction={prices?.stx?.direction}
           />
           <TickerItem
             key="fil-2"
             symbol="FIL"
             price={prices?.fil?.usd}
             change={prices?.fil?.change}
+            direction={prices?.fil?.direction}
           />
           <TickerItem
             key="ldo-2"
             symbol="LDO"
             price={prices?.ldo?.usd}
             change={prices?.ldo?.change}
+            direction={prices?.ldo?.direction}
           />
           <TickerItem
             key="hbar-2"
             symbol="HBAR"
             price={prices?.hbar?.usd}
             change={prices?.hbar?.change}
+            direction={prices?.hbar?.direction}
           />
           <TickerItem
             key="arb-2"
             symbol="ARB"
             price={prices?.arb?.usd}
             change={prices?.arb?.change}
+            direction={prices?.arb?.direction}
           />
         </div>
       </div>
@@ -979,125 +1048,169 @@ export const Dashboard = () => {
               </ResponsiveContainer>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className={cn("grid gap-8 transition-all duration-300", portfolioExpanded ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2")}>
+            {portfolioOrder === 'first' && (
+              <PortfolioSummary 
+                  usdBalance={usdBalance} 
+                  tradingBalanceUsd={tradingUsdBalance} 
+                  btcChange={prices?.btc?.change || 0}
+                  isExpanded={portfolioExpanded}
+                  onToggleExpand={() => setPortfolioExpanded(!portfolioExpanded)}
+                  onSwap={() => setPortfolioOrder((prev) => prev === 'first' ? 'last' : 'first')}
+              />
+            )}
             <QuickActions />
-            <PortfolioSummary 
-                usdBalance={usdBalance} 
-                tradingBalanceUsd={tradingUsdBalance} 
-                btcChange={prices?.btc?.change || 0}
-            />
+            {portfolioOrder === 'last' && (
+              <PortfolioSummary 
+                  usdBalance={usdBalance} 
+                  tradingBalanceUsd={tradingUsdBalance} 
+                  btcChange={prices?.btc?.change || 0}
+                  isExpanded={portfolioExpanded}
+                  onToggleExpand={() => setPortfolioExpanded(!portfolioExpanded)}
+                  onSwap={() => setPortfolioOrder((prev) => prev === 'first' ? 'last' : 'first')}
+              />
+            )}
           </div>
         </div>
 
         {/* Referral & Activity Column */}
         <div className="space-y-8">
-          {/* Referral Card */}
-          <div className="bg-slate-100 dark:bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-[#C9A96E]/10 text-[#C9A96E] rounded-xl flex items-center justify-center">
-                <Users size={20} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-[#0B0B0B] dark:text-white">
-                  Refer and Earn Cash
-                </h3>
-                <p className="text-xs text-gray-600 dark:text-gray-500">
-                  Invite friends and earn cash bonuses
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-[10px] text-gray-600 dark:text-gray-500 uppercase font-bold tracking-widest ml-1">
-                  Referral Code
-                </label>
-                <div className="bg-slate-200 dark:bg-slate-950 border border-[#C9A96E]/20 rounded-xl p-3 flex items-center justify-between gap-2">
-                  <span className="text-sm font-bold text-[#0B0B0B] dark:text-white font-mono">
-                    {profile?.referralCode}
-                  </span>
-                  <button
-                    onClick={copyReferralCode}
-                    data-tooltip-id="dashboard-tooltip"
-                    data-tooltip-content="Copy Referral Code"
-                    className="p-2 hover:bg-[#C9A96E]/10 text-[#C9A96E] rounded-lg transition-all"
-                  >
-                    {copied ? <Check size={16} /> : <Copy size={16} />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-2 border-t border-[#C9A96E]/10">
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Bonus Earned
-                </span>
-                <span className="text-sm font-bold text-[#C9A96E]">
-                  $
-                  {profile?.referralBonusEarned?.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }) || "0.00"}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Activity */}
-          <div className="bg-slate-100 dark:bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-[#0B0B0B] dark:text-white">
-                Recent Activity
-              </h3>
-              <div className="flex items-center gap-2">
-                <select 
-                    value={sortCriteria}
-                    onChange={(e) => setSortCriteria(e.target.value as any)}
-                    className="bg-slate-200 dark:bg-slate-950 border border-[#C9A96E]/20 rounded-lg px-2 py-1 text-[10px] text-gray-600 dark:text-gray-400 outline-none"
-                >
-                    <option value="date">Date</option>
-                    <option value="amount">Amount</option>
-                    <option value="type">Type</option>
-                </select>
-                <Link
-                    to="/transactions"
-                    className="text-sm text-[#C9A96E] hover:underline transition-all"
-                >
-                    View all
-                </Link>
-              </div>
-            </div>
-            <div className="space-y-6">
-              {recentTransactions.length > 0 ? (
-                [...recentTransactions].sort((a, b) => {
-                    if (sortCriteria === 'date') return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-                    if (sortCriteria === 'amount') return (b.amountBtc || b.amount || 0) - (a.amountBtc || a.amount || 0);
-                    if (sortCriteria === 'type') return (a.type || '').localeCompare(b.type || '');
-                    return 0;
-                }).map((tx) => (
-                  <ActivityItem
-                    key={tx.id}
-                    type={tx.type}
-                    amount={tx.amountBtc || tx.amount}
-                    status={tx.status}
-                    date={
-                      tx.createdAt
-                        ? new Date(tx.createdAt).toLocaleDateString()
-                        : "Pending"
-                    }
-                  />
-                ))
-              ) : (
-                <div className="text-center py-8 flex flex-col items-center">
-                  <div className="w-12 h-12 bg-slate-200 dark:bg-slate-950 rounded-full flex items-center justify-center text-gray-500 mb-3">
-                    <Inbox size={24} />
+          {(() => {
+            const referralCard = (
+              <div key="referral" className="bg-slate-100 dark:bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-[#C9A96E]/10 text-[#C9A96E] rounded-xl flex items-center justify-center">
+                    <Users size={20} />
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-500">
-                    No recent activity
-                  </p>
+                  <div>
+                    <h3 className="text-lg font-bold text-[#0B0B0B] dark:text-white">
+                      Refer and Earn Cash
+                    </h3>
+                    <p className="text-xs text-gray-600 dark:text-gray-500">
+                      Invite friends and earn cash bonuses
+                    </p>
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-gray-600 dark:text-gray-500 uppercase font-bold tracking-widest ml-1">
+                      Referral Code
+                    </label>
+                    <div className="bg-slate-200 dark:bg-slate-950 border border-[#C9A96E]/20 rounded-xl p-3 flex items-center justify-between gap-2">
+                      <span className="text-sm font-bold text-[#0B0B0B] dark:text-white font-mono">
+                        {profile?.referralCode}
+                      </span>
+                      <button
+                        onClick={copyReferralCode}
+                        data-tooltip-id="dashboard-tooltip"
+                        data-tooltip-content="Copy Referral Code"
+                        className="p-2 hover:bg-[#C9A96E]/10 text-[#C9A96E] rounded-lg transition-all"
+                      >
+                        {copied ? <Check size={16} /> : <Copy size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-[#C9A96E]/10">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Bonus Earned
+                    </span>
+                    <span className="text-sm font-bold text-[#C9A96E]">
+                      $
+                      {profile?.referralBonusEarned?.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }) || "0.00"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+
+            const recentActivityCard = (
+              <div key="activity" className={cn("bg-slate-100 dark:bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6 transition-all", activityExpanded ? "max-h-[600px] overflow-y-auto" : "max-h-[400px] overflow-hidden relative")}>
+                <div className="flex items-center justify-between mb-6 sticky top-0 bg-slate-100 dark:bg-slate-900 z-10 py-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-bold text-[#0B0B0B] dark:text-white">
+                      Recent Activity
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button 
+                        onClick={() => setActivityOrder((prev) => prev === 'first' ? 'last' : 'first')}
+                        className="p-1.5 bg-slate-200 dark:bg-slate-800 text-gray-500 rounded-lg hover:text-[#C9A96E] transition-colors"
+                        title="Reorder Widget"
+                    >
+                        <ArrowLeftRight size={16} />
+                    </button>
+                    <button 
+                        onClick={() => setActivityExpanded(!activityExpanded)}
+                        className="p-1.5 bg-slate-200 dark:bg-slate-800 text-gray-500 rounded-lg hover:text-[#C9A96E] transition-colors"
+                        title={activityExpanded ? "Collapse Widget" : "Expand Widget"}
+                    >
+                        {activityExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                    </button>
+                    <select 
+                        value={sortCriteria}
+                        onChange={(e) => setSortCriteria(e.target.value as any)}
+                        className="bg-slate-200 dark:bg-slate-950 border border-[#C9A96E]/20 rounded-lg px-2 py-1 text-[10px] text-gray-600 dark:text-gray-400 outline-none"
+                    >
+                        <option value="date">Date</option>
+                        <option value="amount">Amount</option>
+                        <option value="type">Type</option>
+                    </select>
+                    <Link
+                        to="/transactions"
+                        className="text-sm text-[#C9A96E] hover:underline transition-all hidden sm:inline"
+                    >
+                        All
+                    </Link>
+                  </div>
+                </div>
+                <div className="space-y-6">
+                  {recentTransactions.length > 0 ? (
+                    [...recentTransactions].sort((a, b) => {
+                        if (sortCriteria === 'date') return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+                        if (sortCriteria === 'amount') return (b.amountBtc || b.amount || 0) - (a.amountBtc || a.amount || 0);
+                        if (sortCriteria === 'type') return (a.type || '').localeCompare(b.type || '');
+                        return 0;
+                    })
+                    .slice(0, activityExpanded ? undefined : 4)
+                    .map((tx) => (
+                      <ActivityItem
+                        key={tx.id}
+                        type={tx.type}
+                        amount={tx.amountBtc || tx.amount}
+                        status={tx.status}
+                        date={
+                          tx.createdAt
+                            ? new Date(tx.createdAt).toLocaleDateString()
+                            : "Pending"
+                        }
+                      />
+                    ))
+                  ) : (
+                    <div className="text-center py-8 flex flex-col items-center">
+                      <div className="w-12 h-12 bg-slate-200 dark:bg-slate-950 rounded-full flex items-center justify-center text-gray-500 mb-3">
+                        <Inbox size={24} />
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-500">
+                        No recent activity
+                      </p>
+                    </div>
+                  )}
+                </div>
+                {!activityExpanded && recentTransactions.length > 4 && (
+                    <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-slate-100 dark:from-slate-900 pointer-events-none" />
+                )}
+              </div>
+            );
+
+            return activityOrder === 'first' 
+                ? [recentActivityCard, referralCard] 
+                : [referralCard, recentActivityCard];
+          })()}
 
           {/* AI Strategy Tip */}
           <motion.div
@@ -1239,10 +1352,12 @@ const StatCard = ({
   </motion.div>
 );
 
-const TickerItem = ({ symbol, price, change }: any) => (
+const TickerItem = ({ symbol, price, change, direction }: any) => (
   <div className="inline-flex items-center gap-3 px-6 border-r border-[#C9A96E]/10 last:border-none">
-    <span className="text-sm font-bold text-[#0B0B0B] dark:text-white">
+    <span className="text-sm font-bold text-[#0B0B0B] dark:text-white flex items-center gap-1">
       {symbol}
+      {direction === 'up' && <ArrowUpRight size={12} className="text-green-500" />}
+      {direction === 'down' && <ArrowDownRight size={12} className="text-red-500" />}
     </span>
     <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
       ${price?.toLocaleString() || "---"}

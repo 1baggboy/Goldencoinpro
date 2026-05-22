@@ -66,6 +66,7 @@ export const TwoFactorSetup = () => {
       
       console.log("2FA verification result:", result);
 
+      // @ts-ignore: otplib version differences
       const isValid = result === true || (typeof result === 'object' && result?.valid === true);
 
       if (isValid) {
