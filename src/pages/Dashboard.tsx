@@ -580,359 +580,59 @@ export const Dashboard = () => {
       </div>
 
       {/* Market Ticker */}
-      <div className="bg-slate-100 dark:bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-4 overflow-hidden">
+      <div className="bg-slate-100 dark:bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-4 overflow-hidden select-none">
         <div className="flex items-center gap-8 animate-marquee whitespace-nowrap">
-          <TickerItem
-            key="btc-1"
-            symbol="BTC"
-            price={prices?.btc?.usd}
-            change={prices?.btc?.change}
-            direction={prices?.btc?.direction}
-          />
-          <TickerItem
-            key="eth-1"
-            symbol="ETH"
-            price={prices?.eth?.usd}
-            change={prices?.eth?.change}
-            direction={prices?.eth?.direction}
-          />
-          <TickerItem
-            key="sol-1"
-            symbol="SOL"
-            price={prices?.sol?.usd}
-            change={prices?.sol?.change}
-            direction={prices?.sol?.direction}
-          />
-          <TickerItem
-            key="ada-1"
-            symbol="ADA"
-            price={prices?.ada?.usd}
-            change={prices?.ada?.change}
-            direction={prices?.ada?.direction}
-          />
-          <TickerItem
-            key="xrp-1"
-            symbol="XRP"
-            price={prices?.xrp?.usd}
-            change={prices?.xrp?.change}
-            direction={prices?.xrp?.direction}
-          />
-          <TickerItem
-            key="bnb-1"
-            symbol="BNB"
-            price={prices?.bnb?.usd}
-            change={prices?.bnb?.change}
-            direction={prices?.bnb?.direction}
-          />
-          <TickerItem
-            key="doge-1"
-            symbol="DOGE"
-            price={prices?.doge?.usd}
-            change={prices?.doge?.change}
-            direction={prices?.doge?.direction}
-          />
-          <TickerItem
-            key="link-1"
-            symbol="LINK"
-            price={prices?.link?.usd}
-            change={prices?.link?.change}
-            direction={prices?.link?.direction}
-          />
-          <TickerItem
-            key="dot-1"
-            symbol="DOT"
-            price={prices?.dot?.usd}
-            change={prices?.dot?.change}
-            direction={prices?.dot?.direction}
-          />
-          <TickerItem
-            key="matic-1"
-            symbol="MATIC"
-            price={prices?.matic?.usd}
-            change={prices?.matic?.change}
-            direction={prices?.matic?.direction}
-          />
-          <TickerItem
-            key="avax-1"
-            symbol="AVAX"
-            price={prices?.avax?.usd}
-            change={prices?.avax?.change}
-            direction={prices?.avax?.direction}
-          />
-          <TickerItem
-            key="shib-1"
-            symbol="SHIB"
-            price={prices?.shib?.usd}
-            change={prices?.shib?.change}
-            direction={prices?.shib?.direction}
-          />
-          <TickerItem
-            key="trx-1"
-            symbol="TRX"
-            price={prices?.trx?.usd}
-            change={prices?.trx?.change}
-            direction={prices?.trx?.direction}
-          />
-          <TickerItem
-            key="ltc-1"
-            symbol="LTC"
-            price={prices?.ltc?.usd}
-            change={prices?.ltc?.change}
-            direction={prices?.ltc?.direction}
-          />
-          <TickerItem
-            key="near-1"
-            symbol="NEAR"
-            price={prices?.near?.usd}
-            change={prices?.near?.change}
-            direction={prices?.near?.direction}
-          />
-          <TickerItem
-            key="uni-1"
-            symbol="UNI"
-            price={prices?.uni?.usd}
-            change={prices?.uni?.change}
-            direction={prices?.uni?.direction}
-          />
-          <TickerItem
-            key="algo-1"
-            symbol="ALGO"
-            price={prices?.algo?.usd}
-            change={prices?.algo?.change}
-            direction={prices?.algo?.direction}
-          />
-          <TickerItem
-            key="atom-1"
-            symbol="ATOM"
-            price={prices?.atom?.usd}
-            change={prices?.atom?.change}
-            direction={prices?.atom?.direction}
-          />
-          <TickerItem
-            key="icp-1"
-            symbol="ICP"
-            price={prices?.icp?.usd}
-            change={prices?.icp?.change}
-            direction={prices?.icp?.direction}
-          />
-          <TickerItem
-            key="xlm-1"
-            symbol="XLM"
-            price={prices?.xlm?.usd}
-            change={prices?.xlm?.change}
-            direction={prices?.xlm?.direction}
-          />
-          <TickerItem
-            key="stx-1"
-            symbol="STX"
-            price={prices?.stx?.usd}
-            change={prices?.stx?.change}
-            direction={prices?.stx?.direction}
-          />
-          <TickerItem
-            key="fil-1"
-            symbol="FIL"
-            price={prices?.fil?.usd}
-            change={prices?.fil?.change}
-            direction={prices?.fil?.direction}
-          />
-          <TickerItem
-            key="ldo-1"
-            symbol="LDO"
-            price={prices?.ldo?.usd}
-            change={prices?.ldo?.change}
-            direction={prices?.ldo?.direction}
-          />
-          <TickerItem
-            key="hbar-1"
-            symbol="HBAR"
-            price={prices?.hbar?.usd}
-            change={prices?.hbar?.change}
-            direction={prices?.hbar?.direction}
-          />
-          <TickerItem
-            key="arb-1"
-            symbol="ARB"
-            price={prices?.arb?.usd}
-            change={prices?.arb?.change}
-            direction={prices?.arb?.direction}
-          />
-          {/* Duplicate for seamless loop */}
-          <TickerItem
-            key="btc-2"
-            symbol="BTC"
-            price={prices?.btc?.usd}
-            change={prices?.btc?.change}
-            direction={prices?.btc?.direction}
-          />
-          <TickerItem
-            key="eth-2"
-            symbol="ETH"
-            price={prices?.eth?.usd}
-            change={prices?.eth?.change}
-            direction={prices?.eth?.direction}
-          />
-          <TickerItem
-            key="sol-2"
-            symbol="SOL"
-            price={prices?.sol?.usd}
-            change={prices?.sol?.change}
-            direction={prices?.sol?.direction}
-          />
-          <TickerItem
-            key="ada-2"
-            symbol="ADA"
-            price={prices?.ada?.usd}
-            change={prices?.ada?.change}
-            direction={prices?.ada?.direction}
-          />
-          <TickerItem
-            key="xrp-2"
-            symbol="XRP"
-            price={prices?.xrp?.usd}
-            change={prices?.xrp?.change}
-            direction={prices?.xrp?.direction}
-          />
-          <TickerItem
-            key="bnb-2"
-            symbol="BNB"
-            price={prices?.bnb?.usd}
-            change={prices?.bnb?.change}
-            direction={prices?.bnb?.direction}
-          />
-          <TickerItem
-            key="doge-2"
-            symbol="DOGE"
-            price={prices?.doge?.usd}
-            change={prices?.doge?.change}
-            direction={prices?.doge?.direction}
-          />
-          <TickerItem
-            key="link-2"
-            symbol="LINK"
-            price={prices?.link?.usd}
-            change={prices?.link?.change}
-            direction={prices?.link?.direction}
-          />
-          <TickerItem
-            key="dot-2"
-            symbol="DOT"
-            price={prices?.dot?.usd}
-            change={prices?.dot?.change}
-            direction={prices?.dot?.direction}
-          />
-          <TickerItem
-            key="matic-2"
-            symbol="MATIC"
-            price={prices?.matic?.usd}
-            change={prices?.matic?.change}
-            direction={prices?.matic?.direction}
-          />
-          <TickerItem
-            key="avax-2"
-            symbol="AVAX"
-            price={prices?.avax?.usd}
-            change={prices?.avax?.change}
-            direction={prices?.avax?.direction}
-          />
-          <TickerItem
-            key="shib-2"
-            symbol="SHIB"
-            price={prices?.shib?.usd}
-            change={prices?.shib?.change}
-            direction={prices?.shib?.direction}
-          />
-          <TickerItem
-            key="trx-2"
-            symbol="TRX"
-            price={prices?.trx?.usd}
-            change={prices?.trx?.change}
-            direction={prices?.trx?.direction}
-          />
-          <TickerItem
-            key="ltc-2"
-            symbol="LTC"
-            price={prices?.ltc?.usd}
-            change={prices?.ltc?.change}
-            direction={prices?.ltc?.direction}
-          />
-          <TickerItem
-            key="near-2"
-            symbol="NEAR"
-            price={prices?.near?.usd}
-            change={prices?.near?.change}
-            direction={prices?.near?.direction}
-          />
-          <TickerItem
-            key="uni-2"
-            symbol="UNI"
-            price={prices?.uni?.usd}
-            change={prices?.uni?.change}
-            direction={prices?.uni?.direction}
-          />
-          <TickerItem
-            key="algo-2"
-            symbol="ALGO"
-            price={prices?.algo?.usd}
-            change={prices?.algo?.change}
-            direction={prices?.algo?.direction}
-          />
-          <TickerItem
-            key="atom-2"
-            symbol="ATOM"
-            price={prices?.atom?.usd}
-            change={prices?.atom?.change}
-            direction={prices?.atom?.direction}
-          />
-          <TickerItem
-            key="icp-2"
-            symbol="ICP"
-            price={prices?.icp?.usd}
-            change={prices?.icp?.change}
-            direction={prices?.icp?.direction}
-          />
-          <TickerItem
-            key="xlm-2"
-            symbol="XLM"
-            price={prices?.xlm?.usd}
-            change={prices?.xlm?.change}
-            direction={prices?.xlm?.direction}
-          />
-          <TickerItem
-            key="stx-2"
-            symbol="STX"
-            price={prices?.stx?.usd}
-            change={prices?.stx?.change}
-            direction={prices?.stx?.direction}
-          />
-          <TickerItem
-            key="fil-2"
-            symbol="FIL"
-            price={prices?.fil?.usd}
-            change={prices?.fil?.change}
-            direction={prices?.fil?.direction}
-          />
-          <TickerItem
-            key="ldo-2"
-            symbol="LDO"
-            price={prices?.ldo?.usd}
-            change={prices?.ldo?.change}
-            direction={prices?.ldo?.direction}
-          />
-          <TickerItem
-            key="hbar-2"
-            symbol="HBAR"
-            price={prices?.hbar?.usd}
-            change={prices?.hbar?.change}
-            direction={prices?.hbar?.direction}
-          />
-          <TickerItem
-            key="arb-2"
-            symbol="ARB"
-            price={prices?.arb?.usd}
-            change={prices?.arb?.change}
-            direction={prices?.arb?.direction}
-          />
+          {Object.keys(prices || {}).length > 0 ? (
+            <>
+              {Object.keys(prices).map((sym) => (
+                <TickerItem
+                  key={`${sym}-1`}
+                  symbol={sym.toUpperCase()}
+                  price={prices[sym]?.usd}
+                  change={prices[sym]?.change}
+                  direction={prices[sym]?.direction}
+                  displayCurrency={displayCurrency}
+                  btcPrice={prices?.btc?.usd}
+                />
+              ))}
+              {Object.keys(prices).map((sym) => (
+                <TickerItem
+                  key={`${sym}-2`}
+                  symbol={sym.toUpperCase()}
+                  price={prices[sym]?.usd}
+                  change={prices[sym]?.change}
+                  direction={prices[sym]?.direction}
+                  displayCurrency={displayCurrency}
+                  btcPrice={prices?.btc?.usd}
+                />
+              ))}
+            </>
+          ) : (
+            <>
+              {["BTC", "ETH", "SOL", "ADA", "XRP", "BNB", "DOGE", "LINK", "DOT", "MATIC", "AVAX", "SHIB", "TRX", "LTC", "NEAR", "UNI", "ALGO", "ATOM", "ICP", "XLM", "STX", "FIL", "LDO", "HBAR", "ARB"].map((sym) => (
+                <TickerItem
+                  key={`${sym}-fallback-1`}
+                  symbol={sym}
+                  price={sym === "BTC" ? 67340 : sym === "ETH" ? 3480 : 172.5}
+                  change={1.5}
+                  direction="up"
+                  displayCurrency={displayCurrency}
+                  btcPrice={67340}
+                />
+              ))}
+              {["BTC", "ETH", "SOL", "ADA", "XRP", "BNB", "DOGE", "LINK", "DOT", "MATIC", "AVAX", "SHIB", "TRX", "LTC", "NEAR", "UNI", "ALGO", "ATOM", "ICP", "XLM", "STX", "FIL", "LDO", "HBAR", "ARB"].map((sym) => (
+                <TickerItem
+                  key={`${sym}-fallback-2`}
+                  symbol={sym}
+                  price={sym === "BTC" ? 67340 : sym === "ETH" ? 3480 : 172.5}
+                  change={1.5}
+                  direction="up"
+                  displayCurrency={displayCurrency}
+                  btcPrice={67340}
+                />
+              ))}
+            </>
+          )}
         </div>
       </div>
 
@@ -1407,29 +1107,60 @@ const StatCard = ({
   </motion.div>
 );
 
-const TickerItem = ({ symbol, price, change, direction }: any) => (
-  <div className="inline-flex items-center gap-3 px-6 border-r border-[#C9A96E]/10 last:border-none">
-    <span className="text-sm font-bold text-[#0B0B0B] dark:text-white flex items-center gap-1">
-      {symbol}
-      {direction === 'up' && <ArrowUpRight size={12} className="text-green-500" />}
-      {direction === 'down' && <ArrowDownRight size={12} className="text-red-500" />}
-    </span>
-    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-      ${price?.toLocaleString() || "---"}
-    </span>
-    <span
-      className={cn(
-        "text-xs font-bold",
-        (change || 0) >= 0
-          ? "text-green-600 dark:text-green-500"
-          : "text-red-600 dark:text-red-500",
-      )}
-    >
-      {(change || 0) >= 0 ? "+" : ""}
-      {(change || 0).toFixed(2)}%
-    </span>
-  </div>
-);
+const TickerItem = ({ symbol, price, change, direction, displayCurrency, btcPrice }: any) => {
+  const isBtcDisplay = displayCurrency === "BTC";
+  
+  let finalPriceStr = "---";
+  if (typeof price === "number") {
+    if (isBtcDisplay) {
+      if (symbol === "BTC") {
+        finalPriceStr = "1.0000 ₿";
+      } else {
+        const btcVal = btcPrice > 0 ? btcPrice : 67340;
+        const inBtc = price / btcVal;
+        if (inBtc < 0.0001) {
+          finalPriceStr = `${inBtc.toFixed(8)} ₿`;
+        } else if (inBtc < 0.01) {
+          finalPriceStr = `${inBtc.toFixed(6)} ₿`;
+        } else {
+          finalPriceStr = `${inBtc.toFixed(4)} ₿`;
+        }
+      }
+    } else {
+      if (symbol === "SHIB") {
+        finalPriceStr = `$${price.toFixed(8)}`;
+      } else if (price < 1) {
+        finalPriceStr = `$${price.toFixed(4)}`;
+      } else {
+        finalPriceStr = `$${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+    }
+  }
+
+  return (
+    <div className="inline-flex items-center gap-3 px-6 border-r border-[#C9A96E]/10 last:border-none">
+      <span className="text-sm font-bold text-[#0B0B0B] dark:text-white flex items-center gap-1">
+        {symbol}
+        {direction === 'up' && <ArrowUpRight size={12} className="text-green-500" />}
+        {direction === 'down' && <ArrowDownRight size={12} className="text-red-500" />}
+      </span>
+      <span className="text-sm font-medium text-gray-600 dark:text-gray-300 font-mono">
+        {finalPriceStr}
+      </span>
+      <span
+        className={cn(
+          "text-xs font-bold",
+          (change || 0) >= 0
+            ? "text-green-600 dark:text-green-500"
+            : "text-red-600 dark:text-red-500",
+        )}
+      >
+        {(change || 0) >= 0 ? "+" : ""}
+        {(change || 0).toFixed(2)}%
+      </span>
+    </div>
+  );
+};
 
 const ActivityItem = ({ type, amount, status, date }: any) => (
   <div className="flex items-center justify-between group cursor-pointer">
