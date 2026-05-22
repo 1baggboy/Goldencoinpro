@@ -8,12 +8,21 @@ export const NewsletterSubscription = () => {
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanEmail = email.trim();
+    
+    // Add robust email regex validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
     setLoading(true);
     try {
       const resp = await fetch('/api/newsletter/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email: cleanEmail })
       });
       if (resp.ok) {
         toast.success("Subscribed to newsletter!");
@@ -46,9 +55,13 @@ export const NewsletterSubscription = () => {
           />
           <button 
             disabled={loading}
-            className="bg-[#C9A96E] text-black px-6 py-3 rounded-lg text-sm font-black disabled:opacity-50 hover:bg-[#D4B985] transition-all"
+            className="bg-[#C9A96E] text-black px-6 py-3 rounded-lg text-sm font-black disabled:opacity-50 hover:bg-[#D4B985] transition-all flex items-center justify-center min-w-[56px] h-[46px]"
           >
-            {loading ? "..." : <Send size={16} />}
+            {loading ? (
+              <span className="w-4 h-4 border-2 border-black border-t-transparent animate-spin rounded-full inline-block" />
+            ) : (
+              <Send size={16} />
+            )}
           </button>
         </form>
       </div>

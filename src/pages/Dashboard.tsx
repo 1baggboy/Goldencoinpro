@@ -99,6 +99,7 @@ export const Dashboard = () => {
   const [isDashboardSearchOpen, setIsDashboardSearchOpen] = useState(false);
   const [isAutoRefreshEnabled, setIsAutoRefreshEnabled] = useState(true);
   const [sortCriteria, setSortCriteria] = useState<'date' | 'amount' | 'type'>('date');
+  const [displayCurrency, setDisplayCurrency] = useState<'USD' | 'BTC'>('USD');
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -438,31 +439,85 @@ export const Dashboard = () => {
         </div>
       )}
 
+      {/* Stats Header with Currency Toggle */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 dark:border-[#C9A96E]/10 pb-4">
+        <h2 className="text-lg font-bold text-slate-800 dark:text-[#C9A96E] font-display flex items-center gap-2">
+          <Wallet size={18} className="text-[#C9A96E]" /> Portfolio Balances
+        </h2>
+        
+        {/* Currency Switcher Toggle */}
+        <div className="flex items-center gap-2 self-start sm:self-auto bg-slate-100/50 dark:bg-slate-900/50 p-1.5 rounded-2xl border border-slate-200/50 dark:border-[#C9A96E]/10">
+          <span className="text-[11px] font-bold tracking-tight text-slate-500 dark:text-gray-400 pl-1.5 pr-1 select-none">DISPLAY IN:</span>
+          <div className="flex bg-slate-200/60 dark:bg-slate-950 p-1 rounded-xl shadow-inner gap-1">
+            <button
+              onClick={() => setDisplayCurrency("USD")}
+              className={cn(
+                "px-3.5 py-1.5 text-xs font-black rounded-lg transition-all uppercase tracking-wider",
+                displayCurrency === "USD"
+                  ? "bg-[#C9A96E] text-slate-950 shadow-md transform hover:scale-105"
+                  : "text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white"
+              )}
+            >
+              USD ($)
+            </button>
+            <button
+              onClick={() => setDisplayCurrency("BTC")}
+              className={cn(
+                "px-3.5 py-1.5 text-xs font-black rounded-lg transition-all uppercase tracking-wider",
+                displayCurrency === "BTC"
+                  ? "bg-[#C9A96E] text-slate-950 shadow-md transform hover:scale-105"
+                  : "text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white"
+              )}
+            >
+              BTC (₿)
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 lg:gap-5 xl:gap-6">
         <StatCard
           title="Account Balance"
-          value={`$${usdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          subValue={prices?.btc?.usd > 0 ? `${(usdBalance / prices.btc.usd).toFixed(4)} BTC` : "--- BTC"}
+          value={displayCurrency === "USD" 
+            ? `$${usdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+            : `${(usdBalance / (prices?.btc?.usd || 67000)).toFixed(4)} BTC`
+          }
+          subValue={displayCurrency === "USD" 
+            ? (prices?.btc?.usd > 0 ? `${(usdBalance / prices.btc.usd).toFixed(4)} BTC` : "--- BTC") 
+            : `$${usdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          }
           icon={Wallet}
           color="gold"
-          tooltip="Available USD for trading or withdrawal"
+          tooltip="Available cash balance for investing, trading, or standard withdrawal"
         />
         <StatCard
           title="Trading Balance"
-          value={`${profile?.tradingBalanceBtc?.toFixed(4) || "0.0000"} BTC`}
-          subValue={`$${tradingUsdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          value={displayCurrency === "USD"
+            ? `$${tradingUsdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : `${profile?.tradingBalanceBtc?.toFixed(4) || "0.0000"} BTC`
+          }
+          subValue={displayCurrency === "USD"
+            ? `${profile?.tradingBalanceBtc?.toFixed(4) || "0.0000"} BTC`
+            : `$${tradingUsdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          }
           icon={Zap}
           color="gold"
-          tooltip="Total BTC currently in active trading cycles"
+          tooltip="Total coin currently active within specialized crypto high-frequency arbitrage algorithms"
         />
         <StatCard
           title="Total Deposited"
-          value={`$${(profile?.totalDepositedUsd || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          subValue={`Cumulative Deposits`}
+          value={displayCurrency === "USD"
+            ? `$${(profile?.totalDepositedUsd || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : `${((profile?.totalDepositedUsd || 0) / (prices?.btc?.usd || 67000)).toFixed(4)} BTC`
+          }
+          subValue={displayCurrency === "USD"
+            ? "Cumulative Deposits"
+            : `$${(profile?.totalDepositedUsd || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          }
           icon={TrendingUp}
           color="green"
-          tooltip="Total amount funded into this account"
+          tooltip="Total historical amount loaded and recorded under this specific identity portfolio"
         />
         <StatCard
           title="Active Investments"

@@ -37,6 +37,14 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Try to load cached prices first for instant initialization
   const [prices, setPrices] = useState<any>(() => {
+    try {
+      const sessionCached = sessionStorage.getItem("goldencoin_market_prices_session");
+      if (sessionCached) {
+        return JSON.parse(sessionCached);
+      }
+    } catch (e) {
+      console.error("Failed to parse sessionStorage prices", e);
+    }
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
       try {
@@ -199,6 +207,12 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             });
           }
           localStorage.setItem(CACHE_KEY, JSON.stringify(newPrices));
+          try {
+            sessionStorage.setItem("goldencoin_market_prices_session", JSON.stringify(newPrices));
+            sessionStorage.setItem("goldencoin_market_prices_timestamp", Date.now().toString());
+          } catch (e) {
+            console.error("Failed to write to sessionStorage", e);
+          }
           return newPrices;
         });
         setError(null);
@@ -221,7 +235,28 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       Notification.requestPermission();
     }
     
-    refreshPrices();
+    // Check if we have recent valid prices in sessionStorage
+    let shouldFetchImmediately = true;
+    try {
+      const sessionCached = sessionStorage.getItem("goldencoin_market_prices_session");
+      const sessionTime = sessionStorage.getItem("goldencoin_market_prices_timestamp");
+      if (sessionCached && sessionTime) {
+        const elapsed = Date.now() - Number(sessionTime);
+        // Skip automatic immediate fetch on render/page refresh if caching is fresh (under 15s)
+        if (elapsed < 15000) {
+          shouldFetchImmediately = false;
+          setLoading(false);
+          const parsed = JSON.parse(sessionCached);
+          checkAlerts(parsed);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to read price session storage", e);
+    }
+    
+    if (shouldFetchImmediately) {
+      refreshPrices();
+    }
     // Faster updates (5 seconds) for a more "live" feel, synced with backend
     const interval = setInterval(refreshPrices, 5000); 
     return () => clearInterval(interval);

@@ -16,9 +16,11 @@ import { db } from "../firebase";
 import { useAuth } from "../AuthContext";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "../lib/utils";
+import { useNavigate } from "react-router-dom";
 
 export const TwoFactorSetup = () => {
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [secret, setSecret] = useState("");
   const [qrCodeUrl, setQrCodeUrl] = useState("");
@@ -147,6 +149,15 @@ export const TwoFactorSetup = () => {
             <p className="text-gray-400 text-sm">Enhance your account security with TOTP.</p>
           </div>
         </div>
+
+        {!profile?.twoFactorEnabled && step !== 4 && (
+          <div className="mb-8 p-4 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 rounded-2xl text-xs space-y-1.5 animate-pulse">
+            <p className="font-bold flex items-center gap-1.5">⚠️ Security Action Suggested</p>
+            <p className="opacity-90 leading-relaxed">
+              Your account currently has Two-Factor Authentication disabled. We strongly advocate enabling 2FA to guarantee robust fund protection, portfolio safety, and verified trading limits.
+            </p>
+          </div>
+        )}
 
         {/* Steps Progress */}
         <div className="flex items-center justify-between mb-12 relative">
@@ -300,7 +311,7 @@ export const TwoFactorSetup = () => {
                 <p className="text-gray-400">Your account is now more secure. You will need to enter a code from your app to log in.</p>
               </div>
               <button 
-                onClick={() => window.location.href = "/profile"}
+                onClick={() => navigate("/profile")}
                 className="w-full py-4 bg-[#C9A96E] text-[#0B0B0B] font-bold rounded-xl hover:bg-[#D4B985] transition-all"
               >
                 Back to Profile
@@ -308,6 +319,17 @@ export const TwoFactorSetup = () => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {!profile?.twoFactorEnabled && step !== 4 && (
+          <div className="mt-8 text-center border-t border-slate-800 pt-6">
+            <button
+              onClick={() => navigate("/dashboard", { replace: true })}
+              className="text-xs text-[#C9A96E]/80 hover:text-[#C9A96E] font-extrabold tracking-widest uppercase transition-colors cursor-pointer focus:outline-none"
+            >
+              Skip Setup for now & Proceed to Dashboard →
+            </button>
+          </div>
+        )}
       </div>
       </div>
     </div>

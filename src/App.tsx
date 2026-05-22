@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
+import { WifiOff, Wifi, RefreshCw } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { AuthProvider, useAuth } from "./AuthContext";
 import { NotificationProvider } from "./NotificationContext";
 import { PriceProvider, usePrices } from "./PriceContext";
@@ -82,6 +84,37 @@ export default function App() {
 
 function AppContent({ siteLoading, setSiteLoading }: { siteLoading: boolean, setSiteLoading: (v: boolean) => void }) {
   const { prices, loading: pricesLoading } = usePrices();
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [wasOffline, setWasOffline] = useState(false);
+  const [showOnlineNotification, setShowOnlineNotification] = useState(false);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      if (wasOffline) {
+        setShowOnlineNotification(true);
+        const timer = setTimeout(() => {
+          setShowOnlineNotification(false);
+          setWasOffline(false);
+        }, 5000);
+        return () => clearTimeout(timer);
+      }
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      setWasOffline(true);
+      setShowOnlineNotification(false);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [wasOffline]);
 
   useEffect(() => {
     // Hide preloader once prices are initially loaded (or after a reasonable timeout)
@@ -112,6 +145,51 @@ function AppContent({ siteLoading, setSiteLoading }: { siteLoading: boolean, set
       <Analytics />
       <Router>
         <ScrollToTop />
+        <AnimatePresence>
+          {!isOnline && (
+            <motion.div
+              key="offline-banner"
+              initial={{ opacity: 0, y: 50, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 50, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#111111]/90 border border-red-500/30 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-md max-w-sm w-[90%]"
+            >
+              <div className="w-8 h-8 rounded-full bg-red-500/15 flex items-center justify-center text-red-400 shrink-0">
+                <WifiOff size={18} className="animate-pulse" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold tracking-tight text-white mb-0.5">Offline Mode</p>
+                <p className="text-[11px] text-gray-400 font-medium leading-normal">Firebase connection dropped. Retrying sync with current device...</p>
+              </div>
+              <div className="flex items-center gap-1 font-mono text-[9px] bg-red-500/10 text-red-400 border border-red-500/20 px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wider">
+                <RefreshCw size={10} className="animate-spin" />
+                Retrying
+              </div>
+            </motion.div>
+          )}
+          
+          {showOnlineNotification && (
+            <motion.div
+              key="online-banner"
+              initial={{ opacity: 0, y: 50, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#111111]/90 border border-emerald-500/30 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-md max-w-sm w-[90%]"
+            >
+              <div className="w-8 h-8 rounded-full bg-emerald-500/15 flex items-center justify-center text-emerald-400 shrink-0">
+                <Wifi size={18} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold tracking-tight text-white mb-0.5">Connection Restored</p>
+                <p className="text-[11px] text-gray-400 font-medium leading-normal">You are back online. Prices and operations synced successfully.</p>
+              </div>
+              <div className="font-mono text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wider">
+                Online
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
