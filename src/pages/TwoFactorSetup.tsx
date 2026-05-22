@@ -58,12 +58,17 @@ export const TwoFactorSetup = () => {
     setError("");
 
     try {
+      // Allow verify to be either a boolean or an object depending on otplib version/wrapper
       const result = await verify({
         token: verificationCode,
         secret: secret
       });
+      
+      console.log("2FA verification result:", result);
 
-      if (result.valid) {
+      const isValid = result === true || (typeof result === 'object' && result?.valid === true);
+
+      if (isValid) {
         await updateDoc(doc(db, "users", user.uid), {
           twoFactorEnabled: true,
           twoFactorSecret: secret // In a real app, encrypt this or store it more securely
@@ -106,7 +111,7 @@ export const TwoFactorSetup = () => {
 
   if (profile?.twoFactorEnabled && step !== 4) {
     return (
-      <div className="max-w-full mx-auto py-10 px-4">
+      <div className="max-w-lg mx-auto py-10 px-4">
         <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-3xl p-8 text-center space-y-6">
           <div className="w-20 h-20 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto">
             <ShieldCheck size={40} />
@@ -130,7 +135,7 @@ export const TwoFactorSetup = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-      <div className="max-w-full mx-auto py-10 px-4">
+      <div className="max-w-lg mx-auto py-10 px-4">
       <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-3xl p-8 md:p-12 shadow-2xl">
         <div className="flex items-center gap-4 mb-8">
           <div className="w-12 h-12 bg-[#C9A96E]/10 rounded-2xl flex items-center justify-center text-[#C9A96E]">

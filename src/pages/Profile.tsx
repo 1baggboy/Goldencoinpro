@@ -9,7 +9,7 @@ import { deleteUser } from "firebase/auth";
 import { motion } from "motion/react";
 import { cn } from "../lib/utils";
 import { handleFirestoreError, OperationType } from "../lib/firestoreErrorHandler";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { DeviceManagement } from "../components/DeviceManagement";
 
 export const Profile = () => {
@@ -17,6 +17,15 @@ export const Profile = () => {
   const { addNotification } = useNotifications();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.pathname === '/profile/security') {
+      const el = document.getElementById('security-section');
+      if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 300);
+    }
+  }, [location.pathname]);
+
   const [displayName, setDisplayName] = useState(profile?.displayName || "");
   const [phoneNumber, setPhoneNumber] = useState(profile?.phoneNumber || "");
   const [gender, setGender] = useState(profile?.gender || "");
@@ -465,7 +474,7 @@ export const Profile = () => {
       </div>
 
       {/* Trusted Devices Section */}
-      <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6 lg:p-8">
+      <div id="security-section" className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6 lg:p-8">
         <DeviceManagement />
       </div>
 

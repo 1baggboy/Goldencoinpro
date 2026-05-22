@@ -194,6 +194,14 @@ function AppContent({ siteLoading, setSiteLoading }: { siteLoading: boolean, set
               </Layout>
             </ProtectedRoute>
           } />
+
+          <Route path="/profile/security" element={
+            <ProtectedRoute>
+              <Layout>
+                <Profile />
+              </Layout>
+            </ProtectedRoute>
+          } />
           
           <Route path="/admin" element={
             <ProtectedRoute adminOnly>

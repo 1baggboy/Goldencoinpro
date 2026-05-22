@@ -397,6 +397,28 @@ export const Dashboard = () => {
         </div>
       )}
 
+      {!profile?.twoFactorEnabled && (
+        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+            <div className="w-10 h-10 bg-yellow-500/20 text-yellow-600 dark:text-yellow-500 rounded-xl flex items-center justify-center shrink-0">
+              <ShieldCheck size={20} className="animate-pulse" />
+            </div>
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Protect your account</h3>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 max-w-lg">
+                Your account is currently at risk. Enable Two-Factor Authentication (2FA) to significantly improve your security score and protect your funds.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/2fa/setup"
+            className="w-full sm:w-auto px-6 py-2.5 bg-yellow-500 hover:bg-yellow-600 text-slate-900 font-bold rounded-xl transition-all text-sm text-center shadow-lg shadow-yellow-500/20 shrink-0"
+          >
+            Enable 2FA
+          </Link>
+        </div>
+      )}
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 lg:gap-5 xl:gap-6">
         <StatCard

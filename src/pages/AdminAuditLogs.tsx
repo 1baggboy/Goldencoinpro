@@ -13,6 +13,8 @@ export const AdminAuditLogs: React.FC = () => {
     const q = query(collection(db, "admin_audit_logs"), orderBy("timestamp", "desc"));
     const unsub = onSnapshot(q, (snapshot) => {
       setLogs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (error) => {
+      console.error("AdminAuditLogs snapshot error:", error);
     });
     return () => unsub();
   }, []);

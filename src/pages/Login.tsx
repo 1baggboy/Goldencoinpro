@@ -241,7 +241,9 @@ export const Login = () => {
         secret: tempUser.secret
       });
 
-      if (result.valid) {
+      const isValid = result === true || (typeof result === 'object' && result?.valid === true);
+
+      if (isValid) {
         await signInWithEmailAndPassword(auth, email, password);
 
         await trackDeviceAndNotify(tempUser.uid, email);
