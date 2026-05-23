@@ -312,10 +312,11 @@ export const Dashboard = () => {
     };
   }, [user]);
 
-  const usdBalance = profile?.usdBalance || 0;
-  // Trading balance acts as a mirror/conversion of account balance
-  const tradingUsdBalance = usdBalance;
-  const tradingBtcBalance = prices?.btc?.usd > 0 ? (usdBalance / prices.btc.usd) : (profile?.tradingBalanceBtc || 0);
+  const liveBtcPrice = prices?.btc?.usd || 0;
+  const usdBalance = liveBtcPrice > 0 ? (profile?.btcBalance || 0) * liveBtcPrice : (profile?.usdBalance || 0);
+  
+  const tradingBtcBalance = profile?.tradingBalanceBtc || 0;
+  const tradingUsdBalance = tradingBtcBalance * liveBtcPrice;
 
   // Widget States
   const [portfolioExpanded, setPortfolioExpanded] = useState(() => localStorage.getItem('portfolioExpanded') === 'true');
@@ -489,7 +490,8 @@ export const Dashboard = () => {
         />
         <StatCard
           title="Trading Balance"
-          value={`${tradingBtcBalance.toFixed(4)} BTC`}
+          value={`$${tradingUsdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          subValue={`${tradingBtcBalance.toFixed(4)} BTC`}
           icon={Zap}
           color="gold"
           tooltip="The BTC equivalent of your current account balance, active within high-frequency algorithms"

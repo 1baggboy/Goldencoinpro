@@ -335,6 +335,7 @@ export const AdminDashboard = () => {
       let comparison = 0;
       if (sortBy === "name") comparison = (a.displayName || "").localeCompare(b.displayName || "");
       if (sortBy === "balance") comparison = (a.btcBalance || 0) - (b.btcBalance || 0);
+      if (sortBy === "totalDeposited") comparison = (a.totalDepositedUsd || 0) - (b.totalDepositedUsd || 0);
       if (sortBy === "joined") {
         const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -897,6 +898,15 @@ export const AdminDashboard = () => {
                 </th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">Status</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">KYC Status</th>
+                <th 
+                  className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest cursor-pointer hover:text-[#C9A96E] transition-colors"
+                  onClick={() => handleSort("totalDeposited")}
+                >
+                  <div className="flex items-center gap-2">
+                    Total Deposited
+                    <ArrowUpDown size={12} className={sortBy === "totalDeposited" ? "text-[#C9A96E]" : "text-gray-600"} />
+                  </div>
+                </th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">Password</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">Last Seen</th>
                 <th 
@@ -914,7 +924,7 @@ export const AdminDashboard = () => {
             <tbody className="divide-y divide-[#C9A96E]/5">
               {filteredAndSortedUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-20">
+                  <td colSpan={10} className="px-6 py-20">
                     <div className="flex flex-col items-center justify-center text-center">
                       <div className="w-20 h-20 bg-slate-950 rounded-full flex items-center justify-center text-gray-700 mb-4">
                         <Users size={40} />
@@ -982,6 +992,12 @@ export const AdminDashboard = () => {
                     )}>
                       {u.kycStatus ? u.kycStatus.replace('_', ' ') : 'not submitted'}
                     </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-white">${(u.totalDepositedUsd || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="text-[10px] text-gray-500 font-mono">{(u.totalDeposited || 0).toFixed(4)} BTC</span>
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-xs font-mono text-gray-400 select-all" title="Click to select">

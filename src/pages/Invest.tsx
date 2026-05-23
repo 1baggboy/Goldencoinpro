@@ -268,8 +268,8 @@ export const Invest = () => {
               <h3 className="text-xl font-bold text-white">Start Investment</h3>
               <div className="text-right">
                 <p className="text-xs text-gray-500 uppercase font-bold tracking-widest">Available Balance</p>
-                <p className="text-sm font-bold text-[#C9A96E]">${(profile?.usdBalance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
-                <p className="text-[10px] text-gray-500">{(profile?.usdBalance / btcPrice).toFixed(6)} BTC Equiv.</p>
+                <p className="text-sm font-bold text-[#C9A96E]">${((profile?.btcBalance || 0) * btcPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                <p className="text-[10px] text-gray-500">{(profile?.btcBalance || 0).toFixed(6)} BTC</p>
               </div>
             </div>
 

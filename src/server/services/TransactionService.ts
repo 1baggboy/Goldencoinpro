@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import admin from 'firebase-admin';
 import { EmailService } from './EmailService';
 import { db } from '../lib/firebase';
 
@@ -49,9 +50,9 @@ export class TransactionService {
     const amountBtc = amount / btcPrice;
     
     await userDocRef.update({ 
-      usdBalance: (user.usdBalance || 0) - amount,
-      btcBalance: (user.btcBalance || 0) - amountBtc,
-      tradingBalanceBtc: (user.tradingBalanceBtc || 0) - amountBtc
+      usdBalance: admin.firestore.FieldValue.increment(-amount),
+      btcBalance: admin.firestore.FieldValue.increment(-amountBtc),
+      tradingBalanceBtc: admin.firestore.FieldValue.increment(-amountBtc)
     });
 
     const reference = `WTH-${uuidv4().substring(0, 8).toUpperCase()}`;
@@ -98,14 +99,17 @@ export class TransactionService {
     const user = { ...userDoc.data(), id: tx.userId } as any;
 
     if (tx.type === 'DEPOSIT') {
-      const amountBtc = tx.amountBtc || 0;
       const amountUsd = tx.amountUsd || tx.amount || 0;
+      // If amountBtc is missing, try to calculate it based on a reasonable fallback price if possible
+      // but primarily rely on tx.amountBtc if it was provided at creation (e.g., in Deposit.tsx)
+      const amountBtc = tx.amountBtc || (amountUsd / 67000); 
+
       await userRef.update({ 
-        usdBalance: (user.usdBalance || 0) + amountUsd,
-        totalDepositedUsd: (user.totalDepositedUsd || 0) + amountUsd,
-        btcBalance: (user.btcBalance || 0) + amountBtc,
-        tradingBalanceBtc: (user.tradingBalanceBtc || 0) + amountBtc,
-        totalDeposited: (user.totalDeposited || 0) + amountBtc
+        usdBalance: admin.firestore.FieldValue.increment(amountUsd),
+        totalDepositedUsd: admin.firestore.FieldValue.increment(amountUsd),
+        btcBalance: admin.firestore.FieldValue.increment(amountBtc),
+        tradingBalanceBtc: admin.firestore.FieldValue.increment(amountBtc),
+        totalDeposited: admin.firestore.FieldValue.increment(amountBtc)
       });
     }
     // Withdrawal balance already deducted at request time
@@ -142,9 +146,9 @@ export class TransactionService {
       const amountBtc = tx.amountBtc || 0;
       const amountUsd = tx.amountUsd || tx.amount || 0;
       await userRef.update({ 
-        btcBalance: (user.btcBalance || 0) + amountBtc,
-        tradingBalanceBtc: (user.tradingBalanceBtc || 0) + amountBtc,
-        usdBalance: (user.usdBalance || 0) + amountUsd
+        btcBalance: admin.firestore.FieldValue.increment(amountBtc),
+        tradingBalanceBtc: admin.firestore.FieldValue.increment(amountBtc),
+        usdBalance: admin.firestore.FieldValue.increment(amountUsd)
       });
     }
 
