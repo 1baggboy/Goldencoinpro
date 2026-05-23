@@ -496,8 +496,7 @@ export const UserDetail = () => {
             />
             <StatCard 
               title="Trading Balance" 
-              value={`$${tradingUsdBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
-              subValue={`${tradingBtcBalance.toFixed(4)} BTC`}
+              value={`${tradingBtcBalance.toFixed(4)} BTC`} 
               icon={Zap}
               color="gold"
             />
