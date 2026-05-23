@@ -240,31 +240,17 @@ export const Dashboard = () => {
   }, [user, profile, activeInvestmentsCount, recentTransactions.length]);
 
   useEffect(() => {
-    const totalBalance =
-      (profile?.usdBalance || 0) +
-      (profile?.tradingBalanceBtc || 0) * (prices?.btc?.usd || 0);
+    const livePrice = prices?.btc?.usd || 0;
+    const currentBalance = livePrice > 0 ? (profile?.btcBalance || 0) * livePrice : (profile?.usdBalance || 0);
 
-    if (totalBalance === 0 && recentTransactions.length === 0) {
+    if (currentBalance === 0 && recentTransactions.length === 0) {
       setChartData(data.map((d) => ({ ...d, value: 0 })));
-    } else if (recentTransactions.length > 0) {
-      // Aggregate transactions by date
-      const activityMap: { [key: string]: number } = {};
-      recentTransactions.forEach((tx) => {
-        const date = new Date(tx.timestamp).toLocaleDateString("en-US", {
-          weekday: "short",
-        });
-        activityMap[date] =
-          (activityMap[date] || 0) + (tx.amountBtc || tx.amount || 0);
-      });
-      // Convert to array
-      const history = Object.entries(activityMap).map(([name, value]) => ({
-        name,
-        value,
-      }));
-      setChartData(history);
     } else {
-      // Default placeholder data or balances based data
-      setChartData(data.map((d) => ({ ...d, value: totalBalance })));
+      // Anchor chart data to current balance with simulated historical growth
+      setChartData(data.map((d, i) => ({
+        ...d,
+        value: currentBalance * (0.85 + (i * 0.025))
+      })));
     }
   }, [recentTransactions, profile, prices]);
 
