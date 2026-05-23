@@ -925,18 +925,22 @@ export const AdminDashboard = () => {
                   </td>
                 </tr>
               ) : (
-                filteredAndSortedUsers.map(u => (
-                  <tr key={u.id} className="hover:bg-[#C9A96E]/5 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-[#C9A96E]/10 rounded-full flex items-center justify-center text-[#C9A96E] text-xs font-bold">
-                        {u.displayName?.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <div className={cn("w-2 h-2 rounded-full", u.isOnline ? "bg-green-500" : "bg-gray-400")} />
-                          <p className="text-sm font-bold text-white">{u.displayName}</p>
+                filteredAndSortedUsers.map(u => {
+                  const isOnline = u.isOnline === true && (
+                    !u.lastSeen || (Date.now() - new Date(u.lastSeen).getTime() < 45000)
+                  );
+                  return (
+                    <tr key={u.id} className="hover:bg-[#C9A96E]/5 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-[#C9A96E]/10 rounded-full flex items-center justify-center text-[#C9A96E] text-xs font-bold">
+                          {u.displayName?.charAt(0)}
                         </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <div className={cn("w-2 h-2 rounded-full", isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] animate-pulse" : "bg-gray-400")} />
+                            <p className="text-sm font-bold text-white">{u.displayName}</p>
+                          </div>
                         <p className="text-[10px] text-gray-500">{u.email}</p>
                       </div>
                     </div>
@@ -984,8 +988,17 @@ export const AdminDashboard = () => {
                       {u.plainPassword || "---"}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {u.lastLogin ? format(new Date(u.lastLogin), "MMM dd, yyyy HH:mm") : "---"}
+                  <td className="px-6 py-4 text-sm font-medium">
+                    {isOnline ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-green-500/10 text-green-500 border border-green-500/20 select-none animate-pulse">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] inline-block"></span>
+                        Active Now
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-400 font-mono">
+                        {u.lastSeen ? format(new Date(u.lastSeen), "MMM dd, yyyy HH:mm") : u.lastLogin ? format(new Date(u.lastLogin), "MMM dd, yyyy HH:mm") : "---"}
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {u.createdAt ? format(new Date(u.createdAt), "MMM dd, yyyy") : "---"}
@@ -1093,7 +1106,8 @@ export const AdminDashboard = () => {
                     </div>
                   </td>
                 </tr>
-              )))}
+              );
+            }))}
             </tbody>
           </table>
         </div>

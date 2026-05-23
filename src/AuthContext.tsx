@@ -30,6 +30,7 @@ interface UserProfile {
   hasTraded?: boolean;
   isOnline?: boolean;
   lastLogin?: string;
+  lastSeen?: string;
   friendlyId?: string;
 }
 
@@ -192,6 +193,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (unsubProfile) unsubProfile();
     };
   }, []);
+
+  // Periodic heartbeat to update isOnline and lastSeen every 15 seconds
+  useEffect(() => {
+    if (!user) return;
+    
+    const updateHeartbeat = async () => {
+      try {
+        await updateDoc(doc(db, "users", user.uid), {
+          isOnline: true,
+          lastSeen: new Date().toISOString()
+        });
+      } catch (err) {
+        console.warn("Heartbeat update omitted (doc may be missing during creation):", err);
+      }
+    };
+    
+    // First immediate run
+    updateHeartbeat();
+    
+    const interval = setInterval(updateHeartbeat, 15000);
+    
+    return () => {
+      clearInterval(interval);
+      // Try to set isOnline to false when logging out/unmounting
+      updateDoc(doc(db, "users", user.uid), {
+        isOnline: false
+      }).catch(() => {});
+    };
+  }, [user]);
 
   const isAdmin = profile?.role === "admin" || (user?.email ? APP_CONFIG.adminEmails.includes(user.email) : false);
   const isRestricted = profile?.status === "restricted";

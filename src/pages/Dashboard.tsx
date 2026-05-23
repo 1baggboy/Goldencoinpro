@@ -41,6 +41,7 @@ import { motion } from "motion/react";
 import { Link, useNavigate } from "react-router-dom";
 import { cn } from "../lib/utils";
 import { usePrices } from "../PriceContext";
+import { CryptoAdVert } from "../components/CryptoAdVert";
 import {
   collection,
   query,
@@ -490,6 +491,7 @@ export const Dashboard = () => {
           icon={Wallet}
           color="gold"
           tooltip="Available cash balance for investing, trading, or standard withdrawal"
+          warning={usdBalance < 500 ? "Balance is below the $500 minimum required for standard trading strategies." : undefined}
         />
         <StatCard
           title="Trading Balance"
@@ -967,6 +969,9 @@ export const Dashboard = () => {
                 : [referralCard, recentActivityCard];
           })()}
 
+          {/* Premium Cryptocurrency Promotion Stream */}
+          <CryptoAdVert />
+
           {/* AI Strategy Tip */}
           <motion.div
             whileHover={{ scale: 1.02 }}
@@ -1039,9 +1044,7 @@ export const Dashboard = () => {
       </div>
     </div>
   );
-};
-
-const StatCard = ({
+};const StatCard = ({
   title,
   value,
   subValue,
@@ -1049,61 +1052,96 @@ const StatCard = ({
   color,
   onClick,
   tooltip,
+  warning,
 }: any) => (
   <motion.div
     whileHover={{
       y: -5,
-      boxShadow: "0 10px 30px -10px rgba(201, 169, 110, 0.2)",
+      boxShadow: warning 
+        ? "0 10px 30px -10px rgba(239, 68, 68, 0.25)" 
+        : "0 10px 30px -10px rgba(201, 169, 110, 0.2)",
     }}
     onClick={onClick}
     data-tooltip-id="dashboard-tooltip"
     data-tooltip-content={tooltip}
     className={cn(
-      "bg-slate-100 dark:bg-slate-900 border border-[#C9A96E]/10 p-5 rounded-2xl relative overflow-hidden group transition-all duration-300",
+      "bg-slate-100 dark:bg-slate-900 border p-5 rounded-2xl relative overflow-hidden group transition-all duration-300",
+      warning 
+        ? "border-red-500/30 dark:border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.05)]" 
+        : "border-[#C9A96E]/10",
       onClick && "cursor-pointer hover:border-[#C9A96E]/40",
     )}
   >
+    {warning && (
+      <div className="absolute inset-0 bg-red-500/[0.015] dark:bg-red-500/[0.01] animate-pulse pointer-events-none" />
+    )}
+
     <div className="flex flex-col h-full justify-between relative z-10">
       <div className="flex items-start justify-between mb-4">
         <div
           className={cn(
             "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 group-hover:rotate-6 shadow-sm",
-            color === "gold"
-              ? "bg-[#C9A96E]/10 text-[#C9A96E] border border-[#C9A96E]/20"
-              : color === "green"
-                ? "bg-green-500/10 text-green-600 border border-green-500/20"
-                : color === "red"
-                  ? "bg-red-500/10 text-red-600 border border-red-500/20"
-                  : "bg-yellow-500/10 text-yellow-600 border border-yellow-500/20",
+            warning
+              ? "bg-red-500/10 text-red-500 border border-red-500/25 shadow-[0_0_10px_rgba(239,68,68,0.1)]"
+              : color === "gold"
+                ? "bg-[#C9A96E]/10 text-[#C9A96E] border border-[#C9A96E]/20"
+                : color === "green"
+                  ? "bg-green-500/10 text-green-600 border border-green-500/20"
+                  : color === "red"
+                    ? "bg-red-500/10 text-red-600 border border-red-500/20"
+                    : "bg-yellow-500/10 text-yellow-600 border border-yellow-500/20",
           )}
         >
           <Icon size={20} />
         </div>
-        <p className="text-[10px] text-gray-500 dark:text-gray-500 uppercase font-black tracking-[0.2em]">
-          {title}
-        </p>
+        <div className="flex flex-col items-end gap-1">
+          <p className="text-[10px] text-gray-500 dark:text-gray-500 uppercase font-black tracking-[0.2em]">
+            {title}
+          </p>
+          {warning && (
+            <span className="flex items-center gap-1 text-[9px] font-black text-red-500 select-none animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] inline-block"></span>
+              LOW BALANCE
+            </span>
+          )}
+        </div>
       </div>
       <div>
         <h4 className="text-xl xl:text-2xl font-black text-[#0B0B0B] dark:text-white tracking-tight leading-none mb-1 truncate">
           {value}
         </h4>
-        <div
-          className={cn(
-            "text-[9px] font-bold uppercase tracking-tight line-clamp-1",
-            color === "green"
-              ? "text-green-600 dark:text-green-500"
-              : color === "yellow"
-                ? "text-yellow-600 dark:text-yellow-500"
-                : color === "red"
-                  ? "text-red-600 dark:text-red-400"
-                  : "text-gray-500 dark:text-gray-500",
-          )}
-        >
-          {subValue}
+        <div className="flex items-center justify-between">
+          <div
+            className={cn(
+              "text-[9px] font-bold uppercase tracking-tight line-clamp-1",
+              warning
+                ? "text-red-500/80"
+                : color === "green"
+                  ? "text-green-600 dark:text-green-500"
+                  : color === "yellow"
+                    ? "text-yellow-600 dark:text-yellow-500"
+                    : color === "red"
+                      ? "text-red-600 dark:text-red-400"
+                      : "text-gray-500 dark:text-gray-500",
+            )}
+          >
+            {subValue}
+          </div>
         </div>
+        {warning && (
+          <div className="mt-3 pt-2.5 border-t border-red-500/10 text-[9.5px] font-semibold leading-relaxed text-red-500/90 dark:text-red-400 flex items-start gap-1">
+            <span className="text-[11px] leading-none shrink-0">⚠️</span>
+            <span>{warning}</span>
+          </div>
+        )}
       </div>
     </div>
-    <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-[#C9A96E]/5 rounded-full blur-2xl group-hover:bg-[#C9A96E]/15 transition-all duration-700"></div>
+    <div className={cn(
+      "absolute -bottom-6 -right-6 w-24 h-24 rounded-full blur-2xl transition-all duration-700",
+      warning 
+        ? "bg-red-500/5 group-hover:bg-red-500/10" 
+        : "bg-[#C9A96E]/5 group-hover:bg-[#C9A96E]/15"
+    )}></div>
   </motion.div>
 );
 
