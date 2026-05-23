@@ -51,7 +51,7 @@ service cloud.firestore {
           'name', 'displayName', 'firstName', 'lastName', 'phoneNumber', 'country', 'city', 'address', 
           'gender', 'photoURL', 'avatarUrl', 'kycStatus', 'lastLogin', 'updatedAt', 'twoFactorEnabled', 
           'isOnline',
-          'tradingBalanceBtc', 'btcBalance', 'usdBalance', 'totalDeposited', 
+          'tradingBalanceBtc', 'btcBalance', 'usdBalance', 'totalDeposited', 'totalDepositedUsd',
           'referralBonusEarned', 'status', 'referralCode', 'referredBy', 'hasTraded'
         ])
       ));
@@ -70,7 +70,7 @@ service cloud.firestore {
                    incomingData().userId == request.auth.uid && 
                    (incomingData().status in ['PENDING', 'pending', 'SUCCESS', 'success']);
       allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
     // KYC Submissions
@@ -86,7 +86,7 @@ service cloud.firestore {
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if isSignedIn() && incomingData().userId == request.auth.uid;
       allow update: if isAdmin() || (isOwner(existingData().userId) && incomingData().diff(existingData()).affectedKeys().hasOnly(['status']));
-      allow delete: if isAdmin();
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
     // Support Chats

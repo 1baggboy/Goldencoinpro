@@ -171,7 +171,9 @@ export const Invest = () => {
 
       // 2. Add return to balance
       await updateDoc(doc(db, "users", user.uid), {
-        tradingBalanceBtc: increment(inv.expectedReturnBtc)
+        usdBalance: increment(inv.expectedReturnUsd),
+        tradingBalanceBtc: increment(inv.expectedReturnBtc),
+        btcBalance: increment(inv.expectedReturnBtc)
       });
 
       await addNotification(user.uid, "Investment Claimed", `You have successfully claimed your return of ${inv.expectedReturnBtc.toFixed(6)} BTC from the ${inv.planName}.`, "success");
@@ -266,8 +268,8 @@ export const Invest = () => {
               <h3 className="text-xl font-bold text-white">Start Investment</h3>
               <div className="text-right">
                 <p className="text-xs text-gray-500 uppercase font-bold tracking-widest">Available Balance</p>
-                <p className="text-sm font-bold text-[#C9A96E]">${(profile?.btcBalance * btcPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
-                <p className="text-[10px] text-gray-500">{profile?.btcBalance?.toFixed(6)} BTC</p>
+                <p className="text-sm font-bold text-[#C9A96E]">${(profile?.usdBalance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                <p className="text-[10px] text-gray-500">{(profile?.usdBalance / btcPrice).toFixed(6)} BTC Equiv.</p>
               </div>
             </div>
 

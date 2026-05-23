@@ -84,6 +84,8 @@ export const UserDetail = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [rejecting, setRejecting] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
@@ -197,6 +199,39 @@ export const UserDetail = () => {
     }
   };
 
+  const handleResetUserData = async () => {
+    if (!userId) return;
+    setResetting(true);
+    try {
+      const { writeBatch, getDocs, collection, query, where, doc } = await import("firebase/firestore");
+      const batch = writeBatch(db);
+      
+      // Clear transactions
+      const txSnap = await getDocs(query(collection(db, "transactions"), where("userId", "==", userId)));
+      txSnap.forEach(d => batch.delete(d.ref));
+      
+      // Clear investments
+      const invSnap = await getDocs(query(collection(db, "investments"), where("userId", "==", userId)));
+      invSnap.forEach(d => batch.delete(d.ref));
+      
+      // Reset user fields
+      batch.update(doc(db, "users", userId), {
+        totalDeposited: 0,
+        totalDepositedUsd: 0,
+        referralBonusEarned: 0
+      });
+      
+      await batch.commit();
+      setMessage({ type: 'success', text: "User history and daily limits reset successfully!" });
+      setShowResetConfirm(false);
+    } catch (e) {
+      console.error(e);
+      setMessage({ type: 'error', text: "Failed to reset user data." });
+    } finally {
+      setResetting(false);
+    }
+  };
+
   const handleApproveKyc = async () => {
     if (!userId || !kycSubmission) return;
     try {
@@ -235,6 +270,7 @@ export const UserDetail = () => {
   if (!userProfile) return <div className="text-center py-20 text-red-500">User not found.</div>;
 
   const usdBalance = userProfile?.usdBalance ?? 0;
+  const tradingBtcBalance = btcPrice > 0 ? (usdBalance / btcPrice) : (userProfile?.tradingBalanceBtc || 0);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 w-full space-y-8">
@@ -476,16 +512,14 @@ export const UserDetail = () => {
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <StatCard 
-              title="Current Balance" 
+              title="Account Balance" 
               value={`$${usdBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} 
-              subValue={`${Number(userProfile.btcBalance || 0).toFixed(4)} BTC`}
               icon={Wallet}
               color="gold"
             />
             <StatCard 
               title="Trading Balance" 
-              value={`${Number(userProfile.tradingBalanceBtc || 0).toFixed(4)} BTC`} 
-              subValue={`≈ $${((userProfile.tradingBalanceBtc || 0) * btcPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+              value={`${tradingBtcBalance.toFixed(4)} BTC`} 
               icon={Zap}
               color="gold"
             />
@@ -494,8 +528,8 @@ export const UserDetail = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <StatCard 
               title="Total Deposited" 
-              value={`${userProfile.totalDeposited?.toFixed(4) || "0.0000"} BTC`} 
-              subValue="Lifetime BTC volume"
+              value={`$${(userProfile.totalDepositedUsd || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
+              subValue={`${(userProfile.totalDeposited || 0).toFixed(4)} BTC Equivalent`}
               icon={ArrowDownCircle}
               color="green"
             />
@@ -508,12 +542,20 @@ export const UserDetail = () => {
             />
           </div>
 
-          {/* Recent Activity Feed */}
           <div className="bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6 lg:p-8 mt-8">
-            <h3 className="text-xl font-bold text-white mb-8 flex items-center gap-2">
-              <Clock size={20} className="text-[#C9A96E]" />
-              Recent Activity
-            </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <Clock size={20} className="text-[#C9A96E]" />
+                Recent Activity
+              </h3>
+              <button
+                onClick={() => setShowResetConfirm(true)}
+                className="px-4 py-2 bg-orange-500/10 text-orange-500 text-xs font-bold rounded-lg border border-orange-500/20 hover:bg-orange-500/20 transition-all flex items-center gap-2"
+              >
+                <Clock size={14} />
+                Reset History & Limits
+              </button>
+            </div>
 
             {activities.length === 0 ? (
               <div className="text-center py-12 text-gray-500">No recent activity.</div>
@@ -725,6 +767,47 @@ export const UserDetail = () => {
                     {rejecting ? "Rejecting..." : "Confirm Rejection"}
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {showResetConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              onClick={() => !resetting && setShowResetConfirm(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="relative w-full max-w-md bg-slate-900 border border-orange-500/20 rounded-3xl p-8 shadow-2xl"
+            >
+              <div className="w-16 h-16 bg-orange-500/10 rounded-full flex items-center justify-center text-orange-500 mb-6 mx-auto">
+                <ShieldQuestion size={32} />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2 text-center">Reset User Data?</h3>
+              <p className="text-gray-400 text-sm mb-8 text-center">
+                This will permanently delete ALL transactions and investments for this user. This action will also reset their daily withdrawal limits.
+              </p>
+              
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => setShowResetConfirm(false)}
+                  disabled={resetting}
+                  className="flex-1 py-4 bg-slate-800 text-white font-bold rounded-xl border border-white/10 hover:bg-slate-700 transition-all disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleResetUserData}
+                  disabled={resetting}
+                  className="flex-1 py-4 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {resetting ? "Resetting..." : "Confirm Reset"}
+                </button>
               </div>
             </motion.div>
           </div>

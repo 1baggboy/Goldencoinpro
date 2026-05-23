@@ -313,8 +313,9 @@ export const Dashboard = () => {
   }, [user]);
 
   const usdBalance = profile?.usdBalance || 0;
-  const tradingUsdBalance =
-    (profile?.tradingBalanceBtc || 0) * (prices?.btc?.usd || 0);
+  // Trading balance acts as a mirror/conversion of account balance
+  const tradingUsdBalance = usdBalance;
+  const tradingBtcBalance = prices?.btc?.usd > 0 ? (usdBalance / prices.btc.usd) : (profile?.tradingBalanceBtc || 0);
 
   // Widget States
   const [portfolioExpanded, setPortfolioExpanded] = useState(() => localStorage.getItem('portfolioExpanded') === 'true');
@@ -480,14 +481,7 @@ export const Dashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 lg:gap-5 xl:gap-6">
         <StatCard
           title="Account Balance"
-          value={displayCurrency === "USD" 
-            ? `$${usdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
-            : `${(usdBalance / (prices?.btc?.usd || 67000)).toFixed(4)} BTC`
-          }
-          subValue={displayCurrency === "USD" 
-            ? (prices?.btc?.usd > 0 ? `${(usdBalance / prices.btc.usd).toFixed(4)} BTC` : "--- BTC") 
-            : `$${usdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-          }
+          value={`$${usdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon={Wallet}
           color="gold"
           tooltip="Available cash balance for investing, trading, or standard withdrawal"
@@ -495,28 +489,15 @@ export const Dashboard = () => {
         />
         <StatCard
           title="Trading Balance"
-          value={displayCurrency === "USD"
-            ? `$${tradingUsdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-            : `${profile?.tradingBalanceBtc?.toFixed(4) || "0.0000"} BTC`
-          }
-          subValue={displayCurrency === "USD"
-            ? `${profile?.tradingBalanceBtc?.toFixed(4) || "0.0000"} BTC`
-            : `$${tradingUsdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-          }
+          value={`${tradingBtcBalance.toFixed(4)} BTC`}
           icon={Zap}
           color="gold"
-          tooltip="Total coin currently active within specialized crypto high-frequency arbitrage algorithms"
+          tooltip="The BTC equivalent of your current account balance, active within high-frequency algorithms"
         />
         <StatCard
           title="Total Deposited"
-          value={displayCurrency === "USD"
-            ? `$${(profile?.totalDepositedUsd || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-            : `${((profile?.totalDepositedUsd || 0) / (prices?.btc?.usd || 67000)).toFixed(4)} BTC`
-          }
-          subValue={displayCurrency === "USD"
-            ? "Cumulative Deposits"
-            : `$${(profile?.totalDepositedUsd || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-          }
+          value={`$${(profile?.totalDepositedUsd || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          subValue={`${(profile?.totalDeposited || 0).toFixed(4)} BTC Equivalent`}
           icon={TrendingUp}
           color="green"
           tooltip="Total historical amount loaded and recorded under this specific identity portfolio"

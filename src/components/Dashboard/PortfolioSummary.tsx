@@ -27,7 +27,8 @@ const AnimatedTotal = ({ value }: { value: number }) => {
 };
 
 export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({usdBalance, tradingBalanceUsd, btcChange, isExpanded, onToggleExpand, onSwap}) => {
-    const total = usdBalance + tradingBalanceUsd;
+    // They are mirrors now, so total is just the usdBalance
+    const total = usdBalance;
   return (
     <div className={cn("bg-slate-100 dark:bg-slate-900 border border-[#C9A96E]/10 rounded-2xl p-6 transition-all", isExpanded ? "md:col-span-2" : "")}>
         <div className="flex items-center justify-between mb-6">
