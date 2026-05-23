@@ -72,7 +72,6 @@ export const UserDetail = () => {
   const [loading, setLoading] = useState(true);
   
   // Edit states
-  const [editTradingBalance, setEditTradingBalance] = useState<string>("");
   const [editUsdBalance, setEditUsdBalance] = useState<string>("");
   const [editWallet, setEditWallet] = useState<string>("");
   const [updating, setUpdating] = useState(false);
@@ -94,7 +93,6 @@ export const UserDetail = () => {
       if (doc.exists()) {
         const data = doc.data();
         setUserProfile({ id: doc.id, ...data });
-        setEditTradingBalance(data.tradingBalanceBtc?.toString() || "0");
         setEditUsdBalance(data.usdBalance?.toString() || "0");
         setEditWallet(data.btcWalletAddress || "");
       }
@@ -151,11 +149,12 @@ export const UserDetail = () => {
   const handleSaveAdminEdits = async () => {
     if (!userId) return;
     setUpdating(true);
+    const btcVal = btcPrice > 0 ? parseFloat(editUsdBalance) / btcPrice : (userProfile?.btcBalance || 0);
     try {
       await updateDoc(doc(db, "users", userId), {
-        tradingBalanceBtc: parseFloat(editTradingBalance),
         usdBalance: parseFloat(editUsdBalance),
-        btcBalance: btcPrice > 0 ? parseFloat(editUsdBalance) / btcPrice : (userProfile?.btcBalance || 0),
+        btcBalance: btcVal,
+        tradingBalanceBtc: btcVal,
         btcWalletAddress: editWallet
       });
       setMessage({ type: 'success', text: "User updated successfully!" });
@@ -268,8 +267,9 @@ export const UserDetail = () => {
   if (!userProfile) return <div className="text-center py-20 text-red-500">User not found.</div>;
 
   const liveUsdBalance = btcPrice > 0 ? (userProfile?.btcBalance || 0) * btcPrice : (userProfile?.usdBalance || 0);
-  const tradingBtcBalance = userProfile?.tradingBalanceBtc || 0;
-  const tradingUsdBalance = tradingBtcBalance * btcPrice;
+  // Trading balance is a mirror of account balance
+  const tradingBtcBalance = userProfile?.btcBalance || 0;
+  const tradingUsdBalance = liveUsdBalance;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 w-full space-y-8">
@@ -394,18 +394,7 @@ export const UserDetail = () => {
                 </div>
 
                 <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Trading Balance (BTC)</label>
-                <input 
-                  type="number"
-                  step="0.0001"
-                  value={editTradingBalance}
-                  onChange={(e) => setEditTradingBalance(e.target.value)}
-                  className="w-full bg-slate-950 border border-[#C9A96E]/10 rounded-xl py-3 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">BTC Wallet Address</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">BTC Wallet Address</label>
                 <input 
                   type="text"
                   value={editWallet}

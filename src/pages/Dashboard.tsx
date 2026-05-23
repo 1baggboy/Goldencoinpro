@@ -315,8 +315,9 @@ export const Dashboard = () => {
   const liveBtcPrice = prices?.btc?.usd || 0;
   const usdBalance = liveBtcPrice > 0 ? (profile?.btcBalance || 0) * liveBtcPrice : (profile?.usdBalance || 0);
   
-  const tradingBtcBalance = profile?.tradingBalanceBtc || 0;
-  const tradingUsdBalance = tradingBtcBalance * liveBtcPrice;
+  // Trading balance is a direct mirror of account balance
+  const tradingBtcBalance = profile?.btcBalance || 0;
+  const tradingUsdBalance = usdBalance;
 
   // Widget States
   const [portfolioExpanded, setPortfolioExpanded] = useState(() => localStorage.getItem('portfolioExpanded') === 'true');
