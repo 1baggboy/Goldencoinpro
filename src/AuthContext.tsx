@@ -14,6 +14,7 @@ interface UserProfile {
   btcBalance: number; // BTC balance
   tradingBalanceBtc: number; // Trading balance in BTC
   totalDepositedUsd: number; // Total deposited in USD
+  totalDeposited: number; // Total deposited in BTC (legacy field name used in logic)
   kycStatus: "not_submitted" | "pending" | "verified" | "rejected";
   kycRejectionReason?: string;
   createdAt: string;

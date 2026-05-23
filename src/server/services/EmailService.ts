@@ -205,16 +205,19 @@ export class EmailService {
     const isRejected = tx.status === 'REJECTED' || tx.status === 'FAILED';
     const accentColor = isSuccess ? '#28a745' : (isRejected ? '#d9534f' : '#C9A96E');
 
+    const amount = tx.amount ?? tx.amountUsd ?? 0;
+    const date = tx.createdAt ? new Date(tx.createdAt) : (tx.timestamp ? new Date(tx.timestamp) : new Date());
+
     const content = `
       <p>Hello ${user.firstName || 'User'},</p>
       <p>Your <strong>${tx.type}</strong> request status has been updated to <span style="color: ${accentColor}; font-weight: bold;">${tx.status}</span>.</p>
       <div class="card" style="background-color: #f9f9f9; padding: 25px; border-radius: 12px; margin: 25px 0; border: 1px solid #eee;">
-        <p style="margin: 0 0 10px;"><strong>Amount:</strong> $${tx.amount.toLocaleString()}</p>
+        <p style="margin: 0 0 10px;"><strong>Amount:</strong> $${Number(amount).toLocaleString()}</p>
         <p style="margin: 0 0 10px;"><strong>Type:</strong> ${tx.type}</p>
         <p style="margin: 0 0 10px;"><strong>Status:</strong> ${tx.status}</p>
-        <p style="margin: 0 0 10px;"><strong>Reference:</strong> ${tx.reference || tx.id}</p>
+        <p style="margin: 0 0 10px;"><strong>Reference:</strong> ${tx.reference || tx.id || tx.txId}</p>
         ${tx.rejectionReason ? `<p style="margin: 10px 0 0; color: #d9534f;"><strong>Reason:</strong> ${tx.rejectionReason}</p>` : ''}
-        <p style="margin: 10px 0 0; font-size: 14px; color: #888;"><strong>Date:</strong> ${new Date(tx.createdAt).toLocaleString()}</p>
+        <p style="margin: 10px 0 0; font-size: 14px; color: #888;"><strong>Date:</strong> ${date.toLocaleString()}</p>
       </div>
       <p>You can view full details in your transaction history.</p>
       <div style="text-align: center; margin-top: 30px;">
@@ -230,7 +233,7 @@ export class EmailService {
       email: user.email
     });
 
-    const subject = `Transaction ${tx.status}: ${tx.type} ($${tx.amount})`;
+    const subject = `Transaction ${tx.status}: ${tx.type} ($${Number(amount).toLocaleString()})`;
     const type = tx.type === 'DEPOSIT' ? 'DEPOSIT_ALERT' : (tx.type === 'WITHDRAWAL' ? 'WITHDRAWAL_ALERT' : 'TRANSACTION_CONFIRMATION');
 
     return this.sendEmail({
@@ -410,15 +413,17 @@ export class EmailService {
   }
 
   static async sendInvestmentAlert(user: any, investment: any) {
+    const amount = investment.amount ?? investment.amountUsd ?? 0;
+    const expectedReturn = investment.expectedReturn ?? investment.expectedReturnUsd ?? 0;
     const content = `
       <p>Hello ${user.firstName || 'User'},</p>
       <p>Congratulations! You have successfully invested in the <strong>${investment.planName}</strong> plan. Your capital is now working for you.</p>
       <div class="card" style="background-color: #f9f9f9; padding: 25px; border-radius: 12px; margin: 25px 0; border: 1px solid #eee;">
         <p style="margin: 0 0 10px;"><strong>Plan:</strong> ${investment.planName}</p>
-        <p style="margin: 0 0 10px;"><strong>Invested Amount:</strong> $${investment.amount.toLocaleString()}</p>
-        <p style="margin: 0 0 10px;"><strong>ROI:</strong> ${investment.roiPercentage}%</p>
-        <p style="margin: 0 0 10px;"><strong>Expected Payout:</strong> $${investment.expectedReturn.toLocaleString()}</p>
-        <p style="margin: 0;"><strong>Maturity Date:</strong> ${new Date(investment.endDate).toLocaleDateString()}</p>
+        <p style="margin: 0 0 10px;"><strong>Invested Amount:</strong> $${Number(amount).toLocaleString()}</p>
+        <p style="margin: 0 0 10px;"><strong>ROI:</strong> ${investment.roiPercentage || ((Number(expectedReturn)/Number(amount) - 1) * 100).toFixed(0)}%</p>
+        <p style="margin: 0 0 10px;"><strong>Expected Payout:</strong> $${Number(expectedReturn).toLocaleString()}</p>
+        <p style="margin: 0;"><strong>Maturity Date:</strong> ${new Date(investment.endDate || investment.endTime).toLocaleDateString()}</p>
       </div>
       <p>Your profits will be automatically credited to your main balance upon maturity.</p>
       <div style="text-align: center; margin-top: 35px;">
@@ -429,7 +434,7 @@ export class EmailService {
     const html = TemplateEngine.render({
       title: "Investment Confirmed",
       content,
-      preheader: `Success! You invested $${investment.amount} in ${investment.planName}`,
+      preheader: `Success! You invested $${Number(amount).toLocaleString()} in ${investment.planName}`,
       email: user.email
     });
 

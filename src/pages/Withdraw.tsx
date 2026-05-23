@@ -32,7 +32,6 @@ export const Withdraw = () => {
   const [error, setError] = useState<string | null>(null);
   const { prices } = usePrices();
   const btcPrice = prices?.btc?.usd || 0;
-  const [dailyWithdrawn, setDailyWithdrawn] = useState(0);
   const [showScanner, setShowScanner] = useState(false);
 
   useEffect(() => {
@@ -55,37 +54,6 @@ export const Withdraw = () => {
     }
   }, [showScanner]);
  
-  useEffect(() => {
-    if (user) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      const q = query(
-        collection(db, "transactions"), 
-        where("userId", "==", user.uid), 
-        where("type", "==", "WITHDRAWAL"),
-        where("status", "in", ["PENDING", "SUCCESS"])
-      );
-
-      const unsub = onSnapshot(q, (snap) => {
-        let total = 0;
-        snap.docs.forEach(doc => {
-          const data = doc.data();
-          const txDate = new Date(data.timestamp);
-          if (txDate >= today) {
-            total += data.amountBtc || 0;
-          }
-        });
-        setDailyWithdrawn(total);
-      }, (err) => {
-        handleFirestoreError(err, OperationType.LIST, "transactions");
-        setError("Unable to calculate daily limits. Please refresh the page.");
-      });
-
-      return () => unsub();
-    }
-  }, [user]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !profile) return;
@@ -97,7 +65,6 @@ export const Withdraw = () => {
       return;
     }
     const amountBtc = valUsd / btcPrice;
-    const dailyWithdrawnUsd = dailyWithdrawn * btcPrice;
 
     // 1. Check KYC - Ensure profile exists
     if (!profile) {
@@ -129,14 +96,7 @@ export const Withdraw = () => {
       return;
     }
 
-    // 4. Check Daily Maximum ($50,000)
-    if (dailyWithdrawnUsd + valUsd > 50000) {
-      setError(`Daily withdrawal limit exceeded. You have already withdrawn $${dailyWithdrawnUsd.toLocaleString()} today. Remaining limit: $${(50000 - dailyWithdrawnUsd).toLocaleString()}`);
-      await sendAdminEmailNotification("Failed Withdrawal Attempt", `User ${profile.displayName || profile.email} hit daily withdrawal limit.`);
-      return;
-    }
-
-    // 5. Validate BTC Wallet Address
+    // 4. Validate BTC Wallet Address
     const btcRegex = /^(1[a-km-zA-HJ-NP-Z1-9]{25,34}|3[a-km-zA-HJ-NP-Z1-9]{25,34}|bc1[a-zA-HJ-NP-Z0-9]{25,90})$/;
     if (!btcRegex.test(walletAddress)) {
       setError("Please enter a valid BTC wallet address (Legacy, P2SH, or SegWit).");
@@ -201,7 +161,6 @@ export const Withdraw = () => {
 
   const valUsd = parseFloat(amountUsd || "0");
   const amountBtc = valUsd / btcPrice;
-  const dailyWithdrawnUsd = dailyWithdrawn * btcPrice;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 w-full max-w-full mx-auto space-y-8">
@@ -251,10 +210,6 @@ export const Withdraw = () => {
               <div className="flex justify-between items-center">
                 <span className="text-xs text-gray-400">Minimum</span>
                 <span className="text-xs font-bold text-white">$50.00</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-400">Daily Maximum</span>
-                <span className="text-xs font-bold text-white">$50,000.00</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs text-gray-400">KYC Required</span>
@@ -363,7 +318,6 @@ export const Withdraw = () => {
                       <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
                       BTC to Deduct: <span className="text-white font-bold">{amountBtc.toFixed(8)} BTC</span>
                     </div>
-                    <p className="text-[10px] text-gray-500">Daily: ${dailyWithdrawnUsd.toLocaleString()} / $50,000</p>
                   </div>
                 </div>
 

@@ -42,31 +42,17 @@ export class TransactionService {
 
     const user = { ...userDoc.data(), id: userId } as any;
 
-    if (user.balance < amount) throw new Error("Insufficient balance");
-
-    // Check daily limit
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const withdrawalsToday = await db.collection('transactions')
-      .where('userId', '==', userId)
-      .where('type', '==', 'WITHDRAWAL')
-      .where('status', 'in', ['PENDING', 'SUCCESS'])
-      .where('createdAt', '>=', startOfDay)
-      .get();
-
-    let totalWithdrawnToday = 0;
-    withdrawalsToday.forEach(doc => {
-      totalWithdrawnToday += doc.data().amount;
-    });
-
-    if (totalWithdrawnToday + amount > 50000) {
-      throw new Error(`Daily withdrawal limit reached. You have already withdrawn $${totalWithdrawnToday.toLocaleString()} today. Maximum daily limit is $50,000.`);
-    }
+    if (user.usdBalance < amount) throw new Error("Insufficient balance");
 
     // Deduct balance immediately
-    const newBalance = (user.balance || 0) - amount;
-    await userDocRef.update({ balance: newBalance });
+    const btcPrice = 67000; // Fallback or fetch current
+    const amountBtc = amount / btcPrice;
+    
+    await userDocRef.update({ 
+      usdBalance: (user.usdBalance || 0) - amount,
+      btcBalance: (user.btcBalance || 0) - amountBtc,
+      tradingBalanceBtc: (user.tradingBalanceBtc || 0) - amountBtc
+    });
 
     const reference = `WTH-${uuidv4().substring(0, 8).toUpperCase()}`;
 
