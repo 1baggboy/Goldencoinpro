@@ -160,7 +160,8 @@ export const Withdraw = () => {
       // Update user balance immediately to prevent double-spending pending approval
       await updateDoc(doc(db, "users", user.uid), {
         btcBalance: increment(-amountBtc),
-        tradingBalanceBtc: increment(-amountBtc)
+        tradingBalanceBtc: increment(-amountBtc),
+        usdBalance: increment(-valUsd)
       });
 
       await addNotification(user.uid, "Withdrawal Requested", `Your withdrawal request for $${valUsd.toLocaleString()} (~${amountBtc.toFixed(8)} BTC) has been submitted for approval. Your balance has been adjusted.`, "info");

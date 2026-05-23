@@ -266,7 +266,7 @@ export const Transactions = () => {
                     </div>
                     {tx.amountUsd && (
                       <p className="text-xs text-gray-500 font-medium mt-0.5">
-                        ≈ ${tx.amountUsd.toLocaleString()}
+                        ≈ ${(tx.amountUsd || 0).toLocaleString()}
                       </p>
                     )}
                   </div>
@@ -359,7 +359,7 @@ export const Transactions = () => {
                   {selectedTx.type?.toLowerCase() === 'deposit' ? '+' : '-'}{(selectedTx.amountBtc || selectedTx.amount || 0).toFixed(4)} BTC
                 </h4>
                 {selectedTx.amountUsd && (
-                  <p className="text-gray-500">≈ ${selectedTx.amountUsd.toLocaleString()}</p>
+                  <p className="text-gray-500">≈ ${(selectedTx.amountUsd || 0).toLocaleString()}</p>
                 )}
                 
                 <div className={cn(

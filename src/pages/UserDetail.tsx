@@ -74,6 +74,7 @@ export const UserDetail = () => {
   // Edit states
   const [editBalance, setEditBalance] = useState<string>("");
   const [editTradingBalance, setEditTradingBalance] = useState<string>("");
+  const [editUsdBalance, setEditUsdBalance] = useState<string>("");
   const [editWallet, setEditWallet] = useState<string>("");
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -94,6 +95,7 @@ export const UserDetail = () => {
         setUserProfile({ id: doc.id, ...data });
         setEditBalance(data.btcBalance?.toString() || "0");
         setEditTradingBalance(data.tradingBalanceBtc?.toString() || "0");
+        setEditUsdBalance(data.usdBalance?.toString() || "0");
         setEditWallet(data.btcWalletAddress || "");
       }
       setLoading(false);
@@ -153,6 +155,7 @@ export const UserDetail = () => {
       await updateDoc(doc(db, "users", userId), {
         btcBalance: parseFloat(editBalance),
         tradingBalanceBtc: parseFloat(editTradingBalance),
+        usdBalance: parseFloat(editUsdBalance),
         btcWalletAddress: editWallet
       });
       setMessage({ type: 'success', text: "User updated successfully!" });
@@ -231,7 +234,7 @@ export const UserDetail = () => {
   if (loading) return <div className="flex items-center justify-center h-96 text-[#C9A96E]">Loading user data...</div>;
   if (!userProfile) return <div className="text-center py-20 text-red-500">User not found.</div>;
 
-  const usdBalance = (userProfile?.btcBalance || 0) * btcPrice;
+  const usdBalance = userProfile?.usdBalance ?? 0;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 w-full space-y-8">
@@ -344,6 +347,17 @@ export const UserDetail = () => {
             </h3>
             
             <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Account Balance (USD)</label>
+                <input 
+                  type="number"
+                  step="0.01"
+                  value={editUsdBalance}
+                  onChange={(e) => setEditUsdBalance(e.target.value)}
+                  className="w-full bg-slate-950 border border-[#C9A96E]/10 rounded-xl py-3 px-4 text-white outline-none focus:border-[#C9A96E]/40 transition-all font-mono"
+                />
+              </div>
+
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">BTC Balance</label>
                 <input 

@@ -113,7 +113,10 @@ export class TransactionService {
 
     if (tx.type === 'DEPOSIT') {
       const amountBtc = tx.amountBtc || 0;
+      const amountUsd = tx.amountUsd || tx.amount || 0;
       await userRef.update({ 
+        usdBalance: (user.usdBalance || 0) + amountUsd,
+        totalDepositedUsd: (user.totalDepositedUsd || 0) + amountUsd,
         btcBalance: (user.btcBalance || 0) + amountBtc,
         tradingBalanceBtc: (user.tradingBalanceBtc || 0) + amountBtc,
         totalDeposited: (user.totalDeposited || 0) + amountBtc
@@ -151,9 +154,11 @@ export class TransactionService {
     if (tx.type === 'WITHDRAWAL') {
       // Refund balance
       const amountBtc = tx.amountBtc || 0;
+      const amountUsd = tx.amountUsd || tx.amount || 0;
       await userRef.update({ 
         btcBalance: (user.btcBalance || 0) + amountBtc,
-        tradingBalanceBtc: (user.tradingBalanceBtc || 0) + amountBtc
+        tradingBalanceBtc: (user.tradingBalanceBtc || 0) + amountBtc,
+        usdBalance: (user.usdBalance || 0) + amountUsd
       });
     }
 
