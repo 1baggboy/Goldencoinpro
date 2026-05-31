@@ -168,7 +168,7 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
 
         // Notify natively
-        if (Notification.permission === 'granted') {
+        if ('Notification' in window && Notification.permission === 'granted') {
           new Notification('Golden Coin Alert', {
             body: `${alert.asset.toUpperCase()} is ${alert.condition} $${alert.targetPrice} (Currently $${currentPrice})`
           });
@@ -231,7 +231,7 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     // Request notification permission if needed
-    if (Notification.permission === 'default') {
+    if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
     
